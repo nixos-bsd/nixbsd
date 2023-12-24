@@ -1,56 +1,0 @@
-[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01HBdsDxe: loading Boot0001 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
-BdsDxe: starting Boot0001 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
-[2J[01;01H[=3h[2J[01;01H[2J[01;01H[2J[01;01H
->> FreeBSD EFI boot block
-   Loader path: /boot/loader.efi
-
-   Initializing modules: ZFS UFS
-   Load Path: \EFI\BOOT\BOOTX64.EFI
-   Load Device: PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)/HD(1,MBR,0xBE1AFDFA,0x3F,0xFBFC1)
-   BootCurrent: 0001
-   BootOrder: 0000 0001[*] 0002 0003 0004 0005 0006 0007
-   Probing 5 block devices...not supported
-not supported
-not supported
-not supported
-good
- done
-    ZFS found no pools
-    UFS found 1 partition
-[2J[01;01H[2J[01;01H[2J[01;01H[01;01HConsoles: EFI console  
-    Reading loader env vars from /efi/freebsd/loader.env
-Setting currdev to disk1p1:
-FreeBSD/amd64 EFI loader, Revision 1.1
-
-   Command line arguments: loader.efi
-   Image base: 0x3dc44000
-   EFI version: 2.70
-   EFI Firmware: Ubuntu distribution of EDK II (rev 1.00)
-   Console: efi (0x20001000)
-   Load Path: HD(1,GPT,AE49CF30-A149-11EE-0567-C7697351FF4A,0x22,0x68AA00)
-   Load Device: PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)/HD(1,GPT,AE49CF30-A149-11EE-0567-C7697351FF4A,0x22,0x68AA00)
-   BootCurrent: 0001
-   BootOrder: 0000 0001[*] 0002 0003 0004 0005 0006 0007
-   BootInfo Path: PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)
-Ignoring Boot0001: Only one DP found
-Trying ESP: PciRoot(0x0)/Pci(0x1,0x1)/Ata(0x0)/HD(1,GPT,AE49CF30-A149-11EE-0567-C7697351FF4A,0x22,0x68AA00)
-Setting currdev to disk1p1:
-|/-
-\|/boot/kernel/kernel text=0x9a880 text=0x405730 /-text=0x78d9c \data=0xf500 data=0x8b430+0x364bd0 0x8+0x984a8+0x8+0x75ba0|
-Hit [Enter] to boot immediately, or any other key for command prompt.
-Booting [/boot/kernel/kernel] in 10 seconds... Booting [/boot/kernel/kernel] in 9 seconds... Booting [/boot/kernel/kernel] in 8 seconds... Booting [/boot/kernel/kernel] in 7 seconds... Booting [/boot/kernel/kernel] in 6 seconds... Booting [/boot/kernel/kernel] in 5 seconds... Booting [/boot/kernel/kernel] in 4 seconds... Booting [/boot/kernel/kernel] in 3 seconds... Booting [/boot/kernel/kernel] in 2 seconds... Booting [/boot/kernel/kernel] in 1 second... Booting [/boot/kernel/kernel]...               
-staging 0x2fc00000 (not copying) tramp 0x3da73000 PT4 0x3da6a000
-Start @ 0xffffffff8029b000 ...
-EFI framebuffer information:
-addr, size     0x80000000, 0x3e8000
-dimensions     1280 x 800
-stride         1280
-masks          0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000
-[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01HBdsDxe: loading Boot0001 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
-BdsDxe: starting Boot0001 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1,0x1)/Ata(Primary,Master,0x0)
-[2J[01;01H[=3h[2J[01;01H[2J[01;01H[2J[01;01H
->> FreeBSD EFI boot block
-   Loader path: /boot/loader.efi
-
-   Initializing modules: ZFS UFS
-   Load P
