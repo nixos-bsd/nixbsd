@@ -5,7 +5,7 @@
     name = "nixbsd-${config.label}";
     builder = nixpkgs.stdenv.shell;
     args = [./toplevel-builder.sh];
-    inherit (config) kernel init bootLoader bootFiles label;
+    inherit (config) kernel init initShell bootLoader bootFiles label;
     PATH = "${lib.getBin nixpkgs.coreutils}/bin";
   };
 
@@ -38,13 +38,24 @@ in {
     default = ["bin/loader.efi" "bin/lua" "bin/defaults"];
   };
 
-  options.init = mkOption {
+  options.initShell = mkOption {
     type = types.package;
     default = pkgs.writeShellScript "init" ''
-      export PATH=${lib.concatStringsSep ":" (with pkgs; [bash coreutils vim])}
+      echo "HELLO FROM INIT"
+      export PATH=${lib.makeBinPath (with pkgs; [bash coreutils vim])}
       exec bash -l
     '';
   };
+
+  options.init = mkOption {
+    type = types.str;
+    default = "${pkgs.freebsd.init}/bin/init";
+  };
+
+  #options.initShell = mkOption {
+  #  type = types.str;
+  #  default = "${pkgs.bash}/bin/bash";
+  #};
 
   options.label = mkOption {
     type = types.str;
