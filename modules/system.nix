@@ -1,3 +1,6 @@
 { lib, ... }: with lib; {
-  imports = [ ./top-level.nix ];
+  imports = [
+    ./top-level.nix
+    ./activation.nix
+  ];
 }

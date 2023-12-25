@@ -2,15 +2,15 @@
   pkgs = config.targetPackages;
   system = derivation {
     system = nixpkgs.stdenv.buildPlatform.system;
-    name = "nixbsd-${config.label}";
+    name = "nixbsd-${config.system.label}";
     builder = nixpkgs.stdenv.shell;
     args = [./toplevel-builder.sh];
-    inherit (config) kernel init initShell bootLoader bootFiles label;
+    inherit (config.system) kernel init initShell bootLoader bootFiles label activate;
     PATH = "${lib.getBin nixpkgs.coreutils}/bin";
   };
 
 in {
-  options.target = mkOption {
+  options.system.target = mkOption {
     type = types.str;
     default = "x86_64-freebsd14";
   };
@@ -19,49 +19,52 @@ in {
     readOnly = true;
   };
 
-  options.toplevel = mkOption {
+  options.system.toplevel = mkOption {
     type = types.package;
     readOnly = true;
   };
 
-  options.kernel = mkOption {
+  options.system.kernel = mkOption {
     type = types.package;
     default = pkgs.freebsd.sys;
   };
 
-  options.bootLoader = mkOption {
+  options.system.bootLoader = mkOption {
     type = types.package;
     default = pkgs.freebsd.stand-efi;
   };
 
-  options.bootFiles = mkOption {
+  options.system.bootFiles = mkOption {
     default = ["bin/loader.efi" "bin/lua" "bin/defaults"];
   };
 
-  options.initShell = mkOption {
-    type = types.package;
-    default = pkgs.writeShellScript "init" ''
-      echo "HELLO FROM INIT"
-      export PATH=${lib.makeBinPath (with pkgs; [bash coreutils vim])}
-      exec bash -l
-    '';
-  };
+  #options.initShell = mkOption {
+  #  type = types.package;
+  #  default = pkgs.writeShellScript "init" ''
+  #    export PATH=${lib.makeBinPath (with pkgs; [bash coreutils vim])}
+  #    exec bash -l
+  #  '';
+  #};
 
-  options.init = mkOption {
+  options.system.init = mkOption {
     type = types.str;
     default = "${pkgs.freebsd.init}/bin/init";
   };
 
-  #options.initShell = mkOption {
-  #  type = types.str;
-  #  default = "${pkgs.bash}/bin/bash";
-  #};
+  options.system.initShell = mkOption {
+    type = types.str;
+    default = "${pkgs.bash}/bin/bash";
+  };
 
-  options.label = mkOption {
+  options.system.label = mkOption {
     type = types.str;
     default = "default";
   };
 
-  config.toplevel = system;
-  config.targetPackages = nixpkgs.pkgsCross.${config.target};
+  options.system.activate = mkOption {
+    type = types.str;
+  };
+
+  config.system.toplevel = system;
+  config.targetPackages = nixpkgs.pkgsCross.${config.system.target};
 }

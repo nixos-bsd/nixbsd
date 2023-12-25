@@ -4,7 +4,7 @@ set -ex
 export NIX_PATH=${NIX_PATH-~/proj/nix}
 export DESTDIR=${DESTDIR-~/proj/nix/main}
 export DESTFILE=${DESTFILE-~/proj/nix/disk.img}
-export PROFILE="$(nix-build '<nixbsd>' -A config.toplevel --no-out-link)"
+export PROFILE="$(nix-build '<nixbsd>' -A config.system.toplevel --no-out-link)"
 export MAKEFS="$(nix-build '<nixpkgs>' -A freebsd.packages14.makefs --option substitute false)/bin/makefs"
 export MKIMG="$(nix-build '<nixpkgs>' -A freebsd.packages14.mkimg --option substitute false)/bin/mkimg"
 export TMPPART="$(mktemp)"
