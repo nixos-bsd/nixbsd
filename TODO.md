@@ -18,3 +18,4 @@
     - [ ] "chroot" nixpkgs with shared store
     - [ ] "chroot" nixos with service config
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
+- [ ] jails
