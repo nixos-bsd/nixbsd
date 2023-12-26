@@ -168,4 +168,21 @@ in
     };
 
   };
+
+  config = {
+    system.activationScripts.stdio = ""; # obsolete
+    system.activationScripts.var = ""; # obsolete
+
+    system.activationScripts.usrbinenv = if config.environment.usrbinenv != null
+      then ''
+        mkdir -p /usr/bin
+        chmod 0755 /usr/bin
+        ln -sfn ${config.environment.usrbinenv} /usr/bin/.env.tmp
+        mv /usr/bin/.env.tmp /usr/bin/env # atomically replace /usr/bin/env
+      ''
+      else ''
+        rm -f /usr/bin/env
+        rmdir --ignore-fail-on-non-empty /usr/bin /usr
+      '';
+  };
 }
