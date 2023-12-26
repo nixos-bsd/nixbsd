@@ -63,7 +63,6 @@ let
       gnugrep
       findutils
       getent
-      stdenv.cc.libc # nscd in update-users-groups.pl
     ];
 
   scriptType = withDry: with types;

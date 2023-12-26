@@ -87,7 +87,7 @@ in
             # pam for its environment will otherwise have eg. broken sudo. In
             # particular Gnome Shell sometimes fails to source a proper
             # environment from a shell.
-            { PATH = [ config.security.wrapperDir ]; }
+            # { PATH = [ config.security.wrapperDir ]; }
 
             (mapAttrs (n: toList) cfg.sessionVariables)
             suffixedVariables

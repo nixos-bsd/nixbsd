@@ -1,4 +1,9 @@
-[
+nixpkgsPath:
+let extPath = "${nixpkgsPath}/nixos/modules";
+in [
+  "${extPath}/programs/bash/bash.nix"
+  "${extPath}/programs/environment.nix"
+  "${extPath}/programs/less.nix"
   ./activation/activation-script.nix
   ./activation/etc-activation.nix
   ./activation/users-groups.nix
@@ -11,6 +16,5 @@
   ./misc/ids.nix
   ./misc/meta.nix
   ./misc/nixpkgs.nix
-  ./programs/bash.nix
   ./top-level.nix
 ]

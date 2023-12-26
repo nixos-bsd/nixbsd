@@ -6,7 +6,7 @@
     args = [./toplevel-builder.sh];
     activate = config.system.activationScripts.script;
     inherit (config.system) kernel init initShell bootLoader bootFiles label;
-    PATH = "${lib.getBin pkgs.coreutils}/bin";
+    PATH = "${lib.getBin pkgs.buildPackages.coreutils}/bin";
   };
 
 in {

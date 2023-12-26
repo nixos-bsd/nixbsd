@@ -16,10 +16,6 @@ evalConfigArgs@
 , # !!! is this argument needed any more? The pkgs argument can
   # be set modularly anyway.
   pkgs ? null
-, # !!! what do we gain by making this configurable?
-  #     we can add modules that are included in specialisations, regardless
-  #     of inheritParentConfig.
-  baseModules ? import ../modules/module-list.nix
 , # !!! See comment about args in lib/modules.nix
   extraArgs ? {}
 , # !!! See comment about args in lib/modules.nix
@@ -30,13 +26,15 @@ evalConfigArgs@
   check ? true
 , prefix ? []
 , lib ? import <nixpkgs/lib>
-, # Not imported, we want
+, # Not imported, we want the actual path to be passed in
   nixpkgsPath ? <nixpkgs>
 , extraModules ? let e = builtins.getEnv "NIXBSD_EXTRA_MODULE_PATH";
                  in lib.optional (e != "") (import e)
 }:
 
 let
+  baseModules = import ../modules/module-list.nix nixpkgsPath;
+
   inherit (lib) optional;
 
   evalModulesMinimal = (import ./eval-config-minimal.nix {
