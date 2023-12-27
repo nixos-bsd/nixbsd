@@ -1,6 +1,8 @@
 # Important modules
 - [ ] get activation to actually work
-- [ ] better toplevel
+- [x] better toplevel
+- [ ] vm image
+- [ ] deal with locales (don't copy in glibc-locales which we don't use)
 - [ ] rc module, so we can have a proper init system
 - [ ] tempfiles (so that current-system and booted-system don't get garbage collected)
 - [ ] bootloader
@@ -19,3 +21,7 @@
     - [ ] "chroot" nixos with service config
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
 - [ ] jails
+
+# Not modules
+- [ ] Figure out how to generate documentation
+- [ ] switch-to-configuration

@@ -607,6 +607,7 @@ in {
     users.groups = {
       root.gid = ids.gids.root;
       wheel.gid = ids.gids.wheel;
+      nogroup.gid = ids.gids.nogroup;
     };
 
     system.activationScripts.users = {
