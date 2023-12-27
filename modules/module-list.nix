@@ -20,4 +20,5 @@ in [
   ./misc/extra-arguments.nix
   ./security/wrappers/default.nix
   ./system/boot/kernel.nix
+  ./virtualisation/vm-image.nix
 ]
