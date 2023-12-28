@@ -1,18 +1,10 @@
 #!/usr/bin/env bash
-set -ex
 
 export NIX_PATH=${NIX_PATH-~/proj/nix}
-export DESTDIR=${DESTDIR-~/proj/nix/main}
-export DESTFILE=${DESTFILE-~/proj/nix/disk.img}
-export PROFILE="$(nix-build '<nixbsd>' -A config.system.toplevel --no-out-link)"
-export MAKEFS="$(nix-build '<nixpkgs>' -A freebsd.packages14.makefs --option substitute false)/bin/makefs"
-export MKIMG="$(nix-build '<nixpkgs>' -A freebsd.packages14.mkimg --option substitute false)/bin/mkimg"
-export TMPPART="$(mktemp)"
+TMP_FILE=$(mktemp)
+nix-build '<nixbsd>' -A config.system.build.vmImage --no-out-link >$TMP_FILE && \
+	read BASE_IMAGE <$TMP_FILE && \
+	qemu-img create -f qcow2 -b $BASE_IMAGE -F qcow2 $TMP_FILE && \
+	qemu-system-x86_64 -drive file=$TMP_FILE,format=qcow2 -bios ${OVMF_BIOS-/usr/share/ovmf/OVMF.fd} -m ${QEMU_MEM-1024}
 
-sudo rm -rf $DESTDIR; mkdir -p $DESTDIR
-nix copy --no-check-sigs --to $DESTDIR $PROFILE
-cp -r $PROFILE/boot $DESTDIR/boot
-mkdir -p $DESTDIR/dev
-$MAKEFS -o version=2 -o label=main $TMPPART $DESTDIR
-$MKIMG -o $DESTFILE -s gpt -p freebsd-ufs/main:=$TMPPART
-rm -f $TMPPART
+rm -f $TMP_FILE

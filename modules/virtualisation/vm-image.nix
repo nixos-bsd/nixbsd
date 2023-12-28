@@ -19,20 +19,28 @@
 
         # EFI boot partition
         mkdir -p boot/efi/boot boot/boot
-        cp ${pkgs.freebsd.stand-efi}/bin/loader.efi boot/efi/boot/bootx64.efi
-        cp -r ${pkgs.freebsd.stand-efi}/bin/{lua,defaults} boot/boot
-        makefs -t msdos -o fat_type=32 -o volume_label=EFI -M 32M boot boot.img
+        cp ${pkgs.freebsd.stand-efi}/bin/boot1.efi boot/efi/boot/bootx64.efi
+        touch $TMPDIR/boot.img
+        makefs -t msdos -o fat_type=16 -o volume_label=EFI -o create_size=32m $TMPDIR/boot.img boot
 
         # UFS root partition
-        mkdir -p root/dev
+        mkdir -p root/dev root/boot/available-systems root/boot/loader.conf.d
+        cp -r ${pkgs.freebsd.stand-efi}/bin/{lua,defaults} root/boot
+        cp ${pkgs.freebsd.stand-efi}/bin/loader.efi root/boot
+        ln -s ${config.system.build.toplevel} root/boot/available-systems/builtin
+
+        chmod +w root/boot/lua
+        mv root/boot/lua/loader.lua root/boot/lua/loader_orig.lua
+        cp -r ${../system/boot/nixbsd-loader.lua} root/boot/lua/loader.lua
+        chmod -w root/boot/lua
 
         export NIX_STATE_DIR=$TMPDIR/state
         nix-store --load-db < ${closureInfo}/registration
-        nix copy --no-check-sigs --to root ${config.system.build.toplevel}
+        nix --extra-experimental-features nix-command copy --no-check-sigs --to ./root ${config.system.build.toplevel}
 
-        makefs -o version=2 -o label=root -b 10% root root.img
+        makefs -o version=2 -o label=root -b 10% $TMPDIR/root.img root
 
-        mkimg -o $out -s gpt -p efi:=boot.img -p freebsd-ufs:=root.img 
+        mkimg -o $out -s gpt -f qcow2 -p efi:=$TMPDIR/boot.img -p freebsd-ufs:=$TMPDIR/root.img 
     '';
   };
 }
