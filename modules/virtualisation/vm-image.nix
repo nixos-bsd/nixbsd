@@ -24,7 +24,7 @@
         makefs -t msdos -o fat_type=16 -o volume_label=EFI -o create_size=32m $TMPDIR/boot.img boot
 
         # UFS root partition
-        mkdir -p root/dev root/boot/available-systems root/boot/loader.conf.d
+        mkdir -p root/dev root/boot/available-systems root/boot/loader.conf.d root/etc root/run
         cp -r ${pkgs.freebsd.stand-efi}/bin/{lua,defaults} root/boot
         cp ${pkgs.freebsd.stand-efi}/bin/loader.efi root/boot
         ln -s ${config.system.build.toplevel} root/boot/available-systems/builtin

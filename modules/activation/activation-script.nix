@@ -46,6 +46,9 @@ let
       # Ensure a consistent umask.
       umask 0022
 
+      # Remount root rw
+      mount -u -w /
+
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
     '' + optionalString (!onlyDry) ''
@@ -63,6 +66,8 @@ let
       gnugrep
       findutils
       getent
+      freebsd.mount
+      freebsd.nscd
     ];
 
   scriptType = withDry: with types;

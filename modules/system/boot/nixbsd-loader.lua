@@ -72,9 +72,11 @@ orig_loadKernel = config.loadKernel
 function config.loadKernel(other_kernel)
 	local kernel = other_kernel or loader.getenv("kernel")
 	loader.setenv("module_path", kernel .. "/kernel-modules")
-	loader.setenv("vfs.root.mountfrom", "ufs:/dev/ada0p2")  -- TODO remove this when we have a real fstab
+	loader.setenv("vfs.root.mountfrom", "ufs:/dev/ada0p2")
 	loader.setenv("init_path", "/boot/" .. kernel .. "/init")
 	loader.setenv("init_shell", "/boot/" .. kernel .. "/sw/bin/sh")
+	loader.setenv("init_script", "/boot/" .. kernel .. "/activate")
+	-- TODO load from the kernel-environment
 	orig_loadKernel(other_kernel)
 end
 

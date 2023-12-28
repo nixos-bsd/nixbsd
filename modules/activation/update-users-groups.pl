@@ -31,7 +31,7 @@ sub dateToDays {
 }
 
 sub nscdInvalidate {
-    system("nscd", "--invalidate", $_[0]) unless $is_dry;
+    system("nscd", "-I", $_[0]) unless $is_dry;
 }
 
 sub hashPassword {

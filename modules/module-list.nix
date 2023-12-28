@@ -13,6 +13,7 @@ in [
   "${extPath}/programs/less.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc-activation.nix"
+  "${extPath}/system/activation/activatable-system.nix"
   ./activation/activation-script.nix
   ./activation/top-level.nix
   ./activation/users-groups.nix
@@ -21,4 +22,7 @@ in [
   ./security/wrappers/default.nix
   ./system/boot/kernel.nix
   ./virtualisation/vm-image.nix
+  ./rc/rc.nix
+  ./services/base-system.nix
+  ./services/ttys/getty.nix
 ]
