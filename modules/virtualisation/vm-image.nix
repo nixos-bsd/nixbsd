@@ -40,7 +40,62 @@
 
         makefs -o version=2 -o label=root -b 10% $TMPDIR/root.img root
 
-        mkimg -o $out -s gpt -f qcow2 -p efi:=$TMPDIR/boot.img -p freebsd-ufs:=$TMPDIR/root.img 
+        mkimg -o $out -s gpt -f qcow2 -p efi:=$TMPDIR/boot.img -p freebsd-ufs:=$TMPDIR/root.img
     '';
+
+    system.build.vmImageRunner = let
+      startVM =
+        ''
+          #! ${pkgs.buildPackages.runtimeShell}
+          set -e
+
+          # Create a directory for storing temporary data of the running VM.
+          if [ -z "$TMPDIR" ] || [ -z "$USE_TMPDIR" ]; then
+              TMPDIR=$(mktemp -d nix-vm.XXXXXXXXXX --tmpdir)
+          fi
+
+          NIX_DISK_IMAGE=$(readlink -f "''${NIX_DISK_IMAGE:-$TMPDIR/nixbsd.qcow2}") || test -z "$NIX_DISK_IMAGE"
+
+          if test -n "$NIX_DISK_IMAGE" && ! test -e "$NIX_DISK_IMAGE"; then
+            echo "Disk image do not exist, creating the virtualisation disk image..."
+            # Create a writable qcow2 image using the systemImage as a backing
+            # image.
+
+            # CoW prevent size to be attributed to an image.
+            # FIXME: raise this issue to upstream.
+            ${pkgs.pkgsBuildBuild.qemu}/bin/qemu-img create \
+              -f qcow2 \
+              -b ${config.system.build.vmImage} \
+              -F qcow2 \
+              "$NIX_DISK_IMAGE"
+            echo "Virtualisation disk image created."
+          fi
+
+          NIX_EFI_VARS=$(readlink -f "''${NIX_EFI_VARS:-$TMPDIR/efi-vars.fd}")
+          # VM needs writable EFI vars
+          if ! test -e "$NIX_EFI_VARS"; then
+            cp ${pkgs.pkgsBuildBuild.OVMF.fd.variables} "$NIX_EFI_VARS"
+            chmod 0644 "$NIX_EFI_VARS"
+          fi
+
+          exec ${pkgs.pkgsBuildBuild.qemu}/bin/qemu-kvm \
+            -name nixbsd \
+            -m 1024 \
+            -smp 2 \
+            -device virtio-rng-pci \
+            -drive if=pflash,format=raw,unit=0,readonly=on,file=${pkgs.pkgsBuildBuild.OVMF.fd.firmware} \
+            -drive if=pflash,format=raw,unit=1,readonly=off,file=$NIX_EFI_VARS \
+            -drive format=qcow2,media=disk,readonly=off,file=$NIX_DISK_IMAGE \
+            $QEMU_OPTS \
+            "$@"
+        '';
+    in pkgs.runCommand "freebsd-vm" {
+      preferlocalBuild = true;
+      meta.mainProgram = "run-nixbsd-vm";
+    } ''
+        mkdir -p $out/bin
+        ln -s ${config.system.build.toplevel} $out/system
+        ln -s ${pkgs.buildPackages.writeScript "run-nixbsd-vm" startVM} $out/bin/run-nixbsd-vm
+      '';
   };
 }
