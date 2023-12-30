@@ -25,3 +25,7 @@
 # Not modules
 - [ ] Figure out how to generate documentation
 - [ ] switch-to-configuration
+
+# Packages
+- [ ] Clean up gcc without breaking musl
+- [ ] Figure out why git is failing
