@@ -21,6 +21,7 @@ in [
   ./config/swap.nix
   ./misc/extra-arguments.nix
   ./security/wrappers/default.nix
+  ./security/pam.nix
   ./system/boot/kernel.nix
   ./virtualisation/vm-image.nix
   ./rc/rc.nix

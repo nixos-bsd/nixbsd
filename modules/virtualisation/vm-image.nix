@@ -11,6 +11,7 @@
       binPath = with pkgs.buildPackages; lib.makeBinPath ( stdenv.initialPath ++ [
         freebsd.packages14.makefs
         freebsd.packages14.mkimg
+        freebsd.packages14.mtree
         nix
       ]);
     in
@@ -38,7 +39,15 @@
         nix-store --load-db < ${closureInfo}/registration
         nix --extra-experimental-features nix-command copy --no-check-sigs --to ./root ${config.system.build.toplevel}
 
-        makefs -o version=2 -o label=root -b 10% $TMPDIR/root.img root
+        cd root
+        echo '/set type=file uid=0 gid=0' >>.mtree
+        echo '/set type=dir uid=0 gid=0' >>.mtree
+        echo '/set type=link uid=0 gid=0' >>.mtree
+        echo
+        find . -type d | awk '{ print $0, "type=dir" }' >>.mtree
+        find . -type f | awk '{ print $0, "type=file" }' >>.mtree
+        find . -type l | awk '{ print $0, "type=link" }' >>.mtree
+        makefs -o version=2 -o label=root -b 10% -F .mtree $TMPDIR/root.img .
 
         mkimg -o $out -s gpt -f qcow2 -p efi:=$TMPDIR/boot.img -p freebsd-ufs:=$TMPDIR/root.img
     '';
