@@ -7,6 +7,9 @@
 - [ ] tempfiles (so that current-system and booted-system don't get garbage collected)
 - [ ] bootloader
 - [ ] users (might not need a ton of changes?)
+    - [x] Base setup
+    - [ ] User classes
+    - [ ] initialPassword (have to build perl with crypt or workaround) 
 - [x] wrappers, so we can get sudo/login/etc
 - [ ] ssh
 - [ ] networking (maybe adapt the shell-based nixos stuff?)
@@ -21,6 +24,7 @@
     - [ ] "chroot" nixos with service config
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
 - [ ] jails
+- [ ] figure else what else has to be in requiredPackages
 
 # Not modules
 - [ ] Figure out how to generate documentation

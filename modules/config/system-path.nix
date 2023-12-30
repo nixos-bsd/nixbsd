@@ -9,7 +9,29 @@ let
 
   # TODO: Figure out what we can actually put in requiredPackages
   requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg)
-    [ pkgs.bashInteractive # bash with ncurses support
+    [
+      pkgs.bashInteractive # bash with ncurses support
+      pkgs.bzip2
+      pkgs.coreutils-full
+      pkgs.cpio
+      pkgs.curl
+      pkgs.diffutils
+      pkgs.findutils
+      pkgs.gawk
+      pkgs.stdenv.cc.libc
+      pkgs.getent
+      pkgs.gnugrep
+      pkgs.gnupatch
+      pkgs.gnused
+      pkgs.gnutar
+      pkgs.gzip
+      pkgs.xz
+      pkgs.less
+      pkgs.ncurses
+      pkgs.netcat
+      pkgs.procps
+      pkgs.which
+      pkgs.zstd
     ];
 
   defaultPackageNames =
