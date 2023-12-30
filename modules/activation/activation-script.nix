@@ -46,8 +46,13 @@ let
       # Ensure a consistent umask.
       umask 0022
 
-      # Remount root rw
+      # Early mounts
+      specialMount() {
+        mkdir -m 0755 -p "$2"
+        mount -o "$3" -t "$4" "$1" "$2"
+      }
       mount -u -w /
+      source ${config.system.build.earlyMountScript}
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 

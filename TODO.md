@@ -1,13 +1,13 @@
 # Important modules
-- [ ] get activation to actually work
+- [x] get activation to actually work
 - [x] better toplevel
-- [ ] vm image
+- [x] vm image
 - [ ] deal with locales (don't copy in glibc-locales which we don't use)
-- [ ] rc module, so we can have a proper init system
+- [x] rc module, so we can have a proper init system
 - [ ] tempfiles (so that current-system and booted-system don't get garbage collected)
 - [ ] bootloader
 - [ ] users (might not need a ton of changes?)
-- [ ] wrappers, so we can get sudo
+- [x] wrappers, so we can get sudo/login/etc
 - [ ] ssh
 - [ ] networking (maybe adapt the shell-based nixos stuff?)
 - [ ] fstab

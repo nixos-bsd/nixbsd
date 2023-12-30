@@ -31,5 +31,11 @@ in
       '';
     };
     environment.etc.gettytab.source = gettyTab;
+    security.wrappers.login = {
+      setuid = true;
+      owner = "root";
+      group = "root";
+      source = "${pkgs.freebsd.login}/bin/login";
+    };
   };
 }

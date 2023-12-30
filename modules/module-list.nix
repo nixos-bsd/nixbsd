@@ -18,11 +18,13 @@ in [
   ./activation/top-level.nix
   ./activation/users-groups.nix
   ./config/system-path.nix
+  ./config/swap.nix
   ./misc/extra-arguments.nix
   ./security/wrappers/default.nix
   ./system/boot/kernel.nix
   ./virtualisation/vm-image.nix
   ./rc/rc.nix
+  ./tasks/filesystems.nix
   ./services/base-system.nix
   ./services/ttys/getty.nix
 ]
