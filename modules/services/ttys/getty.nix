@@ -28,6 +28,17 @@ in
         ttyv5	"${gettyBin} Pc"		xterm	onifexists secure
         ttyv6	"${gettyBin} Pc"		xterm	onifexists secure
         ttyv7	"${gettyBin} Pc"		xterm	onifexists secure
+        # Serial terminals
+        ttyu0	"${gettyBin} 3wire"	vt100	onifconsole secure
+        ttyu1	"${gettyBin} 3wire"	vt100	onifconsole secure
+        ttyu2	"${gettyBin} 3wire"	vt100	onifconsole secure
+        ttyu3	"${gettyBin} 3wire"	vt100	onifconsole secure
+        # Dumb console
+        dcons	"${gettyBin} std.115200"	vt100	off secure
+        # Xen Virtual console
+        xc0	"${gettyBin} Pc"		xterm	onifconsole secure
+        # RISC-V HTIF console
+        rcons	"${gettyBin} std.115200"	vt100	onifconsole secure
       '';
     };
     environment.etc.gettytab.source = gettyTab;
