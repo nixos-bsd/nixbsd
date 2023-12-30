@@ -340,6 +340,25 @@ let
           administrator before being able to use the system again.
         '';
       };
+
+      change = mkOption {
+        type = types.nullOr (types.strMatching "[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2}");
+        default = null;
+        description = lib.mdDoc ''
+          Set the date on which the user's password must be changed.
+          The date is expressed in the format YYYY-MM-DD, or null
+          to disable the expiry.
+        '';
+      };
+
+      class = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = lib.mdDoc ''
+          User class, as defined in /etc/login.conf. This can be used to set
+          resource limits.
+        '';
+      };
     };
 
     config = mkMerge
@@ -467,7 +486,8 @@ let
           name uid group description home homeMode createHome isSystemUser
           password hashedPasswordFile hashedPassword
           autoSubUidGidRange subUidRanges subGidRanges
-          initialPassword initialHashedPassword expires;
+          initialPassword initialHashedPassword expires
+          change class;
         shell = utils.toShellPath u.shell;
       }) cfg.users;
     groups = attrValues cfg.groups;
@@ -630,7 +650,7 @@ in {
           if [[ "$hash" = "$"* && ! "$hash" =~ ^\''$${cryptSchemeIdPatternGroup}\$ ]]; then
             users+=("$user")
           fi
-        done </etc/shadow
+        done </etc/master.passwd
 
         if (( "''${#users[@]}" )); then
           echo "

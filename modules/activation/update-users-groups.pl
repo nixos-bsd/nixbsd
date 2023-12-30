@@ -24,10 +24,10 @@ sub updateFile {
 }
 
 # Converts an ISO date to number of days since 1970-01-01
-sub dateToDays {
+sub dateToSeconds {
     my ($date) = @_;
     my $time = Time::Piece->strptime($date, "%Y-%m-%d");
-    return $time->epoch / 60 / 60 / 24;
+    return $time->epoch;
 }
 
 sub nscdInvalidate {
@@ -39,7 +39,9 @@ sub hashPassword {
     my $salt = "";
     my @chars = ('.', '/', 0..9, 'A'..'Z', 'a'..'z');
     $salt .= $chars[rand 64] for (1..8);
-    return crypt($password, '$6$' . $salt . '$');
+    # TODO: @rhelmot @artemist figure out how to get perl to compile correctly
+    # return crypt($password, '$6$' . $salt . '$');
+    return "*";
 }
 
 sub dry_print {
@@ -120,14 +122,15 @@ sub parseGroup {
 
 my %groupsCur = -f "/etc/group" ? map { parseGroup } read_file("/etc/group", { binmode => ":utf8" }) : ();
 
-# Read the current /etc/passwd.
+# Read the current /etc/master.passwd.
 sub parseUser {
     chomp;
-    my @f = split(':', $_, -7);
+    my @f = split(':', $_, -10);
     my $uid = $f[2] eq "" ? undef : int($f[2]);
     $uidsUsed{$uid} = 1 if defined $uid;
-    return ($f[0], { name => $f[0], fakePassword => $f[1], uid => $uid,
-        gid => $f[3], description => $f[4], home => $f[5], shell => $f[6] });
+    return ($f[0], { name => $f[0], hashedPassword => $f[1], uid => $uid,
+        gid => $f[3], class => $f[4], change => $f[5], expires => $f[6],
+	description => $f[4], home => $f[5], shell => $f[6] });
 }
 my %usersCur = -f "/etc/passwd" ? map { parseUser } read_file("/etc/passwd", { binmode => ":utf8" }) : ();
 
@@ -198,7 +201,7 @@ updateFile($gidMapFile, to_json($gidMap, {canonical => 1}));
 updateFile("/etc/group", \@lines);
 nscdInvalidate("group");
 
-# Generate a new /etc/passwd containing the declared users.
+# Generate a new /etc/master.passwd containing the declared users and passwords
 my %usersOut;
 foreach my $u (@{$spec->{users}}) {
     my $name = $u->{name};
@@ -259,7 +262,19 @@ foreach my $u (@{$spec->{users}}) {
         }
     }
 
-    $u->{fakePassword} = $existing->{fakePassword} // "x";
+    if (defined $u->{expires}) {
+        $u->{expires} = dateToSeconds($u->{expires});
+    } else {
+        $u->{expires} = "";
+    }
+    if (defined $u->{change}) {
+        $u->{change} = dateToSeconds($u->{change});
+    } else {
+        $u->{change} = "";
+    }
+
+    $u->{class} = "" unless defined $u->{class}; 
+
     $usersOut{$name} = $u;
 
     $uidMap->{$name} = $u->{uid};
@@ -279,49 +294,15 @@ foreach my $name (keys %usersCur) {
     }
 }
 
-# Rewrite /etc/passwd. FIXME: acquire lock.
-@lines = map { join(":", $_->{name}, $_->{fakePassword}, $_->{uid}, $_->{gid}, $_->{description}, $_->{home}, $_->{shell}) . "\n" }
+# Rewrite /etc/master.passwd. FIXME: acquire lock.
+@lines = map { join(":", $_->{name}, $_->{hashedPassword}, $_->{uid}, $_->{gid}, $_->{class}, $_->{change}, $_->{expires}, $_->{description}, $_->{home}, $_->{shell}) . "\n" }
     (sort { $a->{uid} <=> $b->{uid} } (values %usersOut));
 updateFile($uidMapFile, to_json($uidMap, {canonical => 1}));
-updateFile("/etc/passwd", \@lines);
+updateFile("/etc/master.passwd", \@lines);
 nscdInvalidate("passwd");
 
-
-# Rewrite /etc/shadow to add new accounts or remove dead ones.
-my @shadowNew;
-my %shadowSeen;
-
-foreach my $line (-f "/etc/shadow" ? read_file("/etc/shadow", { binmode => ":utf8" }) : ()) {
-    chomp $line;
-    # struct name copied from `man 3 shadow`
-    my ($sp_namp, $sp_pwdp, $sp_lstch, $sp_min, $sp_max, $sp_warn, $sp_inact, $sp_expire, $sp_flag) = split(':', $line, -9);
-    my $u = $usersOut{$sp_namp};;
-    next if !defined $u;
-    $sp_pwdp = "!" if !$spec->{mutableUsers};
-    $sp_pwdp = $u->{hashedPassword} if defined $u->{hashedPassword} && !$spec->{mutableUsers}; # FIXME
-    $sp_expire = dateToDays($u->{expires}) if defined $u->{expires};
-    chomp $sp_pwdp;
-    push @shadowNew, join(":", $sp_namp, $sp_pwdp, $sp_lstch, $sp_min, $sp_max, $sp_warn, $sp_inact, $sp_expire, $sp_flag) . "\n";
-    $shadowSeen{$sp_namp} = 1;
-}
-
-foreach my $u (values %usersOut) {
-    next if defined $shadowSeen{$u->{name}};
-    my $hashedPassword = "!";
-    $hashedPassword = $u->{hashedPassword} if defined $u->{hashedPassword};
-    my $expires = "";
-    $expires = dateToDays($u->{expires}) if defined $u->{expires};
-    # FIXME: set correct value for sp_lstchg.
-    push @shadowNew, join(":", $u->{name}, $hashedPassword, "1::::", $expires, "") . "\n";
-}
-
-updateFile("/etc/shadow", \@shadowNew, 0640);
-{
-    my $uid = getpwnam "root";
-    my $gid = getgrnam "shadow";
-    my $path = "/etc/shadow";
-    (chown($uid, $gid, $path) || die "Failed to change ownership of $path: $!") unless $is_dry;
-}
+# Regenerate /etc/passwd
+system("pwd_mkdb", "-p", "/etc/master.passwd") unless $is_dry;
 
 # Rewrite /etc/subuid & /etc/subgid to include default container mappings
 

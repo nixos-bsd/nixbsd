@@ -68,11 +68,12 @@ let
 
   path = with pkgs; map getBin
     [ coreutils
-      gnugrep
       findutils
-      getent
       freebsd.mount
       freebsd.nscd
+      freebsd.pwd_mkdb
+      getent
+      gnugrep
     ];
 
   scriptType = withDry: with types;
