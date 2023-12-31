@@ -7,26 +7,30 @@ in [
   "${extPath}/misc/ids.nix"
   "${extPath}/misc/meta.nix"
   "${extPath}/misc/nixpkgs.nix"
+  "${extPath}/misc/version.nix"
   "${extPath}/programs/bash/bash-completion.nix"
   "${extPath}/programs/bash/bash.nix"
+  "${extPath}/programs/bash/ls-colors.nix"
   "${extPath}/programs/environment.nix"
   "${extPath}/programs/less.nix"
+  "${extPath}/programs/nano.nix"
+  "${extPath}/security/ca.nix"
+  "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc-activation.nix"
-  "${extPath}/system/activation/activatable-system.nix"
   ./activation/activation-script.nix
   ./activation/top-level.nix
-  ./activation/users-groups.nix
   ./activation/user-class.nix
-  ./config/system-path.nix
+  ./activation/users-groups.nix
   ./config/swap.nix
+  ./config/system-path.nix
   ./misc/extra-arguments.nix
-  ./security/wrappers/default.nix
-  ./security/pam.nix
-  ./system/boot/kernel.nix
-  ./virtualisation/vm-image.nix
   ./rc/rc.nix
-  ./tasks/filesystems.nix
+  ./security/pam.nix
+  ./security/wrappers/default.nix
   ./services/base-system.nix
   ./services/ttys/getty.nix
+  ./system/boot/kernel.nix
+  ./tasks/filesystems.nix
+  ./virtualisation/vm-image.nix
 ]
