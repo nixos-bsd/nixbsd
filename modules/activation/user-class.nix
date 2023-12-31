@@ -141,7 +141,7 @@ with lib; let
 
       # Environment
       charset = mkOption {
-        type = types.str;
+        type = types.nullOr types.str;
         description = lib.mdDoc ''
           MIME character set used by applications
         '';
@@ -183,7 +183,7 @@ with lib; let
         '';
       };
       lang = mkOption {
-        type = types.str;
+        type = types.nullOr types.str;
         default = "C.UTF-8";
         description = lib.mdDoc ''
           Language, sets LANG environment variable
@@ -245,10 +245,9 @@ with lib; let
     };
 
     config = {
-      charset = let
+      charset = if config.lang == null then lib.mkDefault null else let
         parts = splitString "." config.lang;
-      in
-      lib.mkDefault (elemAt parts (length parts - 1));
+      in lib.mkDefault (elemAt parts 1);
 
       text = let
         nameField = (concatStringsSep "|" config.names);
