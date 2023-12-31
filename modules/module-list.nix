@@ -17,6 +17,7 @@ in [
   ./activation/activation-script.nix
   ./activation/top-level.nix
   ./activation/users-groups.nix
+  ./activation/user-class.nix
   ./config/system-path.nix
   ./config/swap.nix
   ./misc/extra-arguments.nix
