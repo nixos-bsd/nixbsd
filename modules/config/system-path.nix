@@ -32,6 +32,10 @@ let
       pkgs.procps
       pkgs.which
       pkgs.zstd
+
+      # A lot of these are provided by glibc on linux
+      pkgs.freebsd.locale
+      pkgs.freebsd.localedef
     ];
 
   defaultPackageNames =

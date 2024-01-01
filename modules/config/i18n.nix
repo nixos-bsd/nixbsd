@@ -90,12 +90,13 @@ with lib;
   config = {
 
     environment.systemPackages =
-      # We increase the priority a little, so that plain glibc in systemPackages can't win.
-      optional (config.i18n.supportedLocales != []) (lib.setPrio (-1) config.freebsdLocales);
+      optional (config.i18n.supportedLocales != []) config.i18n.freebsdLocales;
+
+    environment.pathsToLink = [ "/share/locale" ];
 
     environment.sessionVariables =
       { LANG = config.i18n.defaultLocale;
-        PATH_LOCALE = "/run/current-system/sw/lib/locale/locale-path";
+        PATH_LOCALE = "/run/current-system/sw/share/locale";
         MM_CHARSET = let parts = splitString "." config.i18n.defaultLocale; in
           if length parts < 2 then "UTF-8" else elemAt parts 1;
       } // config.i18n.extraLocaleSettings;

@@ -22,6 +22,7 @@ in [
   ./activation/top-level.nix
   ./activation/user-class.nix
   ./activation/users-groups.nix
+  ./config/i18n.nix
   ./config/swap.nix
   ./config/system-path.nix
   ./misc/extra-arguments.nix
