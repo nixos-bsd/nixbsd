@@ -30,5 +30,5 @@
 
 # Packages
 - [ ] Clean up gcc without breaking musl
-- [ ] Figure out why git is failing
+- [x] Figure out why git is failing
 - [ ] Subsetting in locales (save a little build time and like 20MiB)
