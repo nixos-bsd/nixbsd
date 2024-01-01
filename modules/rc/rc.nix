@@ -43,8 +43,6 @@ let
 
       name="${name}"
       rcvar="${name}_enabled"
-      # maybe a hack, maybe necessary: auto-enable all modules since we're only including them if they're enabled
-      ${name}_enabled=yes
       export PATH=${makeBinPath binDeps}:$PATH
     '' + optionalString (!(builtins.isNull command)) ''
       command="${command}"
@@ -72,6 +70,12 @@ let
     mkdir -p $out
     ln -s $scripts $out
   '';
+  mkRcBool = b: if b then "YES" else "NO";
+  mkRcLiteral = val: "'" + (replaceStrings ["'"] ["'\"'\"'"] (if (builtins.isBool val) then (mkRcBool val) else val)) + "'";
+  mkRcConf = options: pkgs.writeTextFile {
+    name = "rc.conf";
+    text = concatStringsSep "\n" (["#!/bin/sh"] ++ (mapAttrsToList (key: val: ''${key}=${mkRcLiteral val}'') options));
+  };
 in {
   options.rc.enabled = (mkEnableOption "rc") // { default = true; };
   options.rc.package = mkOption {
@@ -207,11 +211,39 @@ in {
     }));
   };
 
+  options.rc.conf = mkOption {
+    type = types.attrsOf (types.either types.str types.bool);
+    description = "Key-value pairs that should be set in rc.conf";
+    default = {};
+  };
+
+  options.rc.rootRwMount = mkOption {
+    type = types.bool;
+    description = "Set to false to inhibit remounting root read-write";
+    default = true;
+  };
+
+  options.rc.bootInfo = mkOption {
+    type = types.bool;
+    description = "Enables display of informational messages at boot";
+    default = false;
+  };
+
+  options.rc.startMsgs = mkOption {
+    type = types.bool;
+    description = "Show \"Starting foo:\" messages at boot";
+    default = true;
+  };
+
   config = mkIf cfg.enabled {
+    rc.conf = {
+      root_rw_mount = cfg.rootRwMount;
+    } // (mapAttrs' (_: val: nameValuePair ((if (builtins.isString val.provides) then val.provides else builtins.elemAt val.provides 0) + "_enabled") "YES") cfg.services);
     environment.etc."rc" = {
       source = "${cfg.package}/etc/*";
       target = ".";
     };
     environment.etc."rc.d".source = mkRcDir (attrValues cfg.services);
+    environment.etc."rc.conf".source = mkRcConf cfg.conf;
   };
 }

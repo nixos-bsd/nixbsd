@@ -40,7 +40,6 @@ sub hashPassword {
     my @chars = ('.', '/', 0..9, 'A'..'Z', 'a'..'z');
     $salt .= $chars[rand 64] for (1..8);
     return crypt($password, '$6$' . $salt . '$');
-    return "*";
 }
 
 sub dry_print {
