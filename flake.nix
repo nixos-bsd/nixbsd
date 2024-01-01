@@ -23,11 +23,19 @@
     } // (utils.lib.eachSystem supportedSystems (system:
       let
         makeImage = conf:
-          (conf.extendModules {
-            modules = [{ config.nixpkgs.buildPlatform = system; }];
-          }).config.system.build // {
+          let
+            extended = conf.extendModules {
+              modules = [{ config.nixpkgs.buildPlatform = system; }];
+            };
+          in extended.config.system.build // {
             type = "derivation";
             name = "system-build";
+            closureInfo = extended.pkgs.closureInfo {
+              rootPaths = [ extended.config.system.build.toplevel ];
+            };
+            runnerClosureInfo = extended.pkgs.closureInfo {
+              rootPaths = [ extended.config.system.build.vmImageRunner ];
+            };
           };
       in {
         packages = lib.mapAttrs'

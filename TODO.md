@@ -9,7 +9,7 @@
 - [ ] users (might not need a ton of changes?)
     - [x] Base setup
     - [ ] User class defaults
-    - [ ] initialPassword (have to build perl with crypt or workaround) 
+    - [x] initialPassword (have to build perl with crypt or workaround)
 - [x] wrappers, so we can get sudo/login/etc
 - [ ] ssh
 - [ ] networking (maybe adapt the shell-based nixos stuff?)

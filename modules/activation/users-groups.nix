@@ -628,6 +628,8 @@ in {
       root.gid = ids.gids.root;
       wheel.gid = ids.gids.wheel;
       nogroup.gid = ids.gids.nogroup;
+      users.gid = ids.gids.users;
+      nixbld.gid = ids.gids.nixbld;
     };
 
     system.activationScripts.users = {

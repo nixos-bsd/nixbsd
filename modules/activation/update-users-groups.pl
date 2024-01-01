@@ -39,8 +39,7 @@ sub hashPassword {
     my $salt = "";
     my @chars = ('.', '/', 0..9, 'A'..'Z', 'a'..'z');
     $salt .= $chars[rand 64] for (1..8);
-    # TODO: @rhelmot @artemist figure out how to get perl to compile correctly
-    # return crypt($password, '$6$' . $salt . '$');
+    return crypt($password, '$6$' . $salt . '$');
     return "*";
 }
 
