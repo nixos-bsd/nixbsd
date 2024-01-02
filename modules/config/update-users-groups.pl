@@ -128,9 +128,9 @@ sub parseUser {
     $uidsUsed{$uid} = 1 if defined $uid;
     return ($f[0], { name => $f[0], hashedPassword => $f[1], uid => $uid,
         gid => $f[3], class => $f[4], change => $f[5], expires => $f[6],
-	description => $f[4], home => $f[5], shell => $f[6] });
+	description => $f[7], home => $f[8], shell => $f[9] });
 }
-my %usersCur = -f "/etc/passwd" ? map { parseUser } read_file("/etc/passwd", { binmode => ":utf8" }) : ();
+my %usersCur = -f "/etc/master.passwd" ? map { parseUser } read_file("/etc/master.passwd", { binmode => ":utf8" }) : ();
 
 # Read the groups that were created declaratively (i.e. not by groups)
 # in the past. These must be removed if they are no longer in the
@@ -217,8 +217,9 @@ foreach my $u (@{$spec->{users}}) {
     my $existing = $usersCur{$name};
     if (defined $existing) {
         $u->{uid} = $existing->{uid} if !defined $u->{uid};
+        $u->{hashedPassword} = $existing->{hashedPassword};
         if ($u->{uid} != $existing->{uid}) {
-            dry_print("warning: not applying", "warning: would not apply", "UID change of user ‘$name’ ($existing->{uid} -> $u->{uid}) in /etc/passwd");
+            dry_print("warning: not applying", "warning: would not apply", "UID change of user ‘$name’ ($existing->{uid} -> $u->{uid}) in /etc/master.passwd");
             $u->{uid} = $existing->{uid};
         }
     } else {
@@ -281,7 +282,7 @@ foreach my $u (@{$spec->{users}}) {
 # Update the persistent list of declarative users.
 updateFile($declUsersFile, join(" ", sort(keys %usersOut)));
 
-# Merge in the existing /etc/passwd.
+# Merge in the existing /etc/master.passwd.
 foreach my $name (keys %usersCur) {
     my $u = $usersCur{$name};
     next if defined $usersOut{$name};

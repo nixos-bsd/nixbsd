@@ -21,11 +21,11 @@ in [
   "${extPath}/system/etc/etc-activation.nix"
   ./activation/activation-script.nix
   ./activation/top-level.nix
-  ./activation/user-class.nix
-  ./activation/users-groups.nix
   ./config/i18n.nix
   ./config/swap.nix
   ./config/system-path.nix
+  ./config/user-class.nix
+  ./config/users-groups.nix
   ./misc/extra-arguments.nix
   ./programs/shutdown.nix
   ./rc/rc.nix
