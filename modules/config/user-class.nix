@@ -184,7 +184,7 @@ with lib; let
       };
       lang = mkOption {
         type = types.nullOr types.str;
-        default = "C.UTF-8";
+        default = null;
         description = lib.mdDoc ''
           Language, sets LANG environment variable
         '';
