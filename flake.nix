@@ -31,11 +31,12 @@
             type = "derivation";
             name = "system-build";
             closureInfo = extended.pkgs.closureInfo {
-              rootPaths = [ extended.config.system.build.toplevel ];
+              rootPaths = [ extended.config.system.build.toplevel.drvPath ];
             };
-            runnerClosureInfo = extended.pkgs.closureInfo {
-              rootPaths = [ extended.config.system.build.vmImageRunner ];
+            vmImageRunnerClosureInfo = extended.pkgs.closureInfo {
+              rootPaths = [ extended.config.system.build.vmImageRunner.drvPath ];
             };
+            inherit (extended) pkgs;
           };
       in {
         packages = lib.mapAttrs'
