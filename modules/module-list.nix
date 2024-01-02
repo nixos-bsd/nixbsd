@@ -15,6 +15,7 @@ in [
   "${extPath}/programs/less.nix"
   "${extPath}/programs/nano.nix"
   "${extPath}/security/ca.nix"
+  "${extPath}/security/sudo.nix"
   "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc-activation.nix"

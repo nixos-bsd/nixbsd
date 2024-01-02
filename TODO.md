@@ -14,6 +14,9 @@
 - [ ] ssh
 - [ ] networking (maybe adapt the shell-based nixos stuff?)
 - [ ] fstab
+- [ ] fix sudo (currently "Exec format error" in PAM)
+- [ ] make sure user passwords actually work
+- [ ] nix-daemon
 
 # Less important modules
 - [ ] xorg/wayland setup

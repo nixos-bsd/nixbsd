@@ -612,6 +612,47 @@ let
         # Session management.
         ${formatRules "session"}
       '';
+
+      rules = let
+        autoOrderRules = flip pipe [
+          (imap1 (index: rule: rule // { order = mkDefault (10000 + index * 100); } ))
+          (map (rule: nameValuePair rule.name (removeAttrs rule [ "name" ])))
+          listToAttrs
+        ];
+      in {
+        account = autoOrderRules [
+          { name = "login_access"; control = "required"; modulePath = "pam_login_access.so"; }
+          { name = "unix"; control = "required"; modulePath = "pam_unix.so"; }
+        ];
+
+        auth = autoOrderRules [
+          { name = "unix"; enable = cfg.unixAuth; control = "sufficient"; modulePath = "pam_unix.so"; settings = {
+            nullok = cfg.allowNullPassword;
+            inherit (cfg) nodelay;
+            likeauth = true;
+            try_first_pass = true;
+          }; }
+          { name = "deny"; control = "required"; modulePath = "pam_deny.so"; }
+        ];
+
+        password = autoOrderRules [
+          { name = "unix"; control = "sufficient"; modulePath = "pam_unix.so"; settings = {
+            nullok = true;
+            yescrypt = true;
+          }; }
+        ];
+
+        session = autoOrderRules [
+          { name = "env"; enable = cfg.setEnvironment; control = "required"; modulePath = "pam_env.so"; settings = {
+            conffile = "/etc/pam/environment";
+            readenv = 0;
+          }; }
+          { name = "lastlog"; enable = cfg.updateWtmp; control = "required"; modulePath = "pam_lastlog.so"; settings = {
+            silent = true;
+          }; }
+        ];
+      };
+
     };
   };
 
