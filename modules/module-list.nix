@@ -26,6 +26,7 @@ in [
   ./config/swap.nix
   ./config/system-path.nix
   ./misc/extra-arguments.nix
+  ./programs/shutdown.nix
   ./rc/rc.nix
   ./security/pam.nix
   ./security/wrappers/default.nix

@@ -27,6 +27,8 @@
 - [ ] figure else what else has to be in requiredPackages
 - [ ] Figure out how to generate documentation
 - [ ] switch-to-configuration
+- [ ] nixos-install
+- [ ] fsck
 
 # Packages
 - [ ] Clean up gcc without breaking musl

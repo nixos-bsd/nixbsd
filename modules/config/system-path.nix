@@ -18,24 +18,25 @@ let
       pkgs.diffutils
       pkgs.findutils
       pkgs.gawk
-      pkgs.stdenv.cc.libc
       pkgs.getent
       pkgs.gnugrep
       pkgs.gnupatch
       pkgs.gnused
       pkgs.gnutar
       pkgs.gzip
-      pkgs.xz
       pkgs.less
       pkgs.ncurses
       pkgs.netcat
       pkgs.procps
+      pkgs.stdenv.cc.libc
       pkgs.which
+      pkgs.xz
       pkgs.zstd
 
       # A lot of these are provided by glibc on linux
       pkgs.freebsd.locale
       pkgs.freebsd.localedef
+      pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
     ];
 
   defaultPackageNames =
