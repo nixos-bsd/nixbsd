@@ -23,6 +23,7 @@ in [
   ./activation/top-level.nix
   ./config/i18n.nix
   ./config/swap.nix
+  ./config/sysctl.nix
   ./config/system-path.nix
   ./config/user-class.nix
   ./config/users-groups.nix
