@@ -252,7 +252,13 @@ in {
   options = {
     services.syslogd = {
       enable = mkEnableOption "syslogd" // { default = true; };
-      package = mkPackageOption pkgs [ "freebsd" "syslogd" ];
+      package = mkOption {
+        type = types.package;
+        default = pkgs.freebsd.syslogd;
+        description = lib.mdDoc ''
+          freebsd.syslogd package
+        '';
+      };
       defaultRules =
         mkEnableOption "default syslog rules, based on FreeBSD config" // {
           default = true;
@@ -306,6 +312,30 @@ in {
     };
   };
   config = mkIf cfg.enable {
+    # We need a file in etc for reload
+    environment.etc."syslog.conf".text = let
+      formatActions = actions:
+        concatMapStringsSep "\n" (action: action.text) (attrValues actions);
+    in ''
+      ${formatActions cfg.fileActions}
+      ${formatActions cfg.userActions}
+      ${formatActions cfg.remoteActions}
+      ${formatActions cfg.commandActions}
+    '';
+
+    rc.services.syslogd = let
+      socketArgs =
+        map (sock: "-l ${sock}") ([ "/var/run/log" ] ++ cfg.extraSockets);
+    in {
+      description = "System log daemon";
+      command = "${cfg.package}/bin/syslogd";
+      commandArgs = socketArgs ++ cfg.extraParams;
+      commands.reload = null;
+      hasPidfile = true;
+      provides = "syslogd";
+      # require = [ "FILESYSTEMS" "mountcritremote" "newsyslog" "netif" ];
+      before = [ "SERVERS" ];
+    };
     services.syslogd.fileActions = mkIf cfg.defaultRules {
       "/dev/console".selectors = [
         { level = "err"; }
@@ -379,16 +409,6 @@ in {
     services.syslogd.userActions =
       mkIf cfg.defaultRules { "*".selectors = [{ level = "emerg"; }]; };
 
-    # We need a file in etc for reload
-    environment.etc."syslog.conf".text = let
-      formatActions = actions:
-        concatMapStringsSep "\n" (action: action.text) (attrValues actions);
-    in ''
-      ${formatActions cfg.fileActions}
-      ${formatActions cfg.userActions}
-      ${formatActions cfg.remoteActions}
-      ${formatActions cfg.commandActions}
-    '';
   };
 }
 

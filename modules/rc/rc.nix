@@ -22,6 +22,7 @@ let
     let
       extraCommands =
         builtins.attrNames (builtins.removeAttrs commands defaultCommands);
+      definedCommands = filterAttrs (k: v: v != null) commands;
       name = if (builtins.isString provides) then
         provides
       else
@@ -56,25 +57,24 @@ let
         export PATH=${makeBinPath binDeps}:$PATH
       '' + optionalString (!(builtins.isNull command)) ''
         command="${command}"
-      '' + optionalString (!(builtins.isNull commandArgs)) ''
-        command_args="${commandArgs}"
+      '' + optionalString (builtins.length commandArgs != 0) ''
+        command_args="${escapeShellArgs commandArgs}"
       '' + optionalString hasPidfile ''
         pidfile="/var/run/${name}.pid"
       '' + optionalString ((builtins.length extraCommands) != 0) ''
         extra_commands="${concatStringsSep " " extraCommands}"
-      '' + concatStringsSep "" (attrValues (builtins.mapAttrs
+      '' + concatStringsSep "" (mapAttrsToList (cmd_name: cmd_value: ''
+        ${cmd_name}_cmd="${name}_${cmd_name}"
+      '') definedCommands) + "\n" + concatStringsSep "\n" (mapAttrsToList
         (cmd_name: cmd_value: ''
-          ${cmd_name}_cmd="${name}_${cmd_name}"
-        '') commands)) + "\n" + concatStringsSep "\n" (attrValues
-          (builtins.mapAttrs (cmd_name: cmd_value: ''
-            ${name}_${cmd_name}() {
-            ${cmd_value}
-            }
-          '') commands)) + ''
+          ${name}_${cmd_name}() {
+          ${cmd_value}
+          }
+        '') definedCommands) + ''
 
-            load_rc_config ${name}
-            run_rc_command "$1"
-          '');
+          load_rc_config ${name}
+          run_rc_command "$1"
+        '');
     };
   mkRcDir = scriptCfg:
     pkgs.runCommand "rc.d" { scripts = builtins.map mkRcScript scriptCfg; } ''
@@ -121,9 +121,9 @@ in {
       };
 
       options.commandArgs = mkOption {
-        type = types.nullOr types.str;
+        type = types.listOf types.str;
         description = "The args with which to launch `command`";
-        default = null;
+        default = [ ];
       };
 
       options.hasPidfile = mkOption {
@@ -217,7 +217,7 @@ in {
         ++ optionals config.keywordResume [ "resume" ];
 
       options.commands = mkOption {
-        type = types.attrsOf types.str;
+        type = types.attrsOf (types.nullOr types.str);
         description = "A mapping from command name to command text.";
         default = { };
       };
