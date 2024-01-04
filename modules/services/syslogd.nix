@@ -376,6 +376,8 @@ in {
         }];
       };
     };
+    services.syslogd.userActions =
+      mkIf cfg.defaultRules { "*".selectors = [{ level = "emerg"; }]; };
 
     # We need a file in etc for reload
     environment.etc."syslog.conf".text = let
