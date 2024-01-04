@@ -34,13 +34,17 @@
               rootPaths = [ extended.config.system.build.toplevel.drvPath ];
             };
             vmImageRunnerClosureInfo = extended.pkgs.closureInfo {
-              rootPaths = [ extended.config.system.build.vmImageRunner.drvPath ];
+              rootPaths =
+                [ extended.config.system.build.vmImageRunner.drvPath ];
             };
             inherit (extended) pkgs;
           };
+        pkgs = nixpkgs.legacyPackages.${system};
       in {
         packages = lib.mapAttrs'
           (name: value: lib.nameValuePair "${name}" (makeImage value))
           self.nixosConfigurations;
+
+        formatter = pkgs.nixfmt;
       }));
 }

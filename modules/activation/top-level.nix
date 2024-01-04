@@ -3,22 +3,21 @@
 with lib;
 
 let
-  systemBuilder =
-    ''
-      mkdir $out
+  systemBuilder = ''
+    mkdir $out
 
-      ln -s ${config.system.build.etc}/etc $out/etc
-      ln -s ${config.system.path} $out/sw
-      ln -s ${config.system.init}/bin/init $out/init
+    ln -s ${config.system.build.etc}/etc $out/etc
+    ln -s ${config.system.path} $out/sw
+    ln -s ${config.system.init}/bin/init $out/init
 
-      echo -n "${pkgs.stdenv.hostPlatform.system}" > $out/system
+    echo -n "${pkgs.stdenv.hostPlatform.system}" > $out/system
 
-      ${config.system.systemBuilderCommands}
+    ${config.system.systemBuilderCommands}
 
-      cp "$extraDependenciesPath" "$out/extra-dependencies"
+    cp "$extraDependenciesPath" "$out/extra-dependencies"
 
-      ${config.system.extraSystemBuilderCmds}
-    '';
+    ${config.system.extraSystemBuilderCmds}
+  '';
 
   # Putting it all together.  This builds a store path containing
   # symlinks to the various parts of the built configuration (the
@@ -37,16 +36,22 @@ let
 
   # Handle assertions and warnings
 
-  failedAssertions = map (x: x.message) (filter (x: !x.assertion) config.assertions);
+  failedAssertions =
+    map (x: x.message) (filter (x: !x.assertion) config.assertions);
 
-  baseSystemAssertWarn = if failedAssertions != []
-    then throw "\nFailed assertions:\n${concatStringsSep "\n" (map (x: "- ${x}") failedAssertions)}"
-    else showWarnings config.warnings baseSystem;
+  baseSystemAssertWarn = if failedAssertions != [ ] then
+    throw ''
+
+      Failed assertions:
+      ${concatStringsSep "\n" (map (x: "- ${x}") failedAssertions)}''
+  else
+    showWarnings config.warnings baseSystem;
 
   # Replace runtime dependencies
-  system = foldr ({ oldDependency, newDependency }: drv:
-      pkgs.replaceDependency { inherit oldDependency newDependency drv; }
-    ) baseSystemAssertWarn config.system.replaceRuntimeDependencies;
+  system = foldr ({ oldDependency, newDependency }:
+    drv:
+    pkgs.replaceDependency { inherit oldDependency newDependency drv; })
+    baseSystemAssertWarn config.system.replaceRuntimeDependencies;
 
   systemWithBuildDeps = system.overrideAttrs (o: {
     systemBuildClosure = pkgs.closureInfo { rootPaths = [ system.drvPath ]; };
@@ -55,9 +60,7 @@ let
     '';
   });
 
-in
-
-{
+in {
   options = {
     system.boot.loader.id = mkOption {
       internal = true;
@@ -108,7 +111,7 @@ in
     system.systemBuilderArgs = mkOption {
       type = types.attrsOf types.unspecified;
       internal = true;
-      default = {};
+      default = { };
       description = lib.mdDoc ''
         `lib.mkDerivation` attributes that will be passed to the top level system builder.
       '';
@@ -143,7 +146,7 @@ in
 
     system.extraDependencies = mkOption {
       type = types.listOf types.pathInStore;
-      default = [];
+      default = [ ];
       description = lib.mdDoc ''
         A list of paths that should be included in the system
         closure but generally not visible to users.
@@ -156,7 +159,7 @@ in
 
     system.checks = mkOption {
       type = types.listOf types.package;
-      default = [];
+      default = [ ];
       description = lib.mdDoc ''
         Packages that are added as dependencies of the system's build, usually
         for the purpose of validating some part of the configuration.
@@ -167,21 +170,20 @@ in
     };
 
     system.replaceRuntimeDependencies = mkOption {
-      default = [];
-      example = lib.literalExpression "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
-      type = types.listOf (types.submodule (
-        { ... }: {
-          options.original = mkOption {
-            type = types.package;
-            description = lib.mdDoc "The original package to override.";
-          };
+      default = [ ];
+      example = lib.literalExpression
+        "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
+      type = types.listOf (types.submodule ({ ... }: {
+        options.original = mkOption {
+          type = types.package;
+          description = lib.mdDoc "The original package to override.";
+        };
 
-          options.replacement = mkOption {
-            type = types.package;
-            description = lib.mdDoc "The replacement package.";
-          };
-        })
-      );
+        options.replacement = mkOption {
+          type = types.package;
+          description = lib.mdDoc "The replacement package.";
+        };
+      }));
       apply = map ({ original, replacement, ... }: {
         oldDependency = original;
         newDependency = replacement;
@@ -232,19 +234,16 @@ in
 
   };
 
-
   config = {
     system.extraSystemBuilderCmds =
-      optionalString
-        (config.system.forbiddenDependenciesRegex != "")
-        ''
-          if [[ $forbiddenDependenciesRegex != "" && -n $closureInfo ]]; then
-            if forbiddenPaths="$(grep -E -- "$forbiddenDependenciesRegex" $closureInfo/store-paths)"; then
-              echo -e "System closure $out contains the following disallowed paths:\n$forbiddenPaths"
-              exit 1
-            fi
+      optionalString (config.system.forbiddenDependenciesRegex != "") ''
+        if [[ $forbiddenDependenciesRegex != "" && -n $closureInfo ]]; then
+          if forbiddenPaths="$(grep -E -- "$forbiddenDependenciesRegex" $closureInfo/store-paths)"; then
+            echo -e "System closure $out contains the following disallowed paths:\n$forbiddenPaths"
+            exit 1
           fi
-        '';
+        fi
+      '';
 
     system.systemBuilderArgs = {
       # Not actually used in the builder. `passedChecks` is just here to create
@@ -255,17 +254,23 @@ in
       # to the system closure, which defeats the purpose of the `system.checks`
       # option, as opposed to `system.extraDependencies`.
       passedChecks = concatStringsSep " " config.system.checks;
-    }
-    // lib.optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
+    } // lib.optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
       inherit (config.system) forbiddenDependenciesRegex;
-      closureInfo = pkgs.closureInfo { rootPaths = [
-        # override to avoid  infinite recursion (and to allow using extraDependencies to add forbidden dependencies)
-        (config.system.build.toplevel.overrideAttrs (_: { extraDependencies = []; closureInfo = null; }))
-      ]; };
+      closureInfo = pkgs.closureInfo {
+        rootPaths = [
+          # override to avoid  infinite recursion (and to allow using extraDependencies to add forbidden dependencies)
+          (config.system.build.toplevel.overrideAttrs (_: {
+            extraDependencies = [ ];
+            closureInfo = null;
+          }))
+        ];
+      };
     };
 
-
-    system.build.toplevel = if config.system.includeBuildDependencies then systemWithBuildDeps else system;
+    system.build.toplevel = if config.system.includeBuildDependencies then
+      systemWithBuildDeps
+    else
+      system;
 
   };
 

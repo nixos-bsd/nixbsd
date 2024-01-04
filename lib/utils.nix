@@ -1,17 +1,31 @@
-{ lib, config, pkgs }: with lib;
+{ lib, config, pkgs }:
+with lib;
 
 rec {
 
   # Copy configuration files to avoid having the entire sources in the system closure
-  copyFile = filePath: pkgs.runCommand (builtins.unsafeDiscardStringContext (builtins.baseNameOf filePath)) {} ''
-    cp ${filePath} $out
-  '';
+  copyFile = filePath:
+    pkgs.runCommand
+    (builtins.unsafeDiscardStringContext (builtins.baseNameOf filePath)) { } ''
+      cp ${filePath} $out
+    '';
 
   # Check whenever fileSystem is needed for boot.  NOTE: Make sure
   # pathsNeededForBoot is closed under the parent relationship, i.e. if /a/b/c
   # is in the list, put /a and /a/b in as well.
-  pathsNeededForBoot = [ "/" "/nix" "/nix/store" "/var" "/var/log" "/var/lib" "/var/lib/nixos" "/etc" "/usr" ];
-  fsNeededForBoot = fs: fs.neededForBoot || elem fs.mountPoint pathsNeededForBoot;
+  pathsNeededForBoot = [
+    "/"
+    "/nix"
+    "/nix/store"
+    "/var"
+    "/var/log"
+    "/var/lib"
+    "/var/lib/nixos"
+    "/etc"
+    "/usr"
+  ];
+  fsNeededForBoot = fs:
+    fs.neededForBoot || elem fs.mountPoint pathsNeededForBoot;
 
   # Check whenever `b` depends on `a` as a fileSystem
   fsBefore = a: b:
@@ -26,11 +40,14 @@ rec {
       # Here a.mountPoint *is* a prefix of b.device even though a.mountPoint is
       # *not* a parent of b.device. If we add a slash at the end of each string,
       # though, this is not a problem: "/aaa/" is not a prefix of "/aaaa/".
-      normalisePath = path: "${path}${optionalString (!(hasSuffix "/" path)) "/"}";
-      normalise = mount: mount // { device = normalisePath (toString mount.device);
-                                    mountPoint = normalisePath mount.mountPoint;
-                                    depends = map normalisePath mount.depends;
-                                  };
+      normalisePath = path:
+        "${path}${optionalString (!(hasSuffix "/" path)) "/"}";
+      normalise = mount:
+        mount // {
+          device = normalisePath (toString mount.device);
+          mountPoint = normalisePath mount.mountPoint;
+          depends = map normalisePath mount.depends;
+        };
 
       a' = normalise a;
       b' = normalise b;
@@ -43,15 +60,19 @@ rec {
   # The rules are described in systemd.unit(5) as follows:
   # The escaping algorithm operates as follows: given a string, any "/" character is replaced by "-", and all other characters which are not ASCII alphanumerics, ":", "_" or "." are replaced by C-style "\x2d" escapes. In addition, "." is replaced with such a C-style escape when it would appear as the first character in the escaped string.
   # When the input qualifies as absolute file system path, this algorithm is extended slightly: the path to the root directory "/" is encoded as single dash "-". In addition, any leading, trailing or duplicate "/" characters are removed from the string before transformation. Example: /foo//bar/baz/ becomes "foo-bar-baz".
-  escapeSystemdPath = s: let
-    replacePrefix = p: r: s: (if (hasPrefix p s) then r + (removePrefix p s) else s);
-    trim = s: removeSuffix "/" (removePrefix "/" s);
-    normalizedPath = strings.normalizePath s;
-  in
-    replaceStrings ["/"] ["-"]
-    (replacePrefix "." (strings.escapeC ["."] ".")
-    (strings.escapeC (stringToCharacters " !\"#$%&'()*+,;<=>=@[\\]^`{|}~-")
-    (if normalizedPath == "/" then normalizedPath else trim normalizedPath)));
+  escapeSystemdPath = s:
+    let
+      replacePrefix = p: r: s:
+        (if (hasPrefix p s) then r + (removePrefix p s) else s);
+      trim = s: removeSuffix "/" (removePrefix "/" s);
+      normalizedPath = strings.normalizePath s;
+    in replaceStrings [ "/" ] [ "-" ]
+    (replacePrefix "." (strings.escapeC [ "." ] ".")
+      (strings.escapeC (stringToCharacters " !\"#$%&'()*+,;<=>=@[\\]^`{|}~-")
+        (if normalizedPath == "/" then
+          normalizedPath
+        else
+          trim normalizedPath)));
 
   # Quotes an argument for use in Exec* service lines.
   # systemd accepts "-quoted strings with escape sequences, toJSON produces
@@ -62,12 +83,15 @@ rec {
   # substitution for the directive.
   escapeSystemdExecArg = arg:
     let
-      s = if builtins.isPath arg then "${arg}"
-        else if builtins.isString arg then arg
-        else if builtins.isInt arg || builtins.isFloat arg then toString arg
-        else throw "escapeSystemdExecArg only allows strings, paths and numbers";
-    in
-      replaceStrings [ "%" "$" ] [ "%%" "$$" ] (builtins.toJSON s);
+      s = if builtins.isPath arg then
+        "${arg}"
+      else if builtins.isString arg then
+        arg
+      else if builtins.isInt arg || builtins.isFloat arg then
+        toString arg
+      else
+        throw "escapeSystemdExecArg only allows strings, paths and numbers";
+    in replaceStrings [ "%" "$" ] [ "%%" "$$" ] (builtins.toJSON s);
 
   # Quotes a list of arguments into a single string for use in a Exec*
   # line.
@@ -112,13 +136,15 @@ rec {
         else if isAttrs item then
           map (name:
             let
-              escapedName = ''"${replaceStrings [''"'' "\\"] [''\"'' "\\\\"] name}"'';
-            in
-              recurse (prefix + "." + escapedName) item.${name}) (attrNames item)
+              escapedName =
+                ''"${replaceStrings [ ''"'' "\\" ] [ ''\"'' "\\\\" ] name}"'';
+            in recurse (prefix + "." + escapedName) item.${name})
+          (attrNames item)
         else if isList item then
-          imap0 (index: item: recurse (prefix + "[${toString index}]") item) item
+          imap0 (index: item: recurse (prefix + "[${toString index}]") item)
+          item
         else
-          [];
+          [ ];
     in listToAttrs (flatten (recurse "" item));
 
   /* Takes an attrset and a file path and generates a bash snippet that
@@ -186,28 +212,18 @@ rec {
       inherit_errexit_enabled=0
       shopt -pq inherit_errexit && inherit_errexit_enabled=1
       shopt -s inherit_errexit
-    ''
-    + concatStringsSep
-        "\n"
-        (imap1 (index: name: ''
-                  secret${toString index}=$(<'${secrets.${name}}')
-                  export secret${toString index}
-                '')
-               (attrNames secrets))
-    + "\n"
-    + "${pkgs.jq}/bin/jq >'${output}' "
-    + lib.escapeShellArg (stringOrDefault
-          (concatStringsSep
-            " | "
-            (imap1 (index: name: ''${name} = $ENV.secret${toString index}'')
-                   (attrNames secrets)))
-          ".")
-    + ''
-       <<'EOF'
-      ${builtins.toJSON set}
-      EOF
-      (( ! $inherit_errexit_enabled )) && shopt -u inherit_errexit
-    '';
+    '' + concatStringsSep "\n" (imap1 (index: name: ''
+      secret${toString index}=$(<'${secrets.${name}}')
+      export secret${toString index}
+    '') (attrNames secrets)) + "\n" + "${pkgs.jq}/bin/jq >'${output}' "
+    + lib.escapeShellArg (stringOrDefault (concatStringsSep " | "
+      (imap1 (index: name: "${name} = $ENV.secret${toString index}")
+        (attrNames secrets))) ".") + ''
+           <<'EOF'
+          ${builtins.toJSON set}
+          EOF
+          (( ! $inherit_errexit_enabled )) && shopt -u inherit_errexit
+        '';
 
   /* Remove packages of packagesToRemove from packages, based on their names.
      Relies on package names and has quadratic complexity so use with caution!
@@ -220,9 +236,7 @@ rec {
        => [ nautilus ]
   */
   removePackagesByName = packages: packagesToRemove:
-    let
-      namesToRemove = map lib.getName packagesToRemove;
-    in
-      lib.filter (x: !(builtins.elem (lib.getName x) namesToRemove)) packages;
+    let namesToRemove = map lib.getName packagesToRemove;
+    in lib.filter (x: !(builtins.elem (lib.getName x) namesToRemove)) packages;
 
 }

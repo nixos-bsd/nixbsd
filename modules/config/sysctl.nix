@@ -7,24 +7,19 @@ let
   sysctlOption = mkOptionType {
     name = "sysctl option value";
     check = val:
-      let
-        checkType = x: isBool x || isString x || isInt x || x == null;
-      in
-        checkType val || (val._type or "" == "override" && checkType val.content);
+      let checkType = x: isBool x || isString x || isInt x || x == null;
+      in checkType val
+      || (val._type or "" == "override" && checkType val.content);
     merge = loc: defs: mergeOneOption loc (filterOverrides defs);
   };
 
-in
-
-{
+in {
 
   options = {
 
     boot.kernel.sysctl = mkOption {
-      type = types.submodule {
-        freeformType = types.attrsOf sysctlOption;
-      };
-      default = {};
+      type = types.submodule { freeformType = types.attrsOf sysctlOption; };
+      default = { };
       example = literalExpression ''
         { "kern.sync_on_panic" = false; "kern.maxvnodes" = 4096; }
       '';
@@ -42,26 +37,27 @@ in
 
   };
 
-  config = mkIf (cfg != {}) {
+  config = mkIf (cfg != { }) {
 
-    environment.etc."sysctl.conf".text =
-      concatStrings (mapAttrsToList (n: v:
-        optionalString (v != null) "${n}=${if v == false then "0" else toString v}\n"
-      ) cfg);
+    environment.etc."sysctl.conf".text = concatStrings (mapAttrsToList (n: v:
+      optionalString (v != null) ''
+        ${n}=${if v == false then "0" else toString v}
+      '') cfg);
 
-      rc.services.sysctl = {
-        description = "Set sysctl variables";
-        provides = "sysctl";
-        commands.start = "${pkgs.freebsd.sysctl}/bin/sysctl -i -f /etc/sysctl.conf";
-      };
+    rc.services.sysctl = {
+      description = "Set sysctl variables";
+      provides = "sysctl";
+      commands.start =
+        "${pkgs.freebsd.sysctl}/bin/sysctl -i -f /etc/sysctl.conf";
+    };
 
-      rc.services.sysctl-lastload = {
-        description = "Set sysctl variables after services are started";
-        provides = "sysctl_lastload";
-        requires = [ "LOGIN" ];
-        before = [ "jail" ];
-        commands.start = "${pkgs.freebsd.sysctl}/bin/sysctl -f /etc/sysctl.conf";
-      };
+    rc.services.sysctl-lastload = {
+      description = "Set sysctl variables after services are started";
+      provides = "sysctl_lastload";
+      requires = [ "LOGIN" ];
+      before = [ "jail" ];
+      commands.start = "${pkgs.freebsd.sysctl}/bin/sysctl -f /etc/sysctl.conf";
+    };
 
   };
 }
