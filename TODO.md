@@ -36,6 +36,9 @@
 - [ ] nixos-install
 - [ ] fsck
 
+# Nice to have modules
+[ ] syslogd remote listening
+
 # Packages
 - [ ] Clean up gcc without breaking musl
 - [x] Figure out why git is failing
