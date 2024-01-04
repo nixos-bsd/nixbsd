@@ -1,28 +1,32 @@
-{ config, lib, pkgs, ...}:
-with lib; let
+{ config, lib, pkgs, ... }:
+with lib;
+let
   cfg = config.users.classes;
 
   time = types.strMatching "inf(inity)?|unlimit(ed)?|([0-9]+[ywdhms])+";
   size = types.strMatching "inf(inity)?|unlimit(ed)?|([0-9]+[bBkKmMgGtT])+";
-  number = types.either types.ints.positive (types.enum ["inf" "infinity" "unlimit" "unlimited"]);
-  limit = baseType: with types; either baseType (submodule {
-    options = {
-      cur = mkOption {
-        type = baseType;
-        description = lib.mdDoc ''
-          Maximum value at start
-        '';
+  number = types.either types.ints.positive
+    (types.enum [ "inf" "infinity" "unlimit" "unlimited" ]);
+  limit = baseType:
+    with types;
+    either baseType (submodule {
+      options = {
+        cur = mkOption {
+          type = baseType;
+          description = lib.mdDoc ''
+            Maximum value at start
+          '';
+        };
+        max = mkOption {
+          type = baseType;
+          description = lib.mdDoc ''
+            Maximum value user is allowed to set
+          '';
+        };
       };
-      max = mkOption {
-        type = baseType;
-        description = lib.mdDoc ''
-          Maximum value user is allowed to set
-        '';
-      };
-    };
-  });
+    });
 
-  classOpts = { name, config, ...}: {
+  classOpts = { name, config, ... }: {
     options = {
       names = mkOption {
         type = types.listOf types.str;
@@ -147,7 +151,8 @@ with lib; let
         '';
       };
       cpumask = mkOption {
-        type = types.strMatching "default|all|[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*";
+        type =
+          types.strMatching "default|all|[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*";
         default = "default";
         description = lib.mdDoc ''
           List of cpus to bind the user to
@@ -245,30 +250,43 @@ with lib; let
     };
 
     config = {
-      charset = if config.lang == null then lib.mkDefault null else let
-        parts = splitString "." config.lang;
-      in lib.mkDefault (elemAt parts 1);
+      charset = if config.lang == null then
+        lib.mkDefault null
+      else
+        let parts = splitString "." config.lang;
+        in lib.mkDefault (elemAt parts 1);
 
       text = let
         nameField = (concatStringsSep "|" config.names);
-        filtered = config // { names = null; text = null; _module = null; };
-        formatField = name: value: if elem value [ null false ] then []
-          else if value == true then [ name ]
-          else if elem (builtins.typeOf value) [ "int" "path" "string" ] then [ "${name}=${toString value}" ]
-          else if builtins.typeOf value == "set" && value ? cur && value ? max then
-            [ "${name}-cur=${value.cur}" "${name}-max=${value.max}" ]
-            else throw "Invalid value for users.classes.<name>.${name}";
-      in
-        concatStringsSep ":" ([ nameField ] ++ concatLists (mapAttrsToList formatField filtered));
+        filtered = config // {
+          names = null;
+          text = null;
+          _module = null;
+        };
+        formatField = name: value:
+          if elem value [ null false ] then
+            [ ]
+          else if value == true then
+            [ name ]
+          else if elem (builtins.typeOf value) [ "int" "path" "string" ] then
+            [ "${name}=${toString value}" ]
+          else if builtins.typeOf value == "set" && value ? cur && value
+          ? max then [
+            "${name}-cur=${value.cur}"
+            "${name}-max=${value.max}"
+          ] else
+            throw "Invalid value for users.classes.<name>.${name}";
+      in concatStringsSep ":"
+      ([ nameField ] ++ concatLists (mapAttrsToList formatField filtered));
     };
   };
 in {
   options = {
     users.classes = mkOption {
       default = {
-        default = {};
-        root = {};
-        daemon = {};
+        default = { };
+        root = { };
+        daemon = { };
       };
       type = types.attrsOf (types.submodule classOpts);
       description = lib.mdDoc ''
@@ -282,8 +300,8 @@ in {
       mode = "0644";
       uid = 0;
       gid = 0;
-      text = concatMapStringsSep "\n" (class: class.text)
-        (builtins.attrValues cfg);
+      text =
+        concatMapStringsSep "\n" (class: class.text) (builtins.attrValues cfg);
     };
 
     system.activationScripts.cap_mkdb = {

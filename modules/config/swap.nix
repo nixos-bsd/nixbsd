@@ -88,7 +88,7 @@ let
 
   };
 
-  swapCfg = {config, options, ...}: {
+  swapCfg = { config, options, ... }: {
 
     options = {
 
@@ -135,7 +135,8 @@ let
           cipher = "serpent-xts-plain64";
           source = "/dev/random";
         };
-        type = types.coercedTo types.bool randomEncryptionCoerce (types.submodule randomEncryptionOpts);
+        type = types.coercedTo types.bool randomEncryptionCoerce
+          (types.submodule randomEncryptionOpts);
         description = lib.mdDoc ''
           Encrypt swap device with a random key. This way you won't have a persistent swap device.
 
@@ -154,7 +155,7 @@ let
       discardPolicy = mkOption {
         default = null;
         example = "once";
-        type = types.nullOr (types.enum ["once" "pages" "both" ]);
+        type = types.nullOr (types.enum [ "once" "pages" "both" ]);
         description = lib.mdDoc ''
           Specify the discard policy for the swap device. If "once", then the
           whole swap space is discarded at swapon invocation. If "pages",
@@ -186,24 +187,26 @@ let
     };
 
     config = {
-      device = mkIf options.label.isDefined
-        "/dev/disk/by-label/${config.label}";
-      deviceName = lib.replaceStrings ["\\"] [""] (escapeSystemdPath config.device);
-      realDevice = if config.randomEncryption.enable then "/dev/mapper/${config.deviceName}" else config.device;
+      device =
+        mkIf options.label.isDefined "/dev/disk/by-label/${config.label}";
+      deviceName =
+        lib.replaceStrings [ "\\" ] [ "" ] (escapeSystemdPath config.device);
+      realDevice = if config.randomEncryption.enable then
+        "/dev/mapper/${config.deviceName}"
+      else
+        config.device;
     };
 
   };
 
-in
-
-{
+in {
 
   ###### interface
 
   options = {
 
     swapDevices = mkOption {
-      default = [];
+      default = [ ];
       example = [
         { device = "/dev/hda7"; }
         { device = "/var/swapfile"; }
@@ -226,7 +229,8 @@ in
 
   config = mkIf ((length config.swapDevices) != 0) {
     assertions = map (sw: {
-      assertion = sw.randomEncryption.enable -> builtins.match "/dev/disk/by-(uuid|label)/.*" sw.device == null;
+      assertion = sw.randomEncryption.enable
+        -> builtins.match "/dev/disk/by-(uuid|label)/.*" sw.device == null;
       message = ''
         You cannot use swap device "${sw.device}" with randomEncryption enabled.
         The UUIDs and labels will get erased on every boot when the partition is encrypted.
@@ -234,12 +238,11 @@ in
       '';
     }) config.swapDevices;
 
-    warnings =
-      concatMap (sw:
-        if sw.size != null && hasPrefix "/dev/" sw.device
-        then [ "Setting the swap size of block device ${sw.device} has no effect" ]
-        else [ ])
-      config.swapDevices;
+    warnings = concatMap (sw:
+      if sw.size != null && hasPrefix "/dev/" sw.device then
+        [ "Setting the swap size of block device ${sw.device} has no effect" ]
+      else
+        [ ]) config.swapDevices;
 
     #system.requiredKernelConfig = with config.lib.kernelConfig; [
     #  (isYes "SWAP")

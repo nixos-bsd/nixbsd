@@ -5,26 +5,33 @@ with utils;
 
 let
 
-  addCheckDesc = desc: elemType: check: types.addCheck elemType check
-    // { description = "${elemType.description} (with check: ${desc})"; };
+  addCheckDesc = desc: elemType: check:
+    types.addCheck elemType check // {
+      description = "${elemType.description} (with check: ${desc})";
+    };
 
-  isNonEmpty = s: (builtins.match "[ \t\n]*" s) == null;
+  isNonEmpty = s:
+    (builtins.match ''
+      [ 	
+      ]*'' s) == null;
   nonEmptyStr = addCheckDesc "non-empty" types.str isNonEmpty;
 
   fileSystems' = toposort fsBefore (attrValues config.fileSystems);
 
-  fileSystems = if fileSystems' ? result
-                then # use topologically sorted fileSystems everywhere
-                     fileSystems'.result
-                else # the assertion below will catch this,
-                     # but we fall back to the original order
-                     # anyway so that other modules could check
-                     # their assertions too
-                     (attrValues config.fileSystems);
+  fileSystems = if fileSystems'
+  ? result then # use topologically sorted fileSystems everywhere
+    fileSystems'.result
+  else # the assertion below will catch this,
+  # but we fall back to the original order
+  # anyway so that other modules could check
+  # their assertions too
+    (attrValues config.fileSystems);
 
-  specialFSTypes = [ "devfs" "procfs" "sysfs" "tmpfs" "ramfs" "devtmpfs" "devpts" "fdescfs" ];
+  specialFSTypes =
+    [ "devfs" "procfs" "sysfs" "tmpfs" "ramfs" "devtmpfs" "devpts" "fdescfs" ];
 
-  nonEmptyWithoutTrailingSlash = addCheckDesc "non-empty without trailing slash" types.str
+  nonEmptyWithoutTrailingSlash =
+    addCheckDesc "non-empty without trailing slash" types.str
     (s: isNonEmpty s && (builtins.match ".+/" s) == null);
 
   coreFileSystemOpts = { name, config, ... }: {
@@ -84,7 +91,8 @@ let
 
     config = {
       mountPoint = mkDefault name;
-      device = mkIf (elem config.fsType specialFSTypes) (mkDefault config.fsType);
+      device =
+        mkIf (elem config.fsType specialFSTypes) (mkDefault config.fsType);
     };
 
   };
@@ -148,66 +156,71 @@ let
   # `systemMount` should be defined in the sourcing script.
   makeSpecialMounts = mounts:
     pkgs.writeText "mounts.sh" (concatMapStringsSep "\n" (mount: ''
-      specialMount "${mount.device}" "${mount.mountPoint}" "${concatStringsSep "," mount.options}" "${mount.fsType}"
+      specialMount "${mount.device}" "${mount.mountPoint}" "${
+        concatStringsSep "," mount.options
+      }" "${mount.fsType}"
     '') mounts);
 
-  makeFstabEntries =
-    let
-      fsToSkipCheck = [
-        "none"
-        "auto"
-        "overlay"
-        "iso9660"
-        "bindfs"
-        "udf"
-        "btrfs"
-        "zfs"
-        "tmpfs"
-        "bcachefs"
-        "nfs"
-        "nfs4"
-        "nilfs2"
-        "vboxsf"
-        "squashfs"
-        "glusterfs"
-        "apfs"
-        "9p"
-        "cifs"
-        "prl_fs"
-        "vmhgfs"
-      ] ++ lib.optionals (!config.boot.initrd.checkJournalingFS) [
-        "ext3"
-        "ext4"
-        "reiserfs"
-        "xfs"
-        "jfs"
-        "f2fs"
-      ];
-      isBindMount = fs: builtins.elem "bind" fs.options;
-      skipCheck = fs: fs.noCheck || fs.device == "none" || builtins.elem fs.fsType fsToSkipCheck || isBindMount fs;
-      # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
-      escape = string: builtins.replaceStrings [ " " "\t" ] [ "\\040" "\\011" ] string;
-    in fstabFileSystems: { }: concatMapStrings (fs:
-      (if fs.device != null then escape fs.device
-         else if fs.label != null then "/dev/disk/by-label/${escape fs.label}"
-         else throw "No device specified for mount point ‘${fs.mountPoint}’.")
-      + " " + escape fs.mountPoint
-      + " " + fs.fsType
-      + " " + escape (builtins.concatStringsSep "," fs.options)
-      + " 0 " + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
-      + "\n"
-    ) fstabFileSystems;
+  makeFstabEntries = let
+    fsToSkipCheck = [
+      "none"
+      "auto"
+      "overlay"
+      "iso9660"
+      "bindfs"
+      "udf"
+      "btrfs"
+      "zfs"
+      "tmpfs"
+      "bcachefs"
+      "nfs"
+      "nfs4"
+      "nilfs2"
+      "vboxsf"
+      "squashfs"
+      "glusterfs"
+      "apfs"
+      "9p"
+      "cifs"
+      "prl_fs"
+      "vmhgfs"
+    ] ++ lib.optionals (!config.boot.initrd.checkJournalingFS) [
+      "ext3"
+      "ext4"
+      "reiserfs"
+      "xfs"
+      "jfs"
+      "f2fs"
+    ];
+    isBindMount = fs: builtins.elem "bind" fs.options;
+    skipCheck = fs:
+      fs.noCheck || fs.device == "none" || builtins.elem fs.fsType fsToSkipCheck
+      || isBindMount fs;
+    # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
+    escape = string:
+      builtins.replaceStrings [ " " "	" ] [ "\\040" "\\011" ] string;
+  in fstabFileSystems:
+  { }:
+  concatMapStrings (fs:
+    (if fs.device != null then
+      escape fs.device
+    else if fs.label != null then
+      "/dev/disk/by-label/${escape fs.label}"
+    else
+      throw "No device specified for mount point ‘${fs.mountPoint}’.") + " "
+    + escape fs.mountPoint + " " + fs.fsType + " "
+    + escape (builtins.concatStringsSep "," fs.options) + " 0 "
+    + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
+    + "\n") fstabFileSystems;
 
-in
-
-{
+in {
 
   ###### interface
 
   options = {
 
     fileSystems = mkOption {
-      default = {};
+      default = { };
       example = literalExpression ''
         {
           "/".device = "/dev/hda1";
@@ -219,7 +232,8 @@ in
           "/bigdisk".label = "bigdisk";
         }
       '';
-      type = types.attrsOf (types.submodule [coreFileSystemOpts fileSystemOpts]);
+      type =
+        types.attrsOf (types.submodule [ coreFileSystemOpts fileSystemOpts ]);
       description = lib.mdDoc ''
         The file systems to be mounted.  It must include an entry for
         the root directory (`mountPoint = "/"`).  Each
@@ -240,7 +254,8 @@ in
     system.fsPackages = mkOption {
       internal = true;
       default = [ ];
-      description = lib.mdDoc "Packages supplying file system mounters and checkers.";
+      description =
+        lib.mdDoc "Packages supplying file system mounters and checkers.";
     };
 
     boot.supportedFilesystems = mkOption {
@@ -251,7 +266,7 @@ in
     };
 
     boot.specialFileSystems = mkOption {
-      default = {};
+      default = { };
       type = types.attrsOf (types.submodule coreFileSystemOpts);
       internal = true;
       description = lib.mdDoc ''
@@ -298,60 +313,69 @@ in
     };
   };
 
-
   ###### implementation
 
   config = {
 
-    assertions = let
-      ls = sep: concatMapStringsSep sep (x: x.mountPoint);
-    in [
-      { assertion = ! (fileSystems' ? cycle);
-        message = "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${ls " -> " fileSystems'.cycle} loops to ${ls ", " fileSystems'.loops}";
-      }
-    ];
+    assertions = let ls = sep: concatMapStringsSep sep (x: x.mountPoint);
+    in [{
+      assertion = !(fileSystems' ? cycle);
+      message =
+        "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${
+          ls " -> " fileSystems'.cycle
+        } loops to ${ls ", " fileSystems'.loops}";
+    }];
 
     # Export for use in other modules
     system.build.fileSystems = fileSystems;
-    system.build.earlyMountScript = makeSpecialMounts (toposort fsBefore (attrValues config.boot.specialFileSystems)).result;
+    system.build.earlyMountScript = makeSpecialMounts
+      (toposort fsBefore (attrValues config.boot.specialFileSystems)).result;
 
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = [];
+    system.fsPackages = [ ];
 
-    environment.systemPackages = with pkgs; [ freebsd.mount ] ++ config.system.fsPackages;
+    environment.systemPackages = with pkgs;
+      [ freebsd.mount ] ++ config.system.fsPackages;
 
-    environment.etc.fstab.text =
-      let
-        swapOptions = sw: concatStringsSep "," (
-          sw.options
+    environment.etc.fstab.text = let
+      swapOptions = sw:
+        concatStringsSep "," (sw.options
           ++ optional (sw.priority != null) "pri=${toString sw.priority}"
-          ++ optional (sw.discardPolicy != null) "discard${optionalString (sw.discardPolicy != "both") "=${toString sw.discardPolicy}"}"
-        );
-      in ''
-        # This is a generated file.  Do not edit!
-        # To make changes, rebuild your system.
-        #
-        # Device	       Mountpoint      FStype  Options	       Dump    Pass#
-        #
+          ++ optional (sw.discardPolicy != null) "discard${
+            optionalString (sw.discardPolicy != "both")
+            "=${toString sw.discardPolicy}"
+          }");
+    in ''
+      # This is a generated file.  Do not edit!
+      # To make changes, rebuild your system.
+      #
+      # Device	       Mountpoint      FStype  Options	       Dump    Pass#
+      #
 
-        # Filesystems.
-        ${makeFstabEntries fileSystems {}}
+      # Filesystems.
+      ${makeFstabEntries fileSystems { }}
 
-        # Swap devices.
-        ${flip concatMapStrings config.swapDevices (sw:
-            "${sw.realDevice} none swap ${swapOptions sw}\n"
-        )}
-      '';
+      # Swap devices.
+      ${flip concatMapStrings config.swapDevices (sw: ''
+        ${sw.realDevice} none swap ${swapOptions sw}
+      '')}
+    '';
 
     # Sync mount options with systemd's src/core/mount-setup.c: mount_table.
     boot.specialFileSystems = {
-      "/run" = { fsType = "tmpfs"; options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ]; };
+      "/run" = {
+        fsType = "tmpfs";
+        options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ];
+      };
       #"/dev" = { fsType = "devfs"; options = [ "nosuid" "strictatime" "mode=755" "size=${config.boot.devSize}" ]; };
       #"/dev/fd" = { fsType = "fdescfs"; options = [ "nosuid" "noexec" "mode=620" "ptmxmode=0666" "gid=${toString config.ids.gids.tty}" ]; };
     } // (optionalAttrs (config.boot.mountProcfs) {
-      "/proc" = { fsType = "procfs"; options = [ "nosuid" "noexec" "nodev" ]; };
+      "/proc" = {
+        fsType = "procfs";
+        options = [ "nosuid" "noexec" "nodev" ];
+      };
     });
 
   };

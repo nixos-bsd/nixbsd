@@ -5,32 +5,42 @@ with lib;
 
 let
 
-  addAttributeName = mapAttrs (a: v: v // {
-    text = ''
-      #### Activation script snippet ${a}:
-      _localstatus=0
-      ${v.text}
+  addAttributeName = mapAttrs (a: v:
+    v // {
+      text = ''
+        #### Activation script snippet ${a}:
+        _localstatus=0
+        ${v.text}
 
-      if (( _localstatus > 0 )); then
-        printf "Activation script snippet '%s' failed (%s)\n" "${a}" "$_localstatus"
-      fi
-    '';
-  });
+        if (( _localstatus > 0 )); then
+          printf "Activation script snippet '%s' failed (%s)\n" "${a}" "$_localstatus"
+        fi
+      '';
+    });
 
-  systemActivationScript = set: onlyDry: let
-    set' = mapAttrs (_: v: if isString v then (noDepEntry v) // { supportsDryActivation = false; } else v) set;
-    withHeadlines = addAttributeName set';
-    # When building a dry activation script, this replaces all activation scripts
-    # that do not support dry mode with a comment that does nothing. Filtering these
-    # activation scripts out so they don't get generated into the dry activation script
-    # does not work because when an activation script that supports dry mode depends on
-    # an activation script that does not, the dependency cannot be resolved and the eval
-    # fails.
-    withDrySnippets = mapAttrs (a: v: if onlyDry && !v.supportsDryActivation then v // {
-      text = "#### Activation script snippet ${a} does not support dry activation.";
-    } else v) withHeadlines;
-  in
-    ''
+  systemActivationScript = set: onlyDry:
+    let
+      set' = mapAttrs (_: v:
+        if isString v then
+          (noDepEntry v) // { supportsDryActivation = false; }
+        else
+          v) set;
+      withHeadlines = addAttributeName set';
+      # When building a dry activation script, this replaces all activation scripts
+      # that do not support dry mode with a comment that does nothing. Filtering these
+      # activation scripts out so they don't get generated into the dry activation script
+      # does not work because when an activation script that supports dry mode depends on
+      # an activation script that does not, the dependency cannot be resolved and the eval
+      # fails.
+      withDrySnippets = mapAttrs (a: v:
+        if onlyDry && !v.supportsDryActivation then
+          v // {
+            text =
+              "#### Activation script snippet ${a} does not support dry activation.";
+          }
+        else
+          v) withHeadlines;
+    in ''
       #!${pkgs.runtimeShell}
 
       systemConfig='@out@'
@@ -66,8 +76,9 @@ let
       exit $_status
     '';
 
-  path = with pkgs; map getBin
-    [ coreutils
+  path = with pkgs;
+    map getBin [
+      coreutils
       findutils
       freebsd.mount
       freebsd.nscd
@@ -76,40 +87,41 @@ let
       gnugrep
     ];
 
-  scriptType = withDry: with types;
-    let scriptOptions =
-      { deps = mkOption
-          { type = types.listOf types.str;
-            default = [ ];
-            description = lib.mdDoc "List of dependencies. The script will run after these.";
-          };
-        text = mkOption
-          { type = types.lines;
-            description = lib.mdDoc "The content of the script.";
-          };
+  scriptType = withDry:
+    with types;
+    let
+      scriptOptions = {
+        deps = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description =
+            lib.mdDoc "List of dependencies. The script will run after these.";
+        };
+        text = mkOption {
+          type = types.lines;
+          description = lib.mdDoc "The content of the script.";
+        };
       } // optionalAttrs withDry {
-        supportsDryActivation = mkOption
-          { type = types.bool;
-            default = false;
-            description = lib.mdDoc ''
-              Whether this activation script supports being dry-activated.
-              These activation scripts will also be executed on dry-activate
-              activations with the environment variable
-              `NIXOS_ACTION` being set to `dry-activate`.
-              it's important that these activation scripts  don't
-              modify anything about the system when the variable is set.
-            '';
-          };
+        supportsDryActivation = mkOption {
+          type = types.bool;
+          default = false;
+          description = lib.mdDoc ''
+            Whether this activation script supports being dry-activated.
+            These activation scripts will also be executed on dry-activate
+            activations with the environment variable
+            `NIXOS_ACTION` being set to `dry-activate`.
+            it's important that these activation scripts  don't
+            modify anything about the system when the variable is set.
+          '';
+        };
       };
     in either str (submodule { options = scriptOptions; });
 
-in
-
-{
+in {
   options = {
 
     system.activationScripts = mkOption {
-      default = {};
+      default = { };
 
       example = literalExpression ''
         { stdio.text =
@@ -133,16 +145,16 @@ in
       '';
 
       type = types.attrsOf (scriptType true);
-      apply = set: set // {
-        script = systemActivationScript set false;
-      };
+      apply = set: set // { script = systemActivationScript set false; };
     };
 
     system.dryActivationScript = mkOption {
-      description = lib.mdDoc "The shell script that is to be run when dry-activating a system.";
+      description = lib.mdDoc
+        "The shell script that is to be run when dry-activating a system.";
       readOnly = true;
       internal = true;
-      default = systemActivationScript (removeAttrs config.system.activationScripts [ "script" ]) true;
+      default = systemActivationScript
+        (removeAttrs config.system.activationScripts [ "script" ]) true;
       defaultText = literalMD "generated activation script";
     };
 
@@ -163,7 +175,8 @@ in
       # "; true" => make the `$out` argument from switch-to-configuration.pl
       #             go to `true` instead of `echo`, hiding the useless path
       #             from the log.
-      default = "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
+      default =
+        "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
       description = lib.mdDoc ''
         A program that writes a bootloader installation script to the path passed in the first command line argument.
 
@@ -184,14 +197,13 @@ in
     system.activationScripts.stdio = ""; # obsolete
     system.activationScripts.var = ""; # obsolete
 
-    system.activationScripts.usrbinenv = if config.environment.usrbinenv != null
-      then ''
+    system.activationScripts.usrbinenv =
+      if config.environment.usrbinenv != null then ''
         mkdir -p /usr/bin
         chmod 0755 /usr/bin
         ln -sfn ${config.environment.usrbinenv} /usr/bin/.env.tmp
         mv /usr/bin/.env.tmp /usr/bin/env # atomically replace /usr/bin/env
-      ''
-      else ''
+      '' else ''
         rm -f /usr/bin/env
         rmdir --ignore-fail-on-non-empty /usr/bin /usr
       '';

@@ -6,88 +6,80 @@ let
   parentWrapperDir = dirOf wrapperDir;
 
   # NixOS uses musl for this, but it doesn't make a ton of sense for freebsd, so just use fblibc
-  securityWrapper = sourceProg : pkgs.callPackage ./wrapper.nix {
-    inherit sourceProg;
-  };
+  securityWrapper = sourceProg:
+    pkgs.callPackage ./wrapper.nix { inherit sourceProg; };
 
-  fileModeType =
-    let
-      # taken from the chmod(1) man page
-      symbolic = "[ugoa]*([-+=]([rwxXst]*|[ugo]))+|[-+=][0-7]+";
-      numeric = "[-+=]?[0-7]{0,4}";
-      mode = "((${symbolic})(,${symbolic})*)|(${numeric})";
-    in
-     lib.types.strMatching mode
-     // { description = "file mode string"; };
+  fileModeType = let
+    # taken from the chmod(1) man page
+    symbolic = "[ugoa]*([-+=]([rwxXst]*|[ugo]))+|[-+=][0-7]+";
+    numeric = "[-+=]?[0-7]{0,4}";
+    mode = "((${symbolic})(,${symbolic})*)|(${numeric})";
+  in lib.types.strMatching mode // { description = "file mode string"; };
 
   wrapperType = lib.types.submodule ({ name, config, ... }: {
-    options.source = lib.mkOption
-      { type = lib.types.path;
-        description = lib.mdDoc "The absolute path to the program to be wrapped.";
-      };
-    options.program = lib.mkOption
-      { type = with lib.types; nullOr str;
-        default = name;
-        description = lib.mdDoc ''
-          The name of the wrapper program. Defaults to the attribute name.
-        '';
-      };
-    options.owner = lib.mkOption
-      { type = lib.types.str;
-        description = lib.mdDoc "The owner of the wrapper program.";
-      };
-    options.group = lib.mkOption
-      { type = lib.types.str;
-        description = lib.mdDoc "The group of the wrapper program.";
-      };
-    options.permissions = lib.mkOption
-      { type = fileModeType;
-        default  = "u+rx,g+x,o+x";
-        example = "a+rx";
-        description = lib.mdDoc ''
-          The permissions of the wrapper program. The format is that of a
-          symbolic or numeric file mode understood by {command}`chmod`.
-        '';
-      };
-    options.setuid = lib.mkOption
-      { type = lib.types.bool;
-        default = false;
-        description = lib.mdDoc "Whether to add the setuid bit to the wrapper program.";
-      };
-    options.setgid = lib.mkOption
-      { type = lib.types.bool;
-        default = false;
-        description = lib.mdDoc "Whether to add the setgid bit to the wrapper program.";
-      };
+    options.source = lib.mkOption {
+      type = lib.types.path;
+      description = lib.mdDoc "The absolute path to the program to be wrapped.";
+    };
+    options.program = lib.mkOption {
+      type = with lib.types; nullOr str;
+      default = name;
+      description = lib.mdDoc ''
+        The name of the wrapper program. Defaults to the attribute name.
+      '';
+    };
+    options.owner = lib.mkOption {
+      type = lib.types.str;
+      description = lib.mdDoc "The owner of the wrapper program.";
+    };
+    options.group = lib.mkOption {
+      type = lib.types.str;
+      description = lib.mdDoc "The group of the wrapper program.";
+    };
+    options.permissions = lib.mkOption {
+      type = fileModeType;
+      default = "u+rx,g+x,o+x";
+      example = "a+rx";
+      description = lib.mdDoc ''
+        The permissions of the wrapper program. The format is that of a
+        symbolic or numeric file mode understood by {command}`chmod`.
+      '';
+    };
+    options.setuid = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description =
+        lib.mdDoc "Whether to add the setuid bit to the wrapper program.";
+    };
+    options.setgid = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description =
+        lib.mdDoc "Whether to add the setgid bit to the wrapper program.";
+    };
   });
 
   ###### Activation script for the setuid wrappers
   mkSetuidProgram =
-    { program
-    , source
-    , owner
-    , group
-    , setuid
-    , setgid
-    , permissions
-    , ...
-    }:
-    ''
+    { program, source, owner, group, setuid, setgid, permissions, ... }: ''
       cp ${securityWrapper source}/bin/security-wrapper "$wrapperDir/${program}"
 
       # Prevent races
       chmod 0000 "$wrapperDir/${program}"
       chown ${owner}:${group} "$wrapperDir/${program}"
 
-      chmod "u${if setuid then "+" else "-"}s,g${if setgid then "+" else "-"}s,${permissions}" "$wrapperDir/${program}"
+      chmod "u${if setuid then "+" else "-"}s,g${
+        if setgid then "+" else "-"
+      }s,${permissions}" "$wrapperDir/${program}"
     '';
 
   mkWrappedPrograms = builtins.map mkSetuidProgram (lib.attrValues wrappers);
-in
-{
+in {
   imports = [
-    (lib.mkRemovedOptionModule [ "security" "setuidOwners" ] "Use security.wrappers instead")
-    (lib.mkRemovedOptionModule [ "security" "setuidPrograms" ] "Use security.wrappers instead")
+    (lib.mkRemovedOptionModule [ "security" "setuidOwners" ]
+      "Use security.wrappers instead")
+    (lib.mkRemovedOptionModule [ "security" "setuidPrograms" ]
+      "Use security.wrappers instead")
   ];
 
   ###### interface
@@ -95,27 +87,26 @@ in
   options = {
     security.wrappers = lib.mkOption {
       type = lib.types.attrsOf wrapperType;
-      default = {};
-      example = lib.literalExpression
-        ''
-          {
-            # a setuid root program
-            doas =
-              { setuid = true;
-                owner = "root";
-                group = "root";
-                source = "''${pkgs.doas}/bin/doas";
-              };
+      default = { };
+      example = lib.literalExpression ''
+        {
+          # a setuid root program
+          doas =
+            { setuid = true;
+              owner = "root";
+              group = "root";
+              source = "''${pkgs.doas}/bin/doas";
+            };
 
-            # a setgid program
-            locate =
-              { setgid = true;
-                owner = "root";
-                group = "mlocate";
-                source = "''${pkgs.locate}/bin/locate";
-              };
-          }
-        '';
+          # a setgid program
+          locate =
+            { setgid = true;
+              owner = "root";
+              group = "mlocate";
+              source = "''${pkgs.locate}/bin/locate";
+            };
+        }
+      '';
       description = lib.mdDoc ''
         This option effectively allows adding setuid/setgid bits, capabilities,
         changing file ownership and permissions of a program without directly
@@ -136,9 +127,9 @@ in
     };
 
     security.wrapperDir = lib.mkOption {
-      type        = lib.types.path;
-      default     = "/run/wrappers/bin";
-      internal    = true;
+      type = lib.types.path;
+      default = "/run/wrappers/bin";
+      internal = true;
       description = lib.mdDoc ''
         This option defines the path to the wrapper programs. It
         should not be overridden.
@@ -208,17 +199,16 @@ in
     };
 
     ###### wrappers consistency checks
-    system.checks = lib.singleton (pkgs.runCommandLocal
-      "ensure-all-wrappers-paths-exist" { }
-      ''
+    system.checks = lib.singleton
+      (pkgs.runCommandLocal "ensure-all-wrappers-paths-exist" { } ''
         # make sure we produce output
         mkdir -p $out
 
         echo -n "Checking that Nix store paths of all wrapped programs exist... "
 
         declare -A wrappers
-        ${lib.concatStringsSep "\n" (lib.mapAttrsToList (n: v:
-          "wrappers['${n}']='${v.source}'") wrappers)}
+        ${lib.concatStringsSep "\n"
+        (lib.mapAttrsToList (n: v: "wrappers['${n}']='${v.source}'") wrappers)}
 
         for name in "''${!wrappers[@]}"; do
           path="''${wrappers[$name]}"
