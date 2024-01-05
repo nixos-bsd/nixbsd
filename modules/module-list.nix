@@ -28,6 +28,7 @@ in [
   ./config/user-class.nix
   ./config/users-groups.nix
   ./misc/extra-arguments.nix
+  ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./rc/rc.nix
   ./security/pam.nix
