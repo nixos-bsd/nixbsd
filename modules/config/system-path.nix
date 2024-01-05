@@ -32,7 +32,9 @@ let
     pkgs.xz
     pkgs.zstd
 
-    # A lot of these are provided by glibc on linux
+    # Some of these are provided by glibc on linux
+    pkgs.freebsd.bin
+    pkgs.freebsd.ifconfig
     pkgs.freebsd.locale
     pkgs.freebsd.localedef
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
