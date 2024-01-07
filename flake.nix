@@ -28,8 +28,10 @@
               modules = [{ config.nixpkgs.buildPlatform = system; }];
             };
           in extended.config.system.build // {
+            # appease `nix flake show`
             type = "derivation";
             name = "system-build";
+
             closureInfo = extended.pkgs.closureInfo {
               rootPaths = [ extended.config.system.build.toplevel.drvPath ];
             };
