@@ -325,7 +325,7 @@ in {
 
     rc.services.syslogd = let
       socketArgs =
-        map (sock: "-l ${sock}") ([ "/var/run/log" ] ++ cfg.extraSockets);
+        concatMap (sock: ["-l" sock]) ([ "/var/run/log" ] ++ cfg.extraSockets);
     in {
       description = "System log daemon";
       command = "${cfg.package}/bin/syslogd";

@@ -200,7 +200,7 @@ let
         cfg.commandFile
       else
         "";
-    in "${cfg.path} ${owner} ${cfg.mode} ${size} ${when} ${flags} ${pidCmdFile} ${signal}";
+    in "${cfg.path} ${owner} ${cfg.mode} ${toString cfg.count} ${size} ${when} ${flags} ${pidCmdFile} ${signal}";
 
   configFile = pkgs.writeText "newsyslog.conf"
     (concatMapStringsSep "\n" formatLine (attrValues cfg.logfiles));
@@ -251,14 +251,14 @@ in {
       provides = "newsyslog";
       requires = [ "FILESYSTEMS" ];
       command = "${cfg.package}/bin/newsyslog";
-      commandArgs = [ "-f" (toString configFile) ] ++ cfg.extraArgs;
+      commandArgs = [ "-C" "-f" (toString configFile) ] ++ cfg.extraArgs;
       commands.stop = ":";
     };
 
     services.newsyslog.logfiles = mkIf cfg.createDefault (mapAttrs (name: value:
       mkDefault {
         path = value.destination;
-        flags.create = hasPrefix value.destination "/var/log/";
+        flags.create = hasPrefix "/var/log/" value.destination;
       }) config.services.syslogd.fileActions);
   };
 }

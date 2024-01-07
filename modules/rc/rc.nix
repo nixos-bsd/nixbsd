@@ -226,7 +226,7 @@ in {
         type = types.listOf types.package;
         description =
           "Any packages whose bin directories should be made available during command execution.";
-        default = [ pkgs.coreutils pkgs.freebsd.bin ];
+        default = [ pkgs.coreutils pkgs.freebsd.bin pkgs.freebsd.limits ];
       };
 
       options.dummy = mkOption {
