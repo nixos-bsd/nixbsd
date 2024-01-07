@@ -333,7 +333,8 @@ in {
       commands.reload = null;
       hasPidfile = true;
       provides = "syslogd";
-      # require = [ "FILESYSTEMS" "mountcritremote" "newsyslog" "netif" ];
+      requires = [ "FILESYSTEMS" "newsyslog" ];
+      # requires = [ "FILESYSTEMS" "mountcritremote" "newsyslog" "netif" ];
       before = [ "SERVERS" ];
     };
     services.syslogd.fileActions = mkIf cfg.defaultRules {

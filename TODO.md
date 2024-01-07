@@ -37,7 +37,8 @@
 - [ ] fsck
 
 # Nice to have modules
-[ ] syslogd remote listening
+- [ ] syslogd remote listening
+- [ ] newsyslog in cron
 
 # Packages
 - [ ] Clean up gcc without breaking musl

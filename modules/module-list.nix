@@ -34,6 +34,7 @@ in [
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
+  ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/ttys/getty.nix
   ./system/boot/kernel.nix
