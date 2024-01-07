@@ -4,6 +4,11 @@
     utils.url = "github:numtide/flake-utils";
   };
 
+  nixConfig = {
+    # extra-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
+    # extra-trusted-public-keys = [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
+  };
+
   outputs = { self, nixpkgs, utils }:
     let
       inherit (nixpkgs) lib;

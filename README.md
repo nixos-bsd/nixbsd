@@ -37,9 +37,6 @@ You may notice that there is no fork of [freebsd-src](https://cgit.freebsd.org/s
 The changes required to FreeBSD code are minimal and concern mostly the build system,
 so are included as [patches](https://github.com/rhelmot/nixpkgs/tree/freebsd-staging/pkgs/os-specific/bsd/freebsd/patches) in nixpkgs, or as calls to `sed` in package files.
 
-The ultimate goal is to upstream all changes in nix and nixpkgs.
-However, NixBSD will likely stay separate due to the major changes needed to integrate it into nixpkgs.
-
 ## Building
 The easiest way to test module changes is to build a virtual machine from Linux.
 
@@ -58,12 +55,17 @@ All outputs from `system.build` are available, plus a few more. When developing 
 
 The `closureInfo` and `vmImageRunnerClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
 
+### Subtituter
+There is a substituter (binary cache) in the flake, commented out.
+If Artemis remembers, this should contain everything in `.#base.vmImageRunnerClosureInfo` and
+could save you a few hours.
 
-### Tips:
+Note, however, that trusted substituters can maliciously modify outputs, so only use it if you trust Artemis.
+
+### Tips
 * Building `vmImageRunner` for a minimal configuration can take over 8 hours on a fast machine, so keeping around `vmImageRunnerClosureInfo` is highly recommended. Just `base.vmImageRunnerClosureInfo` takes over 30GiB though, so you may want to delete it if you're low on space.
 * Some package checks may intermittently under heavy load. If that happens you may want to build with `--max-jobs 4` or lower so fewer packages are competing for the CPU at the same time.
 * To see what is happening, you might want to use [nix-output-monitor](https://github.com/maralorn/nix-output-monitor). For flake commands you can replace `nix` with `nom` to use it.
-* It's possible to build without flakes, just harder: `nix-build -I`
 
 ## Contributing
 We'd be happy to review any pull requests! If you'd like to ask some questions message [artemist](https://github.com/artemist) on Matrix (@artemist:mildlyfunctional.gay).
