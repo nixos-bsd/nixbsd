@@ -200,7 +200,9 @@ let
         cfg.commandFile
       else
         "";
-    in "${cfg.path} ${owner} ${cfg.mode} ${toString cfg.count} ${size} ${when} ${flags} ${pidCmdFile} ${signal}";
+    in "${cfg.path} ${owner} ${cfg.mode} ${
+      toString cfg.count
+    } ${size} ${when} ${flags} ${pidCmdFile} ${signal}";
 
   configFile = pkgs.writeText "newsyslog.conf"
     (concatMapStringsSep "\n" formatLine (attrValues cfg.logfiles));
@@ -249,7 +251,7 @@ in {
     rc.services.newsyslog = {
       description = "Logfile rotation";
       provides = "newsyslog";
-      requires = [ "FILESYSTEMS" ];
+      requires = [ "FILESYSTEMS" "tempfiles" ];
       command = "${cfg.package}/bin/newsyslog";
       commandArgs = [ "-C" "-f" (toString configFile) ] ++ cfg.extraArgs;
       commands.stop = ":";
