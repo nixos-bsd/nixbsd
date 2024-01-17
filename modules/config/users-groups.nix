@@ -657,6 +657,12 @@ in {
         group = "root";
         initialHashedPassword = mkDefault "!";
       };
+      daemon = {
+        uid = ids.uids.daemon;
+        isSystemUser = true;
+        description = "Daemon running user";
+        group = "daemon";
+      };
       nobody = {
         uid = ids.uids.nobody;
         isSystemUser = true;
@@ -666,11 +672,14 @@ in {
     };
 
     users.groups = {
-      root.gid = ids.gids.root;
-      wheel.gid = ids.gids.wheel;
-      nogroup.gid = ids.gids.nogroup;
-      users.gid = ids.gids.users;
+      audit.gid = ids.gids.audit;
+      daemon.gid = ids.gids.daemon;
       nixbld.gid = ids.gids.nixbld;
+      nogroup.gid = ids.gids.nogroup;
+      operator.gid = ids.gids.operator;
+      root.gid = ids.gids.root;
+      users.gid = ids.gids.users;
+      wheel.gid = ids.gids.wheel;
     };
 
     system.activationScripts.users = {

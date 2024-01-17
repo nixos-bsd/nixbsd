@@ -28,6 +28,7 @@ in [
   ./config/user-class.nix
   ./config/users-groups.nix
   ./misc/extra-arguments.nix
+  ./misc/extra-ids.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./rc/rc.nix
@@ -39,5 +40,6 @@ in [
   ./services/ttys/getty.nix
   ./system/boot/kernel.nix
   ./tasks/filesystems.nix
+  ./tasks/tempfiles
   ./virtualisation/vm-image.nix
 ]
