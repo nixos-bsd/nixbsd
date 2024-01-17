@@ -4,7 +4,7 @@
 - [x] vm image
 - [x] deal with locales
 - [x] rc module, so we can have a proper init system
-- [ ] tempfiles (so that current-system and booted-system don't get garbage collected)
+- [x] tempfiles (so that current-system and booted-system don't get garbage collected)
 - [ ] bootloader
 - [ ] users (might not need a ton of changes?)
     - [x] Base setup
@@ -18,7 +18,7 @@
 - [x] make sure user passwords actually work
 - [ ] nix-daemon
 - [ ] hostname
-- [ ] syslog
+- [x] syslog
 
 # Less important modules
 - [x] sysctl
