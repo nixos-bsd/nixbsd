@@ -320,16 +320,6 @@ let
           '';
         };
 
-        setEnvironment = mkOption {
-          type = types.bool;
-          default = true;
-          description = lib.mdDoc ''
-            Whether the service should set the environment variables
-            listed in {option}`environment.sessionVariables`
-            using `pam_env.so`.
-          '';
-        };
-
         setLoginUid = mkOption {
           type = types.bool;
           description = lib.mdDoc ''
@@ -680,25 +670,13 @@ let
             };
           }];
 
-          session = autoOrderRules [
-            {
-              name = "env";
-              enable = cfg.setEnvironment;
-              control = "required";
-              modulePath = "pam_env.so";
-              settings = {
-                conffile = "/etc/pam/environment";
-                readenv = 0;
-              };
-            }
-            {
-              name = "lastlog";
-              enable = cfg.updateWtmp;
-              control = "required";
-              modulePath = "pam_lastlog.so";
-              settings = { silent = true; };
-            }
-          ];
+          session = autoOrderRules [{
+            name = "lastlog";
+            enable = cfg.updateWtmp;
+            control = "required";
+            modulePath = "pam_lastlog.so";
+            settings = { silent = true; };
+          }];
         };
 
       };
@@ -1307,13 +1285,9 @@ in {
 
     security.pam.services = {
       other.text = ''
-        auth     required pam_warn.so
         auth     required pam_deny.so
-        account  required pam_warn.so
         account  required pam_deny.so
-        password required pam_warn.so
         password required pam_deny.so
-        session  required pam_warn.so
         session  required pam_deny.so
       '';
       system.text = ''

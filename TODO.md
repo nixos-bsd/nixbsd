@@ -14,7 +14,7 @@
 - [ ] ssh
 - [ ] networking (maybe adapt the shell-based nixos stuff?)
 - [ ] fstab
-- [ ] fix sudo (currently "Exec format error" in PAM)
+- [x] fix sudo (currently "Exec format error" in PAM)
 - [x] make sure user passwords actually work
 - [ ] nix-daemon
 - [ ] hostname
