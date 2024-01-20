@@ -10,14 +10,17 @@
         rootPaths = [ config.system.build.toplevel ];
       };
       binPath = with pkgs.buildPackages;
-        lib.makeBinPath (stdenv.initialPath ++ [
+        (stdenv.initialPath ++ [
           freebsd.packages14.makefs
           freebsd.packages14.mkimg
           freebsd.packages14.mtree
           nix
         ]);
-    in pkgs.buildPackages.runCommand "freebsd-image.qcow2" { } ''
-      export PATH="${binPath}"
+    in pkgs.buildPackages.runCommand "freebsd-image.qcow2" {
+      passthru.saveDeps = binPath
+        ++ [ pkgs.freebsd.stand-efi config.system.build.toplevel ];
+    } ''
+      export PATH="${lib.makeBinPath binPath}"
 
       # EFI boot partition
       mkdir -p boot/efi/boot boot/boot
@@ -99,8 +102,10 @@
           "$@"
       '';
     in pkgs.runCommand "freebsd-vm" {
-      preferlocalBuild = true;
+      preferLocalBuild = true;
       meta.mainProgram = "run-nixbsd-vm";
+      passthru.saveDeps = config.system.build.vmImage.saveDeps
+        ++ (with pkgs.pkgsBuildBuild; [ qemu OVMF.fd ]);
     } ''
       mkdir -p $out/bin
       ln -s ${config.system.build.toplevel} $out/system
