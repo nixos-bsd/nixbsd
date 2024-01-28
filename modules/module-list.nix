@@ -21,9 +21,6 @@ in [
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc-activation.nix"
-  ./activation/activation-script.nix
-  ./activation/bootspec.nix
-  ./activation/top-level.nix
   ./config/i18n.nix
   ./config/resolvconf.nix
   ./config/swap.nix
@@ -35,7 +32,6 @@ in [
   ./misc/extra-ids.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
-  ./rc/rc.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
@@ -43,9 +39,13 @@ in [
   ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/ttys/getty.nix
+  ./system/activation/activation-script.nix
+  ./system/activation/bootspec.nix
+  ./system/activation/top-level.nix
+  ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
   ./tasks/filesystems.nix
-  ./tasks/tempfiles
   ./tasks/network-interfaces.nix
+  ./tasks/tempfiles
   ./virtualisation/vm-image.nix
 ]
