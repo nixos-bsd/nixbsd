@@ -5,6 +5,7 @@ in [
   "${extPath}/config/system-environment.nix"
   "${extPath}/misc/assertions.nix"
   "${extPath}/misc/ids.nix"
+  "${extPath}/misc/label.nix"
   "${extPath}/misc/meta.nix"
   "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
@@ -17,9 +18,11 @@ in [
   "${extPath}/security/ca.nix"
   "${extPath}/security/sudo.nix"
   "${extPath}/system/activation/activatable-system.nix"
+  "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc-activation.nix"
   ./activation/activation-script.nix
+  ./activation/bootspec.nix
   ./activation/top-level.nix
   ./config/i18n.nix
   ./config/resolvconf.nix

@@ -6,6 +6,8 @@
   # Don't make me wait for an address...
   networking.dhcpcd.wait = "background";
 
+  networking.hostName = "nixbsd-base";
+
   users.users.bestie = {
     isNormalUser = true;
     description = "your bestie";

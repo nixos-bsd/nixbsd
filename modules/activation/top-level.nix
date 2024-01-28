@@ -16,6 +16,12 @@ let
 
     cp "$extraDependenciesPath" "$out/extra-dependencies"
 
+    ${optionalString config.boot.bootspec.enable ''
+      ${config.boot.bootspec.writer}
+      ${optionalString config.boot.bootspec.enableValidation ''
+        ${config.boot.bootspec.validator} "$out/${config.boot.bootspec.filename}"''}
+    ''}
+
     ${config.system.extraSystemBuilderCmds}
   '';
 
@@ -197,7 +203,10 @@ in {
 
     system.name = mkOption {
       type = types.str;
-      default = "unnamed";
+      default = if config.networking.hostName == "" then
+        "unnamed"
+      else
+        config.networking.hostName;
       defaultText = literalExpression ''
         if config.networking.hostName == ""
         then "unnamed"
