@@ -35,7 +35,6 @@ let
     (s: isNonEmpty s && (builtins.match ".+/" s) == null);
 
   coreFileSystemOpts = { name, config, ... }: {
-
     options = {
       mountPoint = mkOption {
         example = "/mnt/usb";
@@ -43,18 +42,9 @@ let
         description = lib.mdDoc "Location of the mounted file system.";
       };
 
-      stratis.poolUuid = lib.mkOption {
-        type = types.uniq (types.nullOr types.str);
-        description = lib.mdDoc ''
-          UUID of the stratis pool that the fs is located in
-        '';
-        example = "04c68063-90a5-4235-b9dd-6180098a20d9";
-        default = null;
-      };
-
       device = mkOption {
         default = null;
-        example = "/dev/sda";
+        example = "/dev/ada0p1";
         type = types.nullOr nonEmptyStr;
         description = lib.mdDoc "Location of the device.";
       };
@@ -67,7 +57,7 @@ let
       };
 
       options = mkOption {
-        default = [ "defaults" ];
+        default = [ ];
         example = [ "data=journal" ];
         description = lib.mdDoc "Options used to mount the file system.";
         type = types.nonEmptyListOf nonEmptyStr;
@@ -87,6 +77,12 @@ let
         '';
       };
 
+      writable = mkOption {
+        default = true;
+        example = false;
+        type = types.bool;
+        description = lib.mdDoc "Mount the filesystem as read/write.";
+      };
     };
 
     config = {
@@ -98,9 +94,7 @@ let
   };
 
   fileSystemOpts = { config, ... }: {
-
     options = {
-
       label = mkOption {
         default = null;
         example = "root-partition";
@@ -108,48 +102,12 @@ let
         description = lib.mdDoc "Label of the device (if any).";
       };
 
-      autoFormat = mkOption {
-        default = false;
-        type = types.bool;
-        description = lib.mdDoc ''
-          If the device does not currently contain a filesystem (as
-          determined by {command}`blkid`, then automatically
-          format it with the filesystem type specified in
-          {option}`fsType`.  Use with caution.
-        '';
-      };
-
-      formatOptions = mkOption {
-        visible = false;
-        type = types.unspecified;
-        default = null;
-      };
-
-      autoResize = mkOption {
-        default = false;
-        type = types.bool;
-        description = lib.mdDoc ''
-          If set, the filesystem is grown to its maximum size before
-          being mounted. (This is typically the size of the containing
-          partition.) This is currently only supported for ext2/3/4
-          filesystems that are mounted during early boot.
-        '';
-      };
-
       noCheck = mkOption {
         default = false;
         type = types.bool;
         description = lib.mdDoc "Disable running fsck on this filesystem.";
       };
-
     };
-
-    config.options = mkMerge [
-      (mkIf config.autoResize [ "x-systemd.growfs" ])
-      (mkIf config.autoFormat [ "x-systemd.makefs" ])
-      (mkIf (utils.fsNeededForBoot config) [ "x-initrd.mount" ])
-    ];
-
   };
 
   # Makes sequence of `specialMount device mountPoint options fsType` commands.
@@ -199,17 +157,12 @@ let
     # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
     escape = string:
       builtins.replaceStrings [ " " "	" ] [ "\\040" "\\011" ] string;
+    fsOptions = fs: (if fs.writable then [ "rw" ] else [ "ro" ]) ++ fs.options;
   in fstabFileSystems:
   { }:
   concatMapStrings (fs:
-    (if fs.device != null then
-      escape fs.device
-    else if fs.label != null then
-      "/dev/disk/by-label/${escape fs.label}"
-    else
-      throw "No device specified for mount point ‘${fs.mountPoint}’.") + " "
-    + escape fs.mountPoint + " " + fs.fsType + " "
-    + escape (builtins.concatStringsSep "," fs.options) + " 0 "
+    escape fs.device + " " + escape fs.mountPoint + " " + fs.fsType + " "
+    + escape (builtins.concatStringsSep "," (fsOptions fs)) + " 0 "
     + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
     + "\n") fstabFileSystems;
 
@@ -339,29 +292,23 @@ in {
     environment.systemPackages = with pkgs;
       [ freebsd.mount ] ++ config.system.fsPackages;
 
-    environment.etc.fstab.text = let
-      swapOptions = sw:
-        concatStringsSep "," (sw.options
-          ++ optional (sw.priority != null) "pri=${toString sw.priority}"
-          ++ optional (sw.discardPolicy != null) "discard${
-            optionalString (sw.discardPolicy != "both")
-            "=${toString sw.discardPolicy}"
-          }");
-    in ''
-      # This is a generated file.  Do not edit!
-      # To make changes, rebuild your system.
-      #
-      # Device	       Mountpoint      FStype  Options	       Dump    Pass#
-      #
+    environment.etc.fstab.text =
+      let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
+      in ''
+        # This is a generated file.  Do not edit!
+        # To make changes, rebuild your system.
+        #
+        # Device	       Mountpoint      FStype  Options	       Dump    Pass#
+        #
 
-      # Filesystems.
-      ${makeFstabEntries fileSystems { }}
+        # Filesystems.
+        ${makeFstabEntries fileSystems { }}
 
-      # Swap devices.
-      ${flip concatMapStrings config.swapDevices (sw: ''
-        ${sw.realDevice} none swap ${swapOptions sw}
-      '')}
-    '';
+        # Swap devices.
+        ${flip concatMapStrings config.swapDevices (sw: ''
+          ${sw.realDevice} none swap ${swapOptions sw}
+        '')}
+      '';
 
     # Sync mount options with systemd's src/core/mount-setup.c: mount_table.
     boot.specialFileSystems = {
@@ -369,8 +316,6 @@ in {
         fsType = "tmpfs";
         options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ];
       };
-      #"/dev" = { fsType = "devfs"; options = [ "nosuid" "strictatime" "mode=755" "size=${config.boot.devSize}" ]; };
-      #"/dev/fd" = { fsType = "fdescfs"; options = [ "nosuid" "noexec" "mode=620" "ptmxmode=0666" "gid=${toString config.ids.gids.tty}" ]; };
     } // (optionalAttrs (config.boot.mountProcfs) {
       "/proc" = {
         fsType = "procfs";
