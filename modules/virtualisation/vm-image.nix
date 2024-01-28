@@ -2,13 +2,29 @@
 # For now just make a VM image for testing with minimal configurability
 # TODO: use the real NixOS VM image package, with some changes to work on FreeBSD
 
-{ pkgs, config, lib, ... }: {
+{ pkgs, config, lib, extendModules, ... }:
+let
+  extended = extendModules {
+    modules = [{
+      fileSystems = lib.mkForce {
+        "/" = {
+          device = "/dev/ada0p2";
+          fsType = "ufs";
+        };
+        "/boot/efi" = {
+          device = "/dev/ada0p1";
+          fsType = "msdosfs";
+        };
+      };
+    }];
+  };
+  inherit (extended.config.system.build) toplevel;
+in {
   # No options, config.system.build lets us set whatever we want
   config = {
     system.build.vmImage = let
-      closureInfo = pkgs.buildPackages.closureInfo {
-        rootPaths = [ config.system.build.toplevel ];
-      };
+      closureInfo =
+        pkgs.buildPackages.closureInfo { rootPaths = [ toplevel ]; };
       binPath = with pkgs.buildPackages;
         (stdenv.initialPath ++ [
           freebsd.packages14.makefs
@@ -17,8 +33,7 @@
           nix
         ]);
     in pkgs.buildPackages.runCommand "freebsd-image.qcow2" {
-      passthru.saveDeps = binPath
-        ++ [ pkgs.freebsd.stand-efi config.system.build.toplevel ];
+      passthru.saveDeps = binPath ++ [ pkgs.freebsd.stand-efi toplevel ];
     } ''
       export PATH="${lib.makeBinPath binPath}"
 
@@ -29,10 +44,10 @@
       makefs -t msdos -o fat_type=16 -o volume_label=EFI -o create_size=32m $TMPDIR/boot.img boot
 
       # UFS root partition
-      mkdir -p root/dev root/boot/available-systems root/boot/loader.conf.d root/etc
+      mkdir -p root/dev root/boot/available-systems root/boot/efi root/boot/loader.conf.d root/etc
       cp -r ${pkgs.freebsd.stand-efi}/bin/{lua,defaults} root/boot
       cp ${pkgs.freebsd.stand-efi}/bin/loader.efi root/boot
-      ln -s ${config.system.build.toplevel} root/boot/available-systems/builtin
+      ln -s ${toplevel} root/boot/available-systems/builtin
 
       chmod +w root/boot/lua
       mv root/boot/lua/loader.lua root/boot/lua/loader_orig.lua
@@ -41,7 +56,7 @@
 
       export NIX_STATE_DIR=$TMPDIR/state
       nix-store --load-db < ${closureInfo}/registration
-      nix --extra-experimental-features nix-command copy --no-check-sigs --to ./root ${config.system.build.toplevel}
+      nix --extra-experimental-features nix-command copy --no-check-sigs --to ./root ${toplevel}
 
       cd root
       echo '/set type=file uid=0 gid=0' >>.mtree
@@ -108,7 +123,7 @@
         ++ (with pkgs.pkgsBuildBuild; [ qemu OVMF.fd ]);
     } ''
       mkdir -p $out/bin
-      ln -s ${config.system.build.toplevel} $out/system
+      ln -s ${toplevel} $out/system
       ln -s ${
         pkgs.buildPackages.writeScript "run-nixbsd-vm" startVM
       } $out/bin/run-nixbsd-vm

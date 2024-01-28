@@ -60,7 +60,7 @@ let
         default = [ ];
         example = [ "data=journal" ];
         description = lib.mdDoc "Options used to mount the file system.";
-        type = types.nonEmptyListOf nonEmptyStr;
+        type = types.listOf nonEmptyStr;
       };
 
       depends = mkOption {
@@ -142,13 +142,6 @@ let
       "cifs"
       "prl_fs"
       "vmhgfs"
-    ] ++ lib.optionals (!config.boot.initrd.checkJournalingFS) [
-      "ext3"
-      "ext4"
-      "reiserfs"
-      "xfs"
-      "jfs"
-      "f2fs"
     ];
     isBindMount = fs: builtins.elem "bind" fs.options;
     skipCheck = fs:
@@ -287,7 +280,7 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = [ ];
+    system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
 
     environment.systemPackages = with pkgs;
       [ freebsd.mount ] ++ config.system.fsPackages;
@@ -323,6 +316,45 @@ in {
       };
     });
 
-  };
+    rc.services.mountcritlocal = {
+      description = "Mount local filesystems";
+      provides = "mountcritlocal";
+      requires = [ "root" ];
+      before = [ "FILESYSTEMS" ];
+      keywordShutdown = true;
+      keywordNojail = true;
+      binDeps = with pkgs; [
+        freebsd.mount
+        freebsd.bin
+        freebsd.limits
+        coreutils
+      ] ++ config.system.fsPackages;
 
+      commands.stop = "sync";
+      commands.start = ''
+        startmsg -n 'Mounting local filesystems:'
+        mount -a -t "nonfs,smbfs"
+        err=$?
+        if [ $err -ne 0 ]; then
+          echo 'Mounting /etc/fstab filesystems failed,' \
+              'will retry after root mount hold release'
+          root_hold_wait
+          mount -a -t "nonfs,smbfs"
+          err=$?
+        fi
+
+        startmsg '.'
+
+        case $err in
+        0)
+          ;;
+        *)
+          echo 'Mounting /etc/fstab filesystems failed,' \
+              'startup aborted'
+          stop_boot true
+          ;;
+        esac
+      '';
+    };
+  };
 }
