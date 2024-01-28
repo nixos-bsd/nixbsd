@@ -22,6 +22,7 @@ in [
   ./activation/activation-script.nix
   ./activation/top-level.nix
   ./config/i18n.nix
+  ./config/resolvconf.nix
   ./config/swap.nix
   ./config/sysctl.nix
   ./config/system-path.nix
@@ -35,11 +36,13 @@ in [
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
+  ./services/networking/dhcpcd.nix
   ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/ttys/getty.nix
   ./system/boot/kernel.nix
   ./tasks/filesystems.nix
   ./tasks/tempfiles
+  ./tasks/network-interfaces.nix
   ./virtualisation/vm-image.nix
 ]

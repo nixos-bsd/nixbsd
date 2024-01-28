@@ -12,12 +12,12 @@
     - [x] initialPassword (have to build perl with crypt or workaround)
 - [x] wrappers, so we can get sudo/login/etc
 - [ ] ssh
-- [ ] networking (maybe adapt the shell-based nixos stuff?)
+- [x] networking (maybe adapt the shell-based nixos stuff?)
 - [ ] fstab
 - [x] fix sudo (currently "Exec format error" in PAM)
 - [x] make sure user passwords actually work
 - [ ] nix-daemon
-- [ ] hostname
+- [x] hostname
 - [x] syslog
 
 # Less important modules
