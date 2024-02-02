@@ -56,7 +56,7 @@ All outputs from `system.build` are available, plus a few more. When developing 
 The `closureInfo` and `vmImageRunnerClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
 
 ### Subtituter
-There is a substituter (binary cache) in the flake, commented out.
+There is a substituter (binary cache) in the flake.
 If Artemis remembers, this should contain everything in `.#base.vmImageRunnerClosureInfo` and
 could save you a few hours.
 
