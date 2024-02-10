@@ -1,5 +1,6 @@
 { config, pkgs, ... }: {
   nixpkgs.hostPlatform = "x86_64-freebsd";
+  nixpkgs.config.freebsdBranch = "releng/14.0";
 
   users.users.root.initialPassword = "toor";
 

@@ -21,7 +21,7 @@ let
               "${config.boot.kernel.package}/${config.system.boot.loader.kernelFile}";
             kernelParams = [ ];
             label =
-              "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (FreeBSD ${pkgs.freebsd.version})";
+              "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
           };
           "gay.mildlyfunctional.nixbsd.v1" = {
             inherit (config.boot) kernelEnvironment;

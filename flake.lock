@@ -2,16 +2,16 @@
   "nodes": {
     "nixpkgs": {
       "locked": {
-        "lastModified": 1707548714,
-        "narHash": "sha256-AYR1n8IN+xFJKef82N1WzNGez56FIbKOD0BKsEHS4N4=",
+        "lastModified": 1707450237,
+        "narHash": "sha256-NihpupkPbp/JkBqttFqUP5wpqa3hBP3Vna9xcio/2Zo=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "b7a3e327c927b9979caca471b3cb4b0e584a3fc0",
+        "rev": "793ae837bd97e7c3430d4d98e38177a4a4f3db69",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "freebsd-staging",
+        "ref": "freebsd",
         "repo": "nixpkgs",
         "type": "github"
       }
