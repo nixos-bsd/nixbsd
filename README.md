@@ -15,14 +15,14 @@ It is likely that these can be upstreamed fairly quickly with some cleanup.
 ### [nixpkgs](https://github.com/rhelmot/nixpkgs/tree/freebsd-staging)
 A fork of upstream nixpkgs with support for the FreeBSD platform and a variety of FreeBSD packages.
 
-This adds a few new supported systems, including `x86_64-freebsd14`, the host system
+This adds a few new supported systems, including `x86_64-freebsd`, the host system
 we have been using for most development. It's based off staging and has some changes to
 the stdenv that also affects stdenv, so you have to rebuild everything from bootstrap.
 
 This will require a fair amount of work to clean up to an upstreamable state,
 but it should not require masive reorganization
 
-### [NixBSD](https://github.com/rhelmot/nixbsd)
+### [NixBSD](https://github.com/nixos-bsd/nixbsd)
 This repository contains modules for building a system, like the `nixos` directory in nixpkgs.
 When possible, modules are taken directly from nixpkgs without copying
 (see references to `extPath` in [module-list](modules/module-list.nix).

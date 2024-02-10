@@ -6,13 +6,14 @@
 
   nixConfig = {
     extra-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
-    extra-trusted-public-keys = [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
+    extra-trusted-public-keys =
+      [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
   outputs = { self, nixpkgs, utils }:
     let
       inherit (nixpkgs) lib;
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd14" ];
+      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd" ];
       configBase = ./configurations;
       makeSystem = module: self.lib.nixbsdSystem { modules = [ module ]; };
     in {

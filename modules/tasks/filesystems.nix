@@ -323,12 +323,9 @@ in {
       before = [ "FILESYSTEMS" ];
       keywordShutdown = true;
       keywordNojail = true;
-      binDeps = with pkgs; [
-        freebsd.mount
-        freebsd.bin
-        freebsd.limits
-        coreutils
-      ] ++ config.system.fsPackages;
+      binDeps = with pkgs;
+        [ freebsd.mount freebsd.bin freebsd.limits coreutils ]
+        ++ config.system.fsPackages;
 
       commands.stop = "sync";
       commands.start = ''

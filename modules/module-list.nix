@@ -20,7 +20,7 @@ in [
   "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
-  "${extPath}/system/etc/etc-activation.nix"
+  "${extPath}/system/etc/etc.nix"
   ./config/i18n.nix
   ./config/resolvconf.nix
   ./config/swap.nix
@@ -44,6 +44,7 @@ in [
   ./system/activation/top-level.nix
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
+  ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
