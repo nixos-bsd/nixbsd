@@ -16,7 +16,7 @@
 - [ ] fstab
 - [x] fix sudo (currently "Exec format error" in PAM)
 - [x] make sure user passwords actually work
-- [ ] nix-daemon
+- [x] nix-daemon
 - [x] hostname
 - [x] syslog
 

@@ -1,6 +1,8 @@
 nixpkgsPath:
 let extPath = "${nixpkgsPath}/nixos/modules";
 in [
+  "${extPath}/config/nix.nix"
+  "${extPath}/config/nix-remote-build.nix"
   "${extPath}/config/shells-environment.nix"
   "${extPath}/config/system-environment.nix"
   "${extPath}/misc/assertions.nix"
@@ -39,6 +41,7 @@ in [
   ./services/networking/dhcpcd.nix
   ./services/newsyslog.nix
   ./services/syslogd.nix
+  ./services/system/nix-daemon.nix
   ./services/ttys/getty.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
