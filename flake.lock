@@ -1,5 +1,63 @@
 {
   "nodes": {
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1673956053,
+        "narHash": "sha256-4gtG9iQuiKITOjNQQeQIpoIB6b16fm+504Ch3sNKLd8=",
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "rev": "35bb57c0c8d8b62bbfd284272c928ceb64ddbde9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
+    "libgit2": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1697646580,
+        "narHash": "sha256-oX4Z3S9WtJlwvj0uH9HlYcWv+x1hqp8mhXl7HsLu2f0=",
+        "owner": "libgit2",
+        "repo": "libgit2",
+        "rev": "45fd9ed7ae1a9b74b957ef4f337bc3c8b3df01b5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "libgit2",
+        "repo": "libgit2",
+        "type": "github"
+      }
+    },
+    "nix": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "libgit2": "libgit2",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-regression": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1707610626,
+        "narHash": "sha256-ztoUZxGEOiDnLln5taH3SmjJG9rdDyEMJsjxFi9rWT4=",
+        "owner": "rhelmot",
+        "repo": "nix",
+        "rev": "1d44942b9ca06076866816684cbf2dbb4e1476dc",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rhelmot",
+        "ref": "freebsd-staging",
+        "repo": "nix",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1707450237,
@@ -11,13 +69,14 @@
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "freebsd",
+        "ref": "freebsd-staging",
         "repo": "nixpkgs",
         "type": "github"
       }
     },
     "root": {
       "inputs": {
+        "nix": "nix",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }

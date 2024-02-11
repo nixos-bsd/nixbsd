@@ -1,7 +1,13 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/freebsd";
+    nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging";
     utils.url = "github:numtide/flake-utils";
+    nix = {
+      url = "github:rhelmot/nix/freebsd-staging";
+      inputs.nixpkgs.follows = "nixpkgs";
+      # We don't need another nixpkgs clone, it won't evaluate anyway
+      inputs.nixpkgs-regression.follows = "nixpkgs";
+    };
   };
 
   nixConfig = {
@@ -10,7 +16,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, utils }:
+  outputs = { self, nixpkgs, utils, nix }:
     let
       inherit (nixpkgs) lib;
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd" ];
@@ -21,6 +27,7 @@
         import ./lib/eval-config.nix (args // {
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
+          specialArgs = { nixFlake = nix; } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });
 
       nixosConfigurations =

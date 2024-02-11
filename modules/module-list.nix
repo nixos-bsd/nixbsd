@@ -30,6 +30,7 @@ in [
   ./config/users-groups.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
+  ./misc/nix-overlay.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./security/pam.nix
