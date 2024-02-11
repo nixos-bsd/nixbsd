@@ -18,11 +18,13 @@ let
   ];
   cfg = config.rc;
   mkRcScript = { provides, command, commandArgs, shell, requires, before
-    , keywords, hasPidfile, commands, dummy, description, binDeps, ... }:
+    , keywords, hasPidfile, commands, dummy, description, binDeps, environment
+    , ... }:
     let
       extraCommands =
         builtins.attrNames (builtins.removeAttrs commands defaultCommands);
       definedCommands = filterAttrs (k: v: v != null) commands;
+      definedEnvironment = filterAttrs (k: v: v != null) environment;
       name = if (builtins.isString provides) then
         provides
       else
@@ -54,6 +56,8 @@ let
 
         name="${name}"
         rcvar="${name}_enabled"
+        ${concatStringsSep "\n"
+        (mapAttrsToList (k: v: "export " + toShellVar k v) definedEnvironment)}
         export PATH=${makeBinPath binDeps}:$PATH
       '' + optionalString (!(builtins.isNull command)) ''
         command="${command}"
@@ -227,6 +231,14 @@ in {
         description =
           "Any packages whose bin directories should be made available during command execution.";
         default = [ pkgs.coreutils pkgs.freebsd.bin pkgs.freebsd.limits ];
+      };
+
+      options.environment = mkOption {
+        type = with types; attrsOf (nullOr (oneOf [ str path package ]));
+        default = { };
+        example = { CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt"; };
+        description =
+          "Extra environment variables to set during command execution";
       };
 
       options.dummy = mkOption {
