@@ -18,8 +18,8 @@ let
   ];
   cfg = config.rc;
   mkRcScript = { provides, command, commandArgs, shell, requires, before
-    , keywords, hasPidfile, commands, dummy, description, binDeps, environment
-    , ... }:
+    , keywords, hasPidfile, commands, dummy, description, binDeps
+    , defaultBinDeps, environment, extraConfig, precmds, ... }:
     let
       extraCommands =
         builtins.attrNames (builtins.removeAttrs commands defaultCommands);
@@ -58,8 +58,8 @@ let
         rcvar="${name}_enabled"
         ${concatStringsSep "\n"
         (mapAttrsToList (k: v: "export " + toShellVar k v) definedEnvironment)}
-        export PATH=${makeBinPath binDeps}:$PATH
-      '' + optionalString (!(builtins.isNull command)) ''
+        export PATH=${makeBinPath (binDeps ++ defaultBinDeps)}:$PATH
+      '' + optionalString (command != null) ''
         command="${command}"
       '' + optionalString (builtins.length commandArgs != 0) ''
         command_args="${escapeShellArgs commandArgs}"
@@ -69,16 +69,25 @@ let
         extra_commands="${concatStringsSep " " extraCommands}"
       '' + concatStringsSep "" (mapAttrsToList (cmd_name: cmd_value: ''
         ${cmd_name}_cmd="${name}_${cmd_name}"
-      '') definedCommands) + "\n" + concatStringsSep "\n" (mapAttrsToList
+      '') definedCommands) + concatStringsSep "" (mapAttrsToList
         (cmd_name: cmd_value: ''
-          ${name}_${cmd_name}() {
-          ${cmd_value}
-          }
-        '') definedCommands) + ''
+          ${cmd_name}_precmd="${name}_${cmd_name}_precmd"
+        '') precmds) + "\n" + concatStringsSep "\n" (mapAttrsToList
+          (cmd_name: cmd_value: ''
+            ${name}_${cmd_name}() {
+            ${cmd_value}
+            }
+          '') definedCommands) + concatStringsSep "\n" (mapAttrsToList
+            (cmd_name: cmd_value: ''
+              ${name}_${cmd_name}_precmd() {
+              ${cmd_value}
+              }
+            '') precmds) + ''
+              ${extraConfig}
 
-          load_rc_config ${name}
-          run_rc_command "$1"
-        '');
+              load_rc_config ${name}
+              run_rc_command "$1"
+            '');
     };
   mkRcDir = scriptCfg:
     pkgs.runCommand "rc.d" { scripts = builtins.map mkRcScript scriptCfg; } ''
@@ -226,10 +235,30 @@ in {
         default = { };
       };
 
+      options.precmds = mkOption {
+        type = types.attrsOf types.str;
+        description = "A mapping from command name to precommand text.";
+        default = { };
+      };
+
+      options.extraConfig = mkOption {
+        type = types.lines;
+        description =
+          "Extra configuration to add just before the end of the rc script.";
+        default = "";
+      };
+
       options.binDeps = mkOption {
         type = types.listOf types.package;
         description =
           "Any packages whose bin directories should be made available during command execution.";
+        default = [ pkgs.coreutils pkgs.freebsd.bin pkgs.freebsd.limits ];
+      };
+
+      options.defaultBinDeps = mkOption {
+        type = types.listOf types.package;
+        description =
+          "Packages to be added after binDeps, generally includes coreutils and freebsd bins";
         default = [ pkgs.coreutils pkgs.freebsd.bin pkgs.freebsd.limits ];
       };
 

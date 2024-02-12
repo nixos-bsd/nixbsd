@@ -11,7 +11,7 @@
     - [ ] User class defaults
     - [x] initialPassword (have to build perl with crypt or workaround)
 - [x] wrappers, so we can get sudo/login/etc
-- [ ] ssh
+- [x] ssh
 - [x] networking (maybe adapt the shell-based nixos stuff?)
 - [ ] fstab
 - [x] fix sudo (currently "Exec format error" in PAM)

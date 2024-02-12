@@ -40,6 +40,7 @@ in [
   ./security/wrappers/default.nix
   ./services/base-system.nix
   ./services/networking/dhcpcd.nix
+  ./services/networking/ssh/sshd.nix
   ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/system/nix-daemon.nix

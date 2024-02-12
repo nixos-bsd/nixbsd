@@ -15,4 +15,6 @@
     extraGroups = [ "wheel" ];
     inherit (config.users.users.root) initialPassword;
   };
+
+  services.sshd.enable = true;
 }
