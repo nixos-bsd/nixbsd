@@ -9,6 +9,7 @@ let
 
   # TODO: Figure out what we can actually put in requiredPackages
   requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg) [
+    config.programs.ssh.package
     pkgs.bashInteractive # bash with ncurses support
     pkgs.bzip2
     pkgs.coreutils-full

@@ -35,6 +35,7 @@ in [
   ./misc/nix-overlay.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
+  ./programs/ssh.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
