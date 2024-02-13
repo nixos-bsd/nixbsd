@@ -48,8 +48,10 @@ in [
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/top-level.nix
+  ./system/activation/switchable-system.nix
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
+  ./system/boot/loader/stand
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
