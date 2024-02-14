@@ -2,10 +2,11 @@
 with lib;
 let
   cfg = config.boot.loader.stand;
-  builder = import ./stand-conf-builder.nix { inherit pkgs; };
-  populateBuilder = import ./stand-conf-builder.nix { pkgs = pkgs.buildPackages; };
-  timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;
-  builderArgs = "-g ${cfg.configurationLimit} -t ${timeoutStr} -c";
+  builder = import ./stand-conf-builder.nix { inherit pkgs; inherit (pkgs.freebsd) stand-efi; };
+  populateBuilder = import ./stand-conf-builder.nix { pkgs = pkgs.buildPackages; inherit (pkgs.freebsd) stand-efi; };
+  #timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;
+  timeoutStr = "-1";
+  builderArgs = "-g ${builtins.toString cfg.configurationLimit} -t ${timeoutStr} -c";
 in {
   options = {
     boot.loader.stand = {

@@ -34,7 +34,7 @@ menu.welcome.all_entries.kernel_options = {
 			name_color = color.escapefg(color.BLUE)
 		end
 		kernel_name = kernel_name .. name_color ..
-		    nixbsd_config.entries[choice] .. color.resetfg()
+		    nixbsd_config.entries[choice].label .. color.resetfg()
 		return "S" .. color.highlight("y") .. "stem: " ..
 		    kernel_name .. " (" .. idx .. " of " ..
 		    #all_choices .. ")"
@@ -43,7 +43,7 @@ menu.welcome.all_entries.kernel_options = {
 		if loader.getenv("kernelname") ~= nil then
 			loader.perform("unload")
 		end
-		config.selectKernel("available-systems/" .. choice)
+		config.selectKernel(choice)
 	end,
 	alias = {"y", "Y"},
 }
@@ -52,14 +52,13 @@ orig_loadKernel = config.loadKernel
 function config.loadKernel(other_kernel)
 	local system = other_kernel or loader.getenv("system")
 	local entry = nixbsd_config.entries[system]
-	-- TODO un-hardcode this
-	loader.setenv("vfs.root.mountfrom", "ufs:/dev/ada0p2")
-	loader.setenv("rootdev", "ufs:/dev/ada0p2")
 	loader.setenv("init_path", entry.init)
 	for k, v in pairs(entry.kernelEnvironment) do
 		loader.setenv(k, v)
 	end
-	orig_loadKernel(entry.kernel)
+	-- TODO un-hardcode this
+	loader.setenv("vfs.root.mountfrom", "ufs:/dev/ada0p2")
+	orig_loadKernel("disk0p2:" .. entry.kernel)
 end
 
 require("loader_orig")

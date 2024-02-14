@@ -39,7 +39,7 @@ in {
 
       # EFI boot partition
       mkdir ./boot
-      ${config.boot.loader.stand.populateCmd} ${toplevel}/boot.json -d ./boot
+      ${config.boot.loader.stand.populateCmd} ${toplevel}/boot.json -d ./boot -g 0
 
       touch $TMPDIR/boot.img
       makefs -t msdos -o fat_type=16 -o volume_label=EFI -o create_size=32m $TMPDIR/boot.img boot

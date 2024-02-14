@@ -39,11 +39,11 @@ done
 mkdir -p $target/nixos
 mkdir -p $target/extlinux
 
-addEntry( {
+addEntry() {
     local path="$1"  # boot.json
     local tag="$2"  # Generation number or 'default'
     cat <<EOF
-entries["$tag"] = {
+M.entries["$tag"] = {
 	kernel = $(jq -r '."org.nixos.bootspec.v1".kernel | @json' <$path),
 	label = $(jq -r '."org.nixos.bootspec.v1".label | @json' <$path),
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
@@ -51,20 +51,21 @@ entries["$tag"] = {
 	kernelParams = {$(jq -r '."org.nixos.bootspec.v1".kernelParams | map(@json) | join(", ")' <$path)},
         kernelEnvironment = {["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
 }
-table[#table + 1] = "$tag"
+M.tags[#M.tags + 1] = "$tag"
 EOF
 }
 
-tmpFile="$target/stand/stand.lua.tmp.$$"
+tmpFile="$target/stand.lua.tmp.$$"
 
 cat > $tmpFile <<EOF
 -- Generated file, all changes will be lost on nixbsd-rebuild!
 
 -- Change this to e.g. nixbsd-42 to temporarily boot to an older configuration.
-default = "nixbsd-default"
-timeout = $timeout
-entries = {}
-tags = {}
+M = {}
+M.default = "nixbsd-default"
+M.timeout = $timeout
+M.entries = {}
+M.tags = {}
 
 EOF
 
@@ -81,13 +82,17 @@ if [ "$numGenerations" -gt 0 ]; then
     done >> $tmpFile
 fi
 
+echo "return M" >> $tmpFile
 
-rm -rf $target/{lua,defaults}
-cp -r $stand/bin/{lua,defaults} $target
-mv $target/lua/loader.lua $target/lua/loader_orig.lua
-cp @loader_script@ $target/lua/loader.lua
-mv $tmpFile $target/lua/stand_config.lua
-mkdir $target/loader.conf.d
+targetBoot=$target/boot
+mkdir -p $targetBoot
+rm -rf $targetBoot/{lua,defaults}
+cp -r @stand@/bin/{lua,defaults} $targetBoot
+chmod +w $targetBoot/lua
+mv $targetBoot/lua/loader.lua $targetBoot/lua/loader_orig.lua
+cp @loader_script@ $targetBoot/lua/loader.lua
+mv $tmpFile $targetBoot/lua/stand_config.lua
+mkdir $targetBoot/loader.conf.d
 
 mkdir -p $target/efi/boot
-cp $stand/bin/loader.efi $target/efi/boot/bootx64.efi
+cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
