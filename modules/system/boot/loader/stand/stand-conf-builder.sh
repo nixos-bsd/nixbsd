@@ -6,7 +6,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>] [-n <dtbName>] [-r]" >&2
+    echo "usage: $0 -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>]" >&2
     exit 1
 }
 
@@ -40,8 +40,8 @@ mkdir -p $target/nixos
 mkdir -p $target/extlinux
 
 addEntry( {
-    local path=$(readlink -f "$1")
-    local tag="$2" # Generation number or 'default'
+    local path="$1"  # boot.json
+    local tag="$2"  # Generation number or 'default'
     cat <<EOF
 entries["$tag"] = {
 	kernel = $(jq -r '."org.nixos.bootspec.v1".kernel | @json' <$path),
@@ -49,8 +49,9 @@ entries["$tag"] = {
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
 	kernelParams = {$(jq -r '."org.nixos.bootspec.v1".kernelParams | map(@json) | join(", ")' <$path)},
-	kernelEnvironment = {$(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
+        kernelEnvironment = {["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
 }
+table[#table + 1] = "$tag"
 EOF
 }
 
@@ -63,6 +64,7 @@ cat > $tmpFile <<EOF
 default = "nixbsd-default"
 timeout = $timeout
 entries = {}
+tags = {}
 
 EOF
 
@@ -79,4 +81,13 @@ if [ "$numGenerations" -gt 0 ]; then
     done >> $tmpFile
 fi
 
-mv $tmpFile $target/stand/stand.lua
+
+rm -rf $target/{lua,defaults}
+cp -r $stand/bin/{lua,defaults} $target
+mv $target/lua/loader.lua $target/lua/loader_orig.lua
+cp @loader_script@ $target/lua/loader.lua
+mv $tmpFile $target/lua/stand_config.lua
+mkdir $target/loader.conf.d
+
+mkdir -p $target/efi/boot
+cp $stand/bin/loader.efi $target/efi/boot/bootx64.efi

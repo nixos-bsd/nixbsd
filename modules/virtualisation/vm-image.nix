@@ -11,7 +11,7 @@ let
           device = "/dev/ada0p2";
           fsType = "ufs";
         };
-        "/boot/efi" = {
+        "/boot" = {
           device = "/dev/ada0p1";
           fsType = "msdosfs";
         };
@@ -33,26 +33,19 @@ in {
           nix
         ]);
     in pkgs.buildPackages.runCommand "freebsd-image.qcow2" {
-      passthru.saveDeps = binPath ++ [ pkgs.freebsd.stand-efi toplevel ];
+      passthru.saveDeps = binPath ++ [ toplevel ];
     } ''
       export PATH="${lib.makeBinPath binPath}"
 
       # EFI boot partition
-      mkdir -p boot/efi/boot boot/boot
-      cp ${pkgs.freebsd.stand-efi}/bin/boot1.efi boot/efi/boot/bootx64.efi
+      mkdir ./boot
+      ${config.boot.loader.stand.populateCmd} ${toplevel}/boot.json -d ./boot
+
       touch $TMPDIR/boot.img
       makefs -t msdos -o fat_type=16 -o volume_label=EFI -o create_size=32m $TMPDIR/boot.img boot
 
       # UFS root partition
-      mkdir -p root/dev root/boot/available-systems root/boot/efi root/boot/loader.conf.d root/etc
-      cp -r ${pkgs.freebsd.stand-efi}/bin/{lua,defaults} root/boot
-      cp ${pkgs.freebsd.stand-efi}/bin/loader.efi root/boot
-      ln -s ${toplevel} root/boot/available-systems/builtin
-
-      chmod +w root/boot/lua
-      mv root/boot/lua/loader.lua root/boot/lua/loader_orig.lua
-      cp -r ${../system/boot/nixbsd-loader.lua} root/boot/lua/loader.lua
-      chmod -w root/boot/lua
+      mkdir -p root/dev root/boot root/etc
 
       export NIX_STATE_DIR=$TMPDIR/state
       nix-store --load-db < ${closureInfo}/registration

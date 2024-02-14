@@ -7,32 +7,12 @@ local config = require("config")
 local color = require("color")
 local orig_entries_func = menu.welcome.entries
 
+local nixbsd_config = require("stand_config")
+
 local cached_systems = nil;
 local function systemList()
-	if cached_system ~= nil then
-		return cached_systems
-	end
-
-	local kernels = {}
-	local i = 0
-
-	for file, ftype in lfs.dir("/boot/available-systems") do
-		if file == "." or file == ".." then
-			goto continue
-		end
-
-		i = i + 1
-		kernels[i] = file
-
-		::continue::
-	end
-
-	loader.setenv("kernel", "available-systems/" .. kernels[1])
-
-	-- TODO sort in some way
-
-	core.cached_kernels = kernels
-	return core.cached_kernels
+	loader.setenv("system", nixbsd_config.tags[1])
+	return nixbsd_config.tags;
 end
 
 menu.welcome.all_entries.kernel_options = {
@@ -54,7 +34,7 @@ menu.welcome.all_entries.kernel_options = {
 			name_color = color.escapefg(color.BLUE)
 		end
 		kernel_name = kernel_name .. name_color ..
-		    choice .. color.resetfg()
+		    nixbsd_config.entries[choice] .. color.resetfg()
 		return "S" .. color.highlight("y") .. "stem: " ..
 		    kernel_name .. " (" .. idx .. " of " ..
 		    #all_choices .. ")"
@@ -70,14 +50,16 @@ menu.welcome.all_entries.kernel_options = {
 
 orig_loadKernel = config.loadKernel
 function config.loadKernel(other_kernel)
-	local kernel = other_kernel or loader.getenv("kernel")
-	loader.setenv("module_path", kernel .. "/kernel-modules")
+	local system = other_kernel or loader.getenv("system")
+	local entry = nixbsd_config.entries[system]
+	-- TODO un-hardcode this
 	loader.setenv("vfs.root.mountfrom", "ufs:/dev/ada0p2")
-	loader.setenv("init_path", "/boot/" .. kernel .. "/init")
-	loader.setenv("init_shell", "/boot/" .. kernel .. "/sw/bin/sh")
-	loader.setenv("init_script", "/boot/" .. kernel .. "/activate")
-	-- TODO load from the kernel-environment
-	orig_loadKernel(other_kernel)
+	loader.setenv("rootdev", "ufs:/dev/ada0p2")
+	loader.setenv("init_path", entry.init)
+	for k, v in pairs(entry.kernelEnvironment) do
+		loader.setenv(k, v)
+	end
+	orig_loadKernel(entry.kernel)
 end
 
 require("loader_orig")

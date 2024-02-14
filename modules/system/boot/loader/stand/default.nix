@@ -3,7 +3,9 @@ with lib;
 let
   cfg = config.boot.loader.stand;
   builder = import ./stand-conf-builder.nix { inherit pkgs; };
+  populateBuilder = import ./stand-conf-builder.nix { pkgs = pkgs.buildPackages; };
   timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;
+  builderArgs = "-g ${cfg.configurationLimit} -t ${timeoutStr} -c";
 in {
   options = {
     boot.loader.stand = {
@@ -34,7 +36,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    system.build.installBootLoader = "TARGET=/boot GENERATIONS=${cfg.configurationLimit} TIMEOUT=${timeoutStr} ${builder}";
+    system.build.installBootLoader = "${builder} ${builderArgs}";
     system.boot.loader.id = "stand";
     boot.loader.stand.populateCmd = "${populateBuilder} ${builderArgs}";
   };

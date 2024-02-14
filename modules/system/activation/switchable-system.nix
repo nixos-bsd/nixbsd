@@ -32,10 +32,10 @@ in
         --subst-var out \
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
-        --subst-var-by distroId ${lib.escapeShellArg config.system.nixbsd.distroId} \
+        --subst-var-by distroId ${lib.escapeShellArg config.system.nixos.distroId} \
         --subst-var-by installBootLoader ${lib.escapeShellArg config.system.build.installBootLoader} \
         --subst-var-by perl "${perlWrapped}" \
-        --subst-var-by shell "${pkgs.bash}/bin/sh"
+        --subst-var-by shell "${pkgs.bash}/bin/sh" \
         ;
 
       chmod +x $out/bin/switch-to-configuration

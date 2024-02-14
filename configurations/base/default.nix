@@ -17,4 +17,5 @@
   };
 
   services.sshd.enable = true;
+  boot.loader.stand.enable = true;
 }
