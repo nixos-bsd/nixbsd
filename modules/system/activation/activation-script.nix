@@ -64,6 +64,8 @@ let
       mount -u -w /
       source ${config.system.build.earlyMountScript}
 
+      ${config.boot.postMountCommands}
+
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
     '' + optionalString (!onlyDry) ''
@@ -191,6 +193,14 @@ in {
       } (types.either types.str types.package);
     };
 
+    boot.postMountCommands = mkOption {
+      default = "";
+      type = types.lines;
+      description = lib.mdDoc ''
+        Shell commands to be executed immediately after the stage 1
+        filesystems have been mounted.
+      '';
+    };
   };
 
   config = {

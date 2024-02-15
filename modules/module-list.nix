@@ -52,9 +52,11 @@ in [
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
   ./system/boot/loader/stand
+  ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
-  ./virtualisation/vm-image.nix
+  #./virtualisation/vm-image.nix
+  ./virtualisation/qemu-vm.nix
 ]

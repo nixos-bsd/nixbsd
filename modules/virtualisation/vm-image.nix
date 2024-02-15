@@ -15,6 +15,10 @@ let
           device = "/dev/ada0p1";
           fsType = "msdosfs";
         };
+        "/nix" = {
+          device = "/dev/ada1p1";
+          fsType = "msdosfs";
+        };
       };
     }];
   };

@@ -58,7 +58,7 @@ let
         '';
       };
       when = mkOption {
-        type = types.nullOr types.string;
+        type = types.nullOr types.str;
         default = null;
         description = lib.mdDoc ''
           When to rotate log files, regardless of size.
