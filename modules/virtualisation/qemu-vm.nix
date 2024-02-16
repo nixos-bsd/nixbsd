@@ -92,22 +92,21 @@ let
 
       set -e
 
-      # Create an empty ext4 filesystem image. A filesystem image does not
+      # Create an empty filesystem image. A filesystem image does not
       # contain a partition table but just a filesystem.
       createEmptyFilesystemImage() {
         local name=$1
         local size=$2
         local temp=$(mktemp)
-        ${qemu}/bin/qemu-img create -f raw "$temp" "$size"
-        ${hostPkgs.e2fsprogs}/bin/mkfs.ext4 -L ${rootFilesystemLabel} "$temp"
+        ${hostPkgs.freebsd.makefs}/bin/makefs -s "$size" -o label=${rootFilesystemLabel} "$temp"
         ${qemu}/bin/qemu-img convert -f raw -O qcow2 "$temp" "$name"
         rm "$temp"
       }
 
       NIX_DISK_IMAGE=$(readlink -f "''${NIX_DISK_IMAGE:-${toString config.virtualisation.diskImage}}") || test -z "$NIX_DISK_IMAGE"
 
-      if test -n "$NIX_DISK_IMAGE" && ! test -e "$NIX_DISK_IMAGE"; then
-          echo "Disk image do not exist, creating the virtualisation disk image..."
+      if test -n "$NIX_DISK_IMAGE" && (! test -e "$NIX_DISK_IMAGE" || ! ${qemu}/bin/qemu-img info "$NIX_DISK_IMAGE" | grep ${systemImage}/nixos.qcow2 &>/dev/null); then
+          echo "Virtualisation disk image doesn't exist or needs rebase, creating..."
 
           ${if (cfg.useDefaultFilesystems) then ''
             # Create a writable qcow2 image using the systemImage as a backing
@@ -196,39 +195,6 @@ let
         fi
       ''}
 
-      ${lib.optionalString cfg.tpm.enable ''
-        NIX_SWTPM_DIR=$(readlink -f "''${NIX_SWTPM_DIR:-${config.system.name}-swtpm}")
-        mkdir -p "$NIX_SWTPM_DIR"
-        ${lib.getExe cfg.tpm.package} \
-          socket \
-          --tpmstate dir="$NIX_SWTPM_DIR" \
-          --ctrl type=unixio,path="$NIX_SWTPM_DIR"/socket,terminate \
-          --pid file="$NIX_SWTPM_DIR"/pid --daemon \
-          --tpm2 \
-          --log file="$NIX_SWTPM_DIR"/stdout,level=6
-
-        # Enable `fdflags` builtin in Bash
-        # We will need it to perform surgical modification of the file descriptor
-        # passed in the coprocess to remove `FD_CLOEXEC`, i.e. close the file descriptor
-        # on exec.
-        # If let alone, it will trigger the coprocess to read EOF when QEMU is `exec`
-        # at the end of this script. To work around that, we will just clear
-        # the `FD_CLOEXEC` bits as a first step.
-        enable -f ${hostPkgs.bash}/lib/bash/fdflags fdflags
-        # leave a dangling subprocess because the swtpm ctrl socket has
-        # "terminate" when the last connection disconnects, it stops swtpm.
-        # When qemu stops, or if the main shell process ends, the coproc will
-        # get signaled by virtue of the pipe between main and coproc ending.
-        # Which in turns triggers a socat connect-disconnect to swtpm which
-        # will stop it.
-        coproc waitingswtpm {
-          read || :
-          echo "" | ${lib.getExe hostPkgs.socat} STDIO UNIX-CONNECT:"$NIX_SWTPM_DIR"/socket
-        }
-        # Clear `FD_CLOEXEC` on the coprocess' file descriptor stdin.
-        fdflags -s-cloexec ''${waitingswtpm[1]}
-      ''}
-
       cd "$TMPDIR"
 
       ${lib.optionalString (cfg.emptyDiskImages != []) "idx=0"}
@@ -269,7 +235,7 @@ let
   # persistent naming schemes (e.g. /dev/disk/by-{label, uuid, partlabel,
   # partuuid}. Instead, supply a well-defined and persistent serial attribute
   # via QEMU. Inside the running system, the disk can then be identified via
-  # the /dev/disk/by-id scheme.
+  # the /dev/fstype/id scheme.
   rootDriveSerialAttr = "root";
 
   # System image is akin to a complete NixOS install with
@@ -378,9 +344,9 @@ in
     virtualisation.bootLoaderDevice =
       mkOption {
         type = types.path;
-        default = "/dev/disk/by-id/virtio-${rootDriveSerialAttr}";
-        defaultText = literalExpression ''/dev/disk/by-id/virtio-${rootDriveSerialAttr}'';
-        example = "/dev/disk/by-id/virtio-boot-loader-device";
+        default = "/dev/msdosfs/virtio-${rootDriveSerialAttr}";
+        defaultText = literalExpression ''/dev/msdosfs/virtio-${rootDriveSerialAttr}'';
+        example = "/dev/msdosfs/virtio-boot-loader-device";
         description =
           lib.mdDoc ''
             The path (inside th VM) to the device to boot from when legacy booting.
@@ -390,9 +356,9 @@ in
     virtualisation.bootPartition =
       mkOption {
         type = types.nullOr types.path;
-        default = if cfg.useEFIBoot then "/dev/disk/by-label/${espFilesystemLabel}" else null;
-        defaultText = literalExpression ''if cfg.useEFIBoot then "/dev/disk/by-label/${espFilesystemLabel}" else null'';
-        example = "/dev/disk/by-label/esp";
+        default = if cfg.useEFIBoot then "/dev/msdosfs/${espFilesystemLabel}" else null;
+        defaultText = literalExpression ''if cfg.useEFIBoot then "/dev/msdosfs/${espFilesystemLabel}" else null'';
+        example = "/dev/msdosfs/esp";
         description =
           lib.mdDoc ''
             The path (inside the VM) to the device containing the EFI System Partition (ESP).
@@ -405,9 +371,9 @@ in
     virtualisation.rootDevice =
       mkOption {
         type = types.nullOr types.path;
-        default = "/dev/disk/by-label/${rootFilesystemLabel}";
-        defaultText = literalExpression ''/dev/disk/by-label/${rootFilesystemLabel}'';
-        example = "/dev/disk/by-label/nixos";
+        default = "/dev/ufs/${rootFilesystemLabel}";
+        defaultText = literalExpression ''/dev/ufs/${rootFilesystemLabel}'';
+        example = "/dev/ufs/nixos";
         description =
           lib.mdDoc ''
             The path (inside the VM) to the device containing the root filesystem.
@@ -688,7 +654,7 @@ in
       package =
         mkOption {
           type = types.package;
-          default = builtins.trace(hostPkgs.qemu_kvm.stdenv.targetPlatform.config)hostPkgs.qemu_kvm;
+          default = hostPkgs.qemu_kvm;
           example = literalExpression "pkgs.qemu_test";
           description = lib.mdDoc "QEMU package to use.";
         };
@@ -977,7 +943,8 @@ in
       commands.start =
       ''
         REGINFO="$(kenv nix.regInfo)"
-        if [[ -n "REGINFO" ]]; then
+        if [[ -n "$REGINFO" ]]; then
+          echo "Got reginfo '$REGINFO'"
           ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
         fi
       '';
@@ -990,14 +957,14 @@ in
         source = builtins.storeDir;
         target = "/nix/store";
       };
-      xchg = {
-        source = ''"$TMPDIR"/xchg'';
-        target = "/tmp/xchg";
-      };
-      shared = {
-        source = ''"''${SHARED_DIR:-$TMPDIR/xchg}"'';
-        target = "/tmp/shared";
-      };
+      #xchg = {
+      #  source = ''"$TMPDIR"/xchg'';
+      #  target = "/tmp/xchg";
+      #};
+      #shared = {
+      #  source = ''"''${SHARED_DIR:-$TMPDIR/xchg}"'';
+      #  target = "/tmp/shared";
+      #};
       certs = mkIf cfg.useHostCerts {
         source = ''"$TMPDIR"/certs'';
         target = "/etc/ssl/certs";
@@ -1042,11 +1009,6 @@ in
       ])
       (mkIf (!cfg.graphics) [
         "-nographic"
-      ])
-      (mkIf (cfg.tpm.enable) [
-        "-chardev socket,id=chrtpm,path=\"$NIX_SWTPM_DIR\"/socket"
-        "-tpmdev emulator,id=tpm_dev_0,chardev=chrtpm"
-        "-device ${cfg.tpm.deviceModel},tpmdev=tpm_dev_0"
       ])
     ];
 
@@ -1107,7 +1069,7 @@ in
           fsType = "tmpfs";
           #neededForBoot = true;
           # Sync with systemd's tmp.mount;
-          options = [ "mode=1777" "strictatime" "nosuid" "nodev" "size=${toString config.boot.tmp.tmpfsSize}" ];
+          options = [ "mode=1777" "nosuid" "size=${toString config.boot.tmp.tmpfsSize}" ];
         };
         "/nix/${if cfg.writableStore then ".ro-store" else "store"}" = lib.mkIf cfg.useNixStoreImage {
           device = "/dev/disk/by-label/${nixStoreFilesystemLabel}";

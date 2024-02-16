@@ -324,19 +324,19 @@ in {
       keywordShutdown = true;
       keywordNojail = true;
       binDeps = with pkgs;
-        [ freebsd.mount freebsd.bin freebsd.limits coreutils ]
+        [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
         ++ config.system.fsPackages;
 
       commands.stop = "sync";
       commands.start = ''
         startmsg -n 'Mounting local filesystems:'
-        mount -a -t "nonfs,smbfs"
+        cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
         err=$?
         if [ $err -ne 0 ]; then
           echo 'Mounting /etc/fstab filesystems failed,' \
               'will retry after root mount hold release'
           root_hold_wait
-          mount -a -t "nonfs,smbfs"
+          cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
           err=$?
         fi
 

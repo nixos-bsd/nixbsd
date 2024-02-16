@@ -208,7 +208,7 @@ let format' = format; in let
       echo Unsupported >&2 && false
     '';
     efi = ''
-      mkimg -o $diskImage -s gpt -f ${format} -p ESP:=$espImage -p primary:=$primaryImage
+      mkimg -o $diskImage -s gpt -f ${format} -p efi:=$espImage -p freebsd-ufs:=$primaryImage
     '';
     hybrid = ''
       echo Unsupported >&2 && false
@@ -234,7 +234,7 @@ let format' = format; in let
     echo -n ${config.system.nixos.versionSuffix} > $out/nixos/.version-suffix
   '';
 
-  binPath = with pkgs; makeBinPath (
+  binPath = with pkgs.pkgsBuildBuild; makeBinPath (
     [ rsync
       freebsd.makefs
       freebsd.mkimg
@@ -330,7 +330,13 @@ in
 
     ${
       lib.optionalString installBootLoader ''
-        ${config.boot.loader.stand.populateCmd} ${toplevel}/boot.json -d $boot -g 0
+        ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel}/boot.json -d $boot -g 0
+      ''
+    }
+
+    ${
+      lib.optionalString (!onlyNixStore) ''
+        mkdir -p $root/{etc,dev,tmp,boot}
       ''
     }
 
@@ -347,10 +353,10 @@ in
       echo '/set type=file uid=0 gid=0' >>.mtree
       echo '/set type=dir uid=0 gid=0' >>.mtree
       echo '/set type=link uid=0 gid=0' >>.mtree
+      find . -type d | awk '{ print $0, "type=dir" }' >>.mtree
+      find . -type f | awk '{ print $0, "type=file" }' >>.mtree
+      find . -type l | awk '{ print $0, "type=link" }' >>.mtree
       popd
-      find . -type d | awk '{ print $0, "type=dir" }' >>$SOURCE/.mtree
-      find . -type f | awk '{ print $0, "type=file" }' >>$SOURCE/.mtree
-      find . -type l | awk '{ print $0, "type=link" }' >>$SOURCE/.mtree
       makefs -o version=2 -o label=$LABEL -b 10% -F $SOURCE/.mtree $DEST $SOURCE
     }
 
