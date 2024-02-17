@@ -5,7 +5,7 @@
 - [x] deal with locales
 - [x] rc module, so we can have a proper init system
 - [x] tempfiles (so that current-system and booted-system don't get garbage collected)
-- [ ] bootloader
+- [x] bootloader
 - [ ] users (might not need a ton of changes?)
     - [x] Base setup
     - [ ] User class defaults
