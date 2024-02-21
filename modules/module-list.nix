@@ -33,6 +33,7 @@ in [
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
+  ./misc/substituter.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./programs/ssh.nix
@@ -57,6 +58,5 @@ in [
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
-  #./virtualisation/vm-image.nix
   ./virtualisation/qemu-vm.nix
 ]
