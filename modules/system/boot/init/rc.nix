@@ -306,6 +306,8 @@ in {
   config = mkIf cfg.enabled {
     rc.conf = {
       root_rw_mount = cfg.rootRwMount;
+      rc_startmsgs = cfg.startMsgs;
+      rc_info = cfg.bootInfo;
     } // (mapAttrs' (_: val:
       nameValuePair ((if (builtins.isString val.provides) then
         val.provides

@@ -22,7 +22,9 @@ with lib; {
   };
 
   config = {
-    nixpkgs.overlays = mkIf (nixFlake != null && config.nixpkgs.overrideNix)
-      [ nixFlake.overlays.default ];
+    nixpkgs.overlays = mkIf (nixFlake != null && config.nixpkgs.overrideNix) [
+      nixFlake.overlays.default
+      (final: prev: { nix = prev.nix.override { enableManual = false; }; })
+    ];
   };
 }

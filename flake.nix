@@ -57,7 +57,7 @@
             };
             inherit (extended) pkgs;
           };
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs { inherit system; };
       in {
         packages = lib.mapAttrs'
           (name: value: lib.nameValuePair "${name}" (makeImage value))
