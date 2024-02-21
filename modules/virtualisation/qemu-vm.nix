@@ -222,7 +222,10 @@ let
   # a boot partition and root partition.
   systemImage = import ../../lib/make-disk-image.nix {
     inherit pkgs config lib;
-    additionalPaths = [ regInfo ];
+    contents = [{
+      target = "/etc/reginfo";
+      source = "${regInfo}/registration";
+    }];
     format = "qcow2";
     onlyNixStore = false;
     label = rootFilesystemLabel;
@@ -846,13 +849,12 @@ in {
     # allow `system.build.toplevel' to be included.  (If we had a direct
     # reference to ${regInfo} here, then we would get a cyclic
     # dependency.)
-    #boot.kernelEnvironment."nix.regInfo" = "${regInfo}/registration";
     rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
       description = "Load nix regInfo";
       provides = "loadNixRegInfo";
       commands.start = ''
-        REGINFO="$(kenv nix.regInfo)"
-        if [[ -n "$REGINFO" ]]; then
+        REGINFO=/etc/reginfo
+        if [[ -e "$REGINFO" ]]; then
           echo "Got reginfo '$REGINFO'"
           ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
         fi
