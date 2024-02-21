@@ -2,18 +2,25 @@
 with lib;
 let
   cfg = config.boot.loader.stand;
-  builder = import ./stand-conf-builder.nix { inherit pkgs; inherit (pkgs.freebsd) stand-efi; };
-  populateBuilder = import ./stand-conf-builder.nix { pkgs = pkgs.buildPackages; inherit (pkgs.freebsd) stand-efi; };
+  builder = import ./stand-conf-builder.nix {
+    inherit pkgs;
+    inherit (pkgs.freebsd) stand-efi;
+  };
+  populateBuilder = import ./stand-conf-builder.nix {
+    pkgs = pkgs.buildPackages;
+    inherit (pkgs.freebsd) stand-efi;
+  };
   #timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;
   timeoutStr = "-1";
-  builderArgs = "-g ${builtins.toString cfg.configurationLimit} -t ${timeoutStr} -c";
+  builderArgs =
+    "-g ${builtins.toString cfg.configurationLimit} -t ${timeoutStr} -c";
 in {
   options = {
     boot.loader.stand = {
       enable = mkEnableOption (mdDoc ''
         Use the FreeBSD boot loader.
       '');
-      
+
       configurationLimit = mkOption {
         default = 20;
         example = 10;

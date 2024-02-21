@@ -2,10 +2,8 @@
 
 with lib;
 
-let
-  cfg = config.boot.tmp;
-in
-{
+let cfg = config.boot.tmp;
+in {
   options = {
     boot.tmp = {
       cleanOnBoot = mkOption {
@@ -29,12 +27,12 @@ in
         type = types.bool;
         default = true;
         description = lib.mdDoc ''
-           Whether to mount a tmpfs on {file}`/tmp` during boot.
+          Whether to mount a tmpfs on {file}`/tmp` during boot.
 
-           ::: {.note}
-           Large Nix builds can fail if the mounted tmpfs is not large enough.
-           In such a case either increase the tmpfsSize or disable this option.
-           :::
+          ::: {.note}
+          Large Nix builds can fail if the mounted tmpfs is not large enough.
+          In such a case either increase the tmpfsSize or disable this option.
+          :::
         '';
       };
     };

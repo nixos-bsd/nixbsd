@@ -2,11 +2,10 @@
 
 let
 
-  perlWrapped = pkgs.perl.withPackages (p: with p; [ ConfigIniFiles FileSlurp ]);
+  perlWrapped =
+    pkgs.perl.withPackages (p: with p; [ ConfigIniFiles FileSlurp ]);
 
-in
-
-{
+in {
 
   options = {
     system.switch.enable = lib.mkOption {
@@ -28,18 +27,25 @@ in
     # TODO localeArchive
     system.activatableSystemBuilderCommands = ''
       mkdir $out/bin
-      substitute ${./switch-to-configuration.pl} $out/bin/switch-to-configuration \
+      substitute ${
+        ./switch-to-configuration.pl
+      } $out/bin/switch-to-configuration \
         --subst-var out \
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
-        --subst-var-by distroId ${lib.escapeShellArg config.system.nixos.distroId} \
-        --subst-var-by installBootLoader ${lib.escapeShellArg config.system.build.installBootLoader} \
+        --subst-var-by distroId ${
+          lib.escapeShellArg config.system.nixos.distroId
+        } \
+        --subst-var-by installBootLoader ${
+          lib.escapeShellArg config.system.build.installBootLoader
+        } \
         --subst-var-by perl "${perlWrapped}" \
         --subst-var-by shell "${pkgs.bash}/bin/sh" \
         ;
 
       chmod +x $out/bin/switch-to-configuration
-      ${lib.optionalString (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
+      ${lib.optionalString
+      (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
         if ! output=$(${perlWrapped}/bin/perl -c $out/bin/switch-to-configuration 2>&1); then
           echo "switch-to-configuration syntax is not valid:"
           echo "$output"
