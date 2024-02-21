@@ -20,8 +20,6 @@ let
 
   hostPkgs = cfg.host.pkgs;
 
-  consoles = lib.concatMapStringsSep " " (c: "console=${c}") cfg.qemu.consoles;
-
   driveOpts = { ... }: {
 
     options = {
@@ -139,32 +137,10 @@ let
         TMPDIR=$(mktemp -d nix-vm.XXXXXXXXXX --tmpdir)
     fi
 
-    ${lib.optionalString (cfg.useNixStoreImage) (if cfg.writableStore then ''
+    ${lib.optionalString (cfg.useNixStoreImage) ''
       # Create a writable copy/snapshot of the store image.
       ${qemu}/bin/qemu-img create -f qcow2 -F qcow2 -b ${storeImage}/nixos.qcow2 "$TMPDIR"/store.img
-    '' else ''
-      (
-        cd ${builtins.storeDir}
-        ${hostPkgs.erofs-utils}/bin/mkfs.erofs \
-          --force-uid=0 \
-          --force-gid=0 \
-          -L ${nixStoreFilesystemLabel} \
-          -U eb176051-bd15-49b7-9e6b-462e0b467019 \
-          -T 0 \
-          --exclude-regex="$(
-            <${
-              hostPkgs.closureInfo {
-                rootPaths = [ config.system.build.toplevel regInfo ];
-              }
-            }/store-paths \
-              sed -e 's^.*/^^g' \
-            | cut -c -10 \
-            | ${hostPkgs.python3}/bin/python ${./includes-to-excludes.py} )" \
-          "$TMPDIR"/store.img \
-          . \
-          </dev/null >/dev/null
-      )
-    '')}
+    ''}
 
     # Create a directory for exchanging data with the VM.
     mkdir -p "$TMPDIR/xchg"
@@ -285,20 +261,6 @@ let
   };
 
 in {
-  imports = [
-    #../profiles/qemu-guest.nix
-    (mkRenamedOptionModule [ "virtualisation" "pathsInNixDB" ] [
-      "virtualisation"
-      "additionalPaths"
-    ])
-    (mkRemovedOptionModule [ "virtualisation" "bootDevice" ]
-      "This option was renamed to `virtualisation.rootDevice`, as it was incorrectly named and misleading. Take the time to review what you want to do and look at the new options like `virtualisation.{bootLoaderDevice, bootPartition}`, open an issue in case of issues.")
-    (mkRemovedOptionModule [ "virtualisation" "efiVars" ]
-      "This option was removed, it is possible to provide a template UEFI variable with `virtualisation.efi.variables` ; if this option is important to you, open an issue")
-    (mkRemovedOptionModule [ "virtualisation" "persistBootDevice" ]
-      "Boot device is always persisted if you use a bootloader through the root disk image ; if this does not work for your usecase, please examine carefully what `virtualisation.{bootDevice, rootDevice, bootPartition}` options offer you and open an issue explaining your need.`")
-  ];
-
   options = {
 
     virtualisation.fileSystems = options.fileSystems;
@@ -697,14 +659,6 @@ in {
           lib.mdDoc "The interface used for the virtual hard disks.";
       };
 
-      guestAgent.enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = lib.mdDoc ''
-          Enable the Qemu guest agent.
-        '';
-      };
-
       virtioKeyboard = mkOption {
         type = types.bool;
         default = true;
@@ -912,14 +866,6 @@ in {
         source = builtins.storeDir;
         target = "/nix/store";
       };
-      #xchg = {
-      #  source = ''"$TMPDIR"/xchg'';
-      #  target = "/tmp/xchg";
-      #};
-      #shared = {
-      #  source = ''"''${SHARED_DIR:-$TMPDIR/xchg}"'';
-      #  target = "/tmp/shared";
-      #};
       certs = mkIf cfg.useHostCerts {
         source = ''"$TMPDIR"/certs'';
         target = "/etc/ssl/certs";
@@ -980,7 +926,7 @@ in {
         name = "nix-store";
         file = ''"$TMPDIR"/store.img'';
         deviceExtraOpts.bootindex = "2";
-        driveExtraOpts.format = if cfg.writableStore then "qcow2" else "raw";
+        driveExtraOpts.format = "qcow2";
       }])
       (imap0 (idx: _: {
         file = "$(pwd)/empty${toString idx}.qcow2";
@@ -1054,11 +1000,6 @@ in {
     swapDevices =
       (if cfg.useDefaultFilesystems then mkVMOverride else mkDefault) [ ];
 
-    # Don't run ntpd in the guest.  It should get the correct time from KVM.
-    #services.timesyncd.enable = false;
-
-    #services.qemuGuest.enable = cfg.qemu.guestAgent.enable;
-
     system.build.vm = hostPkgs.runCommand "nixos-vm" {
       preferLocalBuild = true;
       meta.mainProgram = "run-${config.system.name}-vm";
@@ -1070,46 +1011,13 @@ in {
       } $out/bin/run-${config.system.name}-vm
     '';
 
-    # When building a regular system configuration, override whatever
-    # video driver the host uses.
-    #services.xserver.videoDrivers = mkVMOverride [ "modesetting" ];
-    #services.xserver.defaultDepth = mkVMOverride 0;
-    #services.xserver.resolutions = mkVMOverride [ cfg.resolution ];
-    #services.xserver.monitorSection =
-    #  ''
-    #    # Set a higher refresh rate so that resolutions > 800x600 work.
-    #    HorizSync 30-140
-    #    VertRefresh 50-160
-    #  '';
-
-    # Wireless won't work in the VM.
-    #networking.wireless.enable = mkVMOverride false;
-    #services.connman.enable = mkVMOverride false;
+    # TODO: enable guest agent when it exists
+    # TODO: disable ntpd when it exists
+    # TODO: configure xserver
+    # TODO: disable wireless when it exists
 
     # Speed up booting by not waiting for ARP.
     networking.dhcpcd.extraConfig = "noarp";
-
-    #networking.usePredictableInterfaceNames = false;
-
-    #system.requiredKernelConfig = with config.lib.kernelConfig;
-    #  [ (isEnabled "VIRTIO_BLK")
-    #    (isEnabled "VIRTIO_PCI")
-    #    (isEnabled "VIRTIO_NET")
-    #    (isEnabled "EXT4_FS")
-    #    (isEnabled "NET_9P_VIRTIO")
-    #    (isEnabled "9P_FS")
-    #    (isYes "BLK_DEV")
-    #    (isYes "PCI")
-    #    (isYes "NETDEVICES")
-    #    (isYes "NET_CORE")
-    #    (isYes "INET")
-    #    (isYes "NETWORK_FILESYSTEMS")
-    #  ] ++ optionals (!cfg.graphics) [
-    #    (isYes "SERIAL_8250_CONSOLE")
-    #    (isYes "SERIAL_8250")
-    #  ] ++ optionals (cfg.writableStore) [
-    #    (isEnabled "OVERLAY_FS")
-    #  ];
 
   };
 
