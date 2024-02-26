@@ -48,10 +48,9 @@ All outputs from `system.build` are available, plus a few more. When developing 
 
 * `toplevel`: Top-level derivation, containing the kernel, etc, software, activation script, and more.
   You'll find it linked in the VM image at `/run/current-system` after activation.
-* `vmImage`: A bootable qcow2 image with a bootloader, intended to be loaded with UEFI
-* `vmImageRunner`: A script that runs a virtual machine with the qcow2 from `vmImage`. The system is booted from a writable CoW copy, so activation will run and you can make changes.
+* `vm`: A script that runs a virtual machine containing the `toplevel`, booted with UEFI. The system is booted from a writable CoW copy, so activation will run and you can edit files
 * `closureInfo`: The closure-info of `toplevel.drvPath`.
-* `vmImageRunnerClosureInfo`: the closure-info of `vmImageRunner.drvPath`.
+* `vmClosureInfo`: the closure-info of `vm.drvPath`.
 
 The `closureInfo` and `vmImageRunnerClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
 
@@ -78,10 +77,10 @@ In your nixbsd checkout:
 ```shell
 # Build the VM and all dependencies, make sure Nix doesn't delete them
 # Will likely take several hours
-nix build .#base.vmImageRunnerClosureInfo --out-link .gcroots/vm-image-runner
+nix build .#base.vmClosureInfo --out-link .gcroots/vm
 # Build the VM (actual build happened last step, should only take a few seconds)
-nix build .#base.vmImageRunner
+nix build .#base.vm
 # Run a VM
-result/bin/run-nixbsd-vm
+result/bin/run-nixbsd-base-vm
 # login as root:toor or bestie:toor
 ```
