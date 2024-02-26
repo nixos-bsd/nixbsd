@@ -331,7 +331,7 @@ in pkgs.runCommand name { } ''
   ''}
 
   ${lib.optionalString installBootLoader ''
-    ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel}/boot.json -d $boot -g 0
+    ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel} -d $boot -g 0
   ''}
 
   ${lib.optionalString (!onlyNixStore) ''

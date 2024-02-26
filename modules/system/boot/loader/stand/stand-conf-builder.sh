@@ -35,10 +35,6 @@ done
 
 [ "$timeout" = "" -o "$default" = "" ] && usage
 
-
-mkdir -p $target/nixos
-mkdir -p $target/extlinux
-
 addEntry() {
     local path="$1"  # boot.json
     local tag="$2"  # Generation number or 'default'
@@ -69,12 +65,12 @@ M.tags = {}
 
 EOF
 
-addEntry $default default >> $tmpFile
+addEntry $default/boot.json default >> $tmpFile
 
 if [ "$numGenerations" -gt 0 ]; then
     for generation in $(
             (cd /nix/var/nix/profiles && ls -d system-*-link/boot.json) \
-            | sed 's/system-\([0-9]\+\)-link/\1/' \
+            | sed 's#system-\([0-9]\+\)-link/boot.json#\1#' \
             | sort -n -r \
             | head -n $numGenerations); do
         link=/nix/var/nix/profiles/system-$generation-link/boot.json
@@ -92,7 +88,7 @@ chmod +w $targetBoot/lua
 mv $targetBoot/lua/loader.lua $targetBoot/lua/loader_orig.lua
 cp @loader_script@ $targetBoot/lua/loader.lua
 mv $tmpFile $targetBoot/lua/stand_config.lua
-mkdir $targetBoot/loader.conf.d
+mkdir -p $targetBoot/loader.conf.d
 
 mkdir -p $target/efi/boot
 cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi

@@ -41,6 +41,7 @@ in {
         } \
         --subst-var-by perl "${perlWrapped}" \
         --subst-var-by shell "${pkgs.bash}/bin/sh" \
+        --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
         ;
 
       chmod +x $out/bin/switch-to-configuration
