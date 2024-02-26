@@ -48,12 +48,8 @@
             closureInfo = extended.pkgs.closureInfo {
               rootPaths = [ extended.config.system.build.toplevel.drvPath ];
             };
-            vmImageRunnerClosureInfo = extended.pkgs.closureInfo {
-              # Building the qcow2 is fast, but is a big upload which takes a lot of cache space
-              # Only include the packages that are needed
-              # TODO: @artemist: make this automatic
-              rootPaths = map (pkg: pkg.drvPath)
-                extended.config.system.build.vmImageRunner.passthru.saveDeps;
+            vmClosureInfo = extended.pkgs.closureInfo {
+              rootPaths = [ extended.config.system.build.vm.drvPath ];
             };
             inherit (extended) pkgs;
           };

@@ -1,2 +1,4 @@
 result
 .gcroots
+*.fd
+*.qcow2

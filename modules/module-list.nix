@@ -33,6 +33,7 @@ in [
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
+  ./misc/substituter.nix
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./programs/ssh.nix
@@ -48,11 +49,14 @@ in [
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/top-level.nix
+  ./system/activation/switchable-system.nix
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
+  ./system/boot/loader/stand
+  ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
-  ./virtualisation/vm-image.nix
+  ./virtualisation/qemu-vm.nix
 ]
