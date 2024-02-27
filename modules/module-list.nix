@@ -30,6 +30,7 @@ in [
   ./config/system-path.nix
   ./config/user-class.nix
   ./config/users-groups.nix
+  ./installer/tools/tools.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
@@ -48,8 +49,8 @@ in [
   ./services/ttys/getty.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
-  ./system/activation/top-level.nix
   ./system/activation/switchable-system.nix
+  ./system/activation/top-level.nix
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
   ./system/boot/loader/stand
