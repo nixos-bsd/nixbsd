@@ -83,7 +83,7 @@ EOF
 
 # This is a NixOS installation if it has /etc/NIXOS or a proper
 # /etc/os-release.
-if (!-f "/etc/NIXBSD" && (read_file("/etc/os-release", err_mode => "quiet") // "") !~ /^ID="?@distroId@"?/msx) {
+if (!-f "/etc/NIXOS" && (read_file("/etc/os-release", err_mode => "quiet") // "") !~ /^ID="?@distroId@"?/msx) {
     die("This is not a NixOS installation!\n");
 }
 
