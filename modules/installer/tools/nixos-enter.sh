@@ -56,10 +56,9 @@ if [[ ! -e $mountPoint/etc/NIXOS ]]; then
     exit 126
 fi
 
-mkdir -p "$mountPoint/dev" "$mountPoint/sys"
-chmod 0755 "$mountPoint/dev" "$mountPoint/sys"
-mount --rbind /dev "$mountPoint/dev"
-mount --rbind /sys "$mountPoint/sys"
+mkdir -p "$mountPoint/dev"
+chmod 0755 "$mountPoint/dev"
+mount -t devfs "$mountPoint/dev"
 
 # modified from https://github.com/archlinux/arch-install-scripts/blob/bb04ab435a5a89cd5e5ee821783477bc80db797f/arch-chroot.in#L26-L52
 chroot_add_resolv_conf() {
@@ -97,12 +96,13 @@ chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" 
         exec 2>/dev/null
     fi
 
-    # Run the activation script. Set $LOCALE_ARCHIVE to suppress some Perl locale warnings.
-    LOCALE_ARCHIVE="$system/sw/lib/locale/locale-archive" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
+    # Run the activation script. Set $PATH_LOCALE to suppress some Perl locale warnings.
+    PATH_LOCALE="$system/sw/share/locale" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
 
     # Create /tmp. This is needed for nix-build and the NixOS activation script to work.
     # Hide the unhelpful "failed to replace specifiers" errors caused by missing /etc/machine-id.
-    chroot "$mountPoint" "$system/sw/bin/systemd-tmpfiles" --create --remove -E 2> /dev/null || true
+    # TODO: When we have minitmpfiles, use that here
+    mkdir -p "$mountPoint/tmp"
 )
 
 unset TMPDIR

@@ -423,7 +423,7 @@ trap cleanup EXIT
 # Re-execute nixos-rebuild from the Nixpkgs tree.
 if [[ -z $_NIXOS_REBUILD_REEXEC && -n $canRun && -z $fast ]]; then
     if [[ -z $flake ]]; then
-        if p=$(runCmd nix-build --no-out-link --expr 'with import <nixpkgs/nixos> {}; config.system.build.nixos-rebuild' "${extraBuildFlags[@]}"); then
+        if p=$(runCmd nix-build --no-out-link --expr 'with import <nixbsd> {}; config.system.build.nixos-rebuild' "${extraBuildFlags[@]}"); then
             SHOULD_REEXEC=1
         fi
     else
@@ -474,24 +474,16 @@ nixSystem() {
 
 prebuiltNix() {
     machine="$1"
-    if [ "$machine" = x86_64 ]; then
-        echo @nix_x86_64_linux@
-    elif [[ "$machine" =~ i.86 ]]; then
-        echo @nix_i686_linux@
-    elif [[ "$machine" = aarch64 ]]; then
-        echo @nix_aarch64_linux@
-    else
-        log "$0: unsupported platform"
-        exit 1
-    fi
+    log "$0: unsupported platform"
+    exit 1
 }
 
 if [[ -n $buildNix && -z $flake ]]; then
     log "building Nix..."
     nixDrv=
-    if ! nixDrv="$(runCmd nix-instantiate '<nixpkgs/nixos>' --add-root "$tmpDir/nix.drv" --indirect -A config.nix.package.out "${extraBuildFlags[@]}")"; then
+    if ! nixDrv="$(runCmd nix-instantiate '<nixbsd>' --add-root "$tmpDir/nix.drv" --indirect -A config.nix.package.out "${extraBuildFlags[@]}")"; then
         if ! nixDrv="$(runCmd nix-instantiate '<nixpkgs>' --add-root "$tmpDir/nix.drv" --indirect -A nix "${extraBuildFlags[@]}")"; then
-            if ! nixStorePath="$(runCmd nix-instantiate --eval '<nixpkgs/nixos/modules/installer/tools/nix-fallback-paths.nix>' -A "$(nixSystem)" | sed -e 's/^"//' -e 's/"$//')"; then
+            if ! nixStorePath="$(runCmd nix-instantiate --eval '<nixbsd/modules/installer/tools/nix-fallback-paths.nix>' -A "$(nixSystem)" | sed -e 's/^"//' -e 's/"$//')"; then
                 nixStorePath="$(prebuiltNix "$(uname -m)")"
             fi
             if ! runCmd nix-store -r "$nixStorePath" --add-root "${tmpDir}/nix" --indirect \
@@ -529,7 +521,7 @@ fi
 # nixos-version shows something useful).
 if [[ -n $canRun && -z $flake ]]; then
     if nixpkgs=$(runCmd nix-instantiate --find-file nixpkgs "${extraBuildFlags[@]}"); then
-        suffix=$(runCmd $SHELL "$nixpkgs/nixos/modules/installer/tools/get-version-suffix" "${extraBuildFlags[@]}" || true)
+        suffix=$(runCmd $SHELL "$nixbsd/modules/installer/tools/get-version-suffix" "${extraBuildFlags[@]}" || true)
         if [ -n "$suffix" ]; then
             echo -n "$suffix" > "$nixpkgs/.version-suffix" || true
         fi
@@ -546,7 +538,7 @@ if [ "$action" = repl ]; then
     # You should feel free to improve its behavior, as well as resolve tech
     # debt in "breaking" ways. Humans adapt quite well.
     if [[ -z $flake ]]; then
-        exec nix repl '<nixpkgs/nixos>' "${extraBuildFlags[@]}"
+        exec nix repl '<nixbsd>' "${extraBuildFlags[@]}"
     else
         if [[ -n "${lockFlags[0]}" ]]; then
             # nix repl itself does not support locking flags
@@ -694,7 +686,7 @@ if [ -z "$rollback" ]; then
     log "building the system configuration..."
     if [[ "$action" = switch || "$action" = boot ]]; then
         if [[ -z $flake ]]; then
-            pathToConfig="$(nixBuild '<nixpkgs/nixos>' --no-out-link -A system "${extraBuildFlags[@]}")"
+            pathToConfig="$(nixBuild '<nixbsd>' --no-out-link -A system "${extraBuildFlags[@]}")"
         else
             pathToConfig="$(nixFlakeBuild "$flake#$flakeAttr.config.system.build.toplevel" "${extraBuildFlags[@]}" "${lockFlags[@]}")"
         fi
@@ -702,19 +694,19 @@ if [ -z "$rollback" ]; then
         targetHostSudoCmd nix-env -p "$profile" --set "$pathToConfig"
     elif [[ "$action" = test || "$action" = build || "$action" = dry-build || "$action" = dry-activate ]]; then
         if [[ -z $flake ]]; then
-            pathToConfig="$(nixBuild '<nixpkgs/nixos>' -A system -k "${extraBuildFlags[@]}")"
+            pathToConfig="$(nixBuild '<nixbsd>' -A system -k "${extraBuildFlags[@]}")"
         else
             pathToConfig="$(nixFlakeBuild "$flake#$flakeAttr.config.system.build.toplevel" "${extraBuildFlags[@]}" "${lockFlags[@]}")"
         fi
     elif [ "$action" = build-vm ]; then
         if [[ -z $flake ]]; then
-            pathToConfig="$(nixBuild '<nixpkgs/nixos>' -A vm -k "${extraBuildFlags[@]}")"
+            pathToConfig="$(nixBuild '<nixbsd>' -A vm -k "${extraBuildFlags[@]}")"
         else
             pathToConfig="$(nixFlakeBuild "$flake#$flakeAttr.config.system.build.vm" "${extraBuildFlags[@]}" "${lockFlags[@]}")"
         fi
     elif [ "$action" = build-vm-with-bootloader ]; then
         if [[ -z $flake ]]; then
-            pathToConfig="$(nixBuild '<nixpkgs/nixos>' -A vmWithBootLoader -k "${extraBuildFlags[@]}")"
+            pathToConfig="$(nixBuild '<nixbsd>' -A vmWithBootLoader -k "${extraBuildFlags[@]}")"
         else
             pathToConfig="$(nixFlakeBuild "$flake#$flakeAttr.config.system.build.vmWithBootLoader" "${extraBuildFlags[@]}" "${lockFlags[@]}")"
         fi
@@ -747,41 +739,21 @@ fi
 # If we're not just building, then make the new configuration the boot
 # default and/or activate it now.
 if [[ "$action" = switch || "$action" = boot || "$action" = test || "$action" = dry-activate ]]; then
-    # Using systemd-run here to protect against PTY failures/network
+    # Linux uses systemd-run here to protect against PTY failures/network
     # disconnections during rebuild.
     # See: https://github.com/NixOS/nixpkgs/issues/39118
-    cmd=(
-        "systemd-run"
-        "-E" "LOCALE_ARCHIVE" # Will be set to new value early in switch-to-configuration script, but interpreter starts out with old value
-        "-E" "NIXOS_INSTALL_BOOTLOADER=$installBootloader"
-        "--collect"
-        "--no-ask-password"
-        "--pty"
-        "--quiet"
-        "--same-dir"
-        "--service-type=exec"
-        "--unit=nixos-rebuild-switch-to-configuration"
-        "--wait"
-    )
-    # Check if we have a working systemd-run. In chroot environments we may have
-    # a non-working systemd, so we fallback to not using systemd-run.
-    # You may also want to explicitly set NIXOS_SWITCH_USE_DIRTY_ENV environment
-    # variable, since systemd-run runs inside an isolated environment and
-    # this may break some post-switch scripts. However keep in mind that this
-    # may be dangerous in remote access (e.g. SSH).
+    # However, there isn't a great equivalant for FreeBSD.
+    # The best option is probably to use screen or tmux,
+    # but that doesn't make sens to start in a script
     if [[ -n "$NIXOS_SWITCH_USE_DIRTY_ENV" ]]; then
-        log "warning: skipping systemd-run since NIXOS_SWITCH_USE_DIRTY_ENV is set. This environment variable will be ignored in the future"
         cmd=("env" "NIXOS_INSTALL_BOOTLOADER=$installBootloader")
-    elif ! targetHostSudoCmd "${cmd[@]}" true; then
-        logVerbose "Skipping systemd-run to switch configuration since it is not working in target host."
+    else
         cmd=(
             "env"
             "-i"
-            "LOCALE_ARCHIVE=$LOCALE_ARCHIVE"
+            "PATH_LOCALE=$PATH_LOCALE"
             "NIXOS_INSTALL_BOOTLOADER=$installBootloader"
         )
-    else
-        logVerbose "Using systemd-run to switch configuration."
     fi
     if [[ -z "$specialisation" ]]; then
         cmd+=("$pathToConfig/bin/switch-to-configuration")

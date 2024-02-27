@@ -193,8 +193,6 @@ touch "$mountPoint/etc/NIXOS"
 # configuration.
 if [[ -z $noBootLoader ]]; then
     echo "installing the boot loader..."
-    # Grub needs an mtab.
-    ln -sfn /proc/mounts "$mountPoint"/etc/mtab
     export mountPoint
     NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root "$mountPoint" -c "$(cat <<'EOF'
       # Create a bind mount for each of the mount points inside the target file
@@ -203,10 +201,11 @@ if [[ -z $noBootLoader ]]; then
       # Without this the bootloader installation may fail due to options that
       # contain paths referenced during evaluation, like initrd.secrets.
       # when not root, re-execute the script in an unshared namespace
-      mount --rbind --mkdir / "$mountPoint"
-      mount --make-rslave "$mountPoint"
+      # On Linux this is done recursively, but that doesn't seem to be an option
+      # on FreeBSD, so let's hope this works
+      mount -t nullfs / "$mountPoint"
       /run/current-system/bin/switch-to-configuration boot
-      umount -R "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
+      umount "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
 EOF
 )"
 fi
