@@ -217,7 +217,7 @@ in let
       echo Unsupported >&2 && false
     '';
     efi = ''
-      mkimg -o $diskImage -s gpt -f ${format} -p efi:=$espImage -p freebsd-ufs:=$primaryImage
+      mkimg -y -o $diskImage -s gpt -f ${format} -p efi:=$espImage -p freebsd-ufs:=$primaryImage
     '';
     hybrid = ''
       echo Unsupported >&2 && false

@@ -18,4 +18,14 @@
 
   services.sshd.enable = true;
   boot.loader.stand.enable = true;
+
+  fileSystems."/" = {
+    device = "/dev/ufs/nixos";
+    fsType = "ufs";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/msdosfs/ESP";
+    fsType = "msdosfs";
+  };
 }
