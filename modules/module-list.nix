@@ -59,5 +59,5 @@ in [
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
-  ./virtualisation/qemu-vm.nix
+  ./virtualisation/build-vm.nix
 ]
