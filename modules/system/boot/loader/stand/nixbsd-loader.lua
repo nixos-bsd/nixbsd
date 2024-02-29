@@ -56,8 +56,7 @@ function config.loadKernel(other_kernel)
 	for k, v in pairs(entry.kernelEnvironment) do
 		loader.setenv(k, v)
 	end
-	-- TODO un-hardcode these
-	orig_loadKernel("disk0p2:" .. entry.kernel)
+	orig_loadKernel(entry.kernel)
 end
 
 require("loader_orig")

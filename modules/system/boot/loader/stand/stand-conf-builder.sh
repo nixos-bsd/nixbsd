@@ -35,16 +35,50 @@ done
 
 [ "$timeout" = "" -o "$default" = "" ] && usage
 
+# Convert a path to a file in the Nix store such as
+# /nix/store/<hash>-<name>/file to <hash>-<name>
+cleanName() {
+    local path="$1"
+    echo "$path" | sed -r 's|^/nix/store/([^/]+).*$|\1|'
+}
+
+# Copy a file from the Nix store to $target/nixos.
+declare -A filesCopied
+
+copyKernel() {
+    local src=$(readlink -f "$1")
+
+    local clean=$(cleanName $src)
+    local dstDir="$target/nixos/$clean"
+    local dst="$dstDir/kernel"
+
+    mkdir -p $dstDir
+    # Don't copy the file if $dst already exists.  This means that we
+    # have to create $dst atomically to prevent partially copied
+    # kernels or initrd if this script is ever interrupted.
+    if ! test -e $dst; then
+        local dstTmp=$dst.tmp.$$
+        cp -r $src $dstTmp
+        mv $dstTmp $dst
+    fi
+    filesCopied[$dstDir]=1
+    result="/nixos/$clean"
+}
+
 addEntry() {
     local path="$1"  # boot.json
     local tag="$2"  # Generation number or 'default'
+
+    local kernel=$(jq -r '."org.nixos.bootspec.v1".kernel' <$path)
+
+    copyKernel "$kernel"; kernel=$result
+
     cat <<EOF
 M.entries["$tag"] = {
-	kernel = $(jq -r '."org.nixos.bootspec.v1".kernel | @json' <$path),
+	kernel = "$kernel",
 	label = $(jq -r '."org.nixos.bootspec.v1".label | @json' <$path),
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
-	kernelParams = {$(jq -r '."org.nixos.bootspec.v1".kernelParams | map(@json) | join(", ")' <$path)},
         kernelEnvironment = {["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
 }
 M.tags[#M.tags + 1] = "$tag"
@@ -92,3 +126,12 @@ mkdir -p $targetBoot/loader.conf.d
 
 mkdir -p $target/efi/boot
 cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
+
+for fn in $target/nixos/*; do
+    if ! test "${filesCopied[$fn]}" = 1; then
+        echo "Removing no longer needed boot file: $fn"
+        chmod +w -- "$fn"
+        rm -rf -- "$fn"
+    fi
+done
+
