@@ -47,5 +47,12 @@ in {
     system.build.installBootLoader = "${builder} ${builderArgs}";
     system.boot.loader.id = "stand";
     boot.loader.stand.populateCmd = "${populateBuilder} ${builderArgs}";
+
+    boot.kernelEnvironment = mkIf (config.fileSystems ? "/")
+      (let fs = config.fileSystems."/";
+      in {
+        "vfs.root.mountfrom" = "${fs.fsType}:${fs.device}";
+        "vfs.root.mountfrom.options" = concatStringsSep "," fs.options;
+      });
   };
 }

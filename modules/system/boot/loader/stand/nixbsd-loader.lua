@@ -57,7 +57,6 @@ function config.loadKernel(other_kernel)
 		loader.setenv(k, v)
 	end
 	-- TODO un-hardcode these
-	loader.setenv("vfs.root.mountfrom", "ufs:/dev/vtbd0p2")
 	orig_loadKernel("disk0p2:" .. entry.kernel)
 end
 
