@@ -33,11 +33,14 @@ let
     pkgs.xz
     pkgs.zstd
 
-    # Some of these are provided by glibc on linux
+    # Most provided by glibc or util-linux on Linux
     pkgs.freebsd.bin
+    pkgs.freebsd.fdisk
+    pkgs.freebsd.geom
     pkgs.freebsd.ifconfig
     pkgs.freebsd.locale
     pkgs.freebsd.localedef
+    pkgs.freebsd.newfs
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
   ];
 
