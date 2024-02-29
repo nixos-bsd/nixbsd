@@ -1,4 +1,4 @@
-{ config, pkgs, ... }: {
+{ config, lib, ... }: {
   nixpkgs.hostPlatform = "x86_64-freebsd";
   nixpkgs.config.freebsdBranch = "releng/14.0";
 
@@ -7,7 +7,7 @@
   # Don't make me wait for an address...
   networking.dhcpcd.wait = "background";
 
-  networking.hostName = "nixbsd-base";
+  networking.hostName = lib.mkDefault "nixbsd-base";
 
   users.users.bestie = {
     isNormalUser = true;
