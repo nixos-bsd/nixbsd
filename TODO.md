@@ -6,14 +6,14 @@
 - [x] rc module, so we can have a proper init system
 - [x] tempfiles (so that current-system and booted-system don't get garbage collected)
 - [x] bootloader
-- [ ] users (might not need a ton of changes?)
+- [x] users (might not need a ton of changes?)
     - [x] Base setup
-    - [ ] User class defaults
+    - [x] User class defaults
     - [x] initialPassword (have to build perl with crypt or workaround)
 - [x] wrappers, so we can get sudo/login/etc
 - [x] ssh
 - [x] networking (maybe adapt the shell-based nixos stuff?)
-- [ ] fstab
+- [x] fstab
 - [x] fix sudo (currently "Exec format error" in PAM)
 - [x] make sure user passwords actually work
 - [x] nix-daemon
