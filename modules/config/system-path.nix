@@ -36,12 +36,14 @@ let
     # Most provided by glibc or util-linux on Linux
     pkgs.freebsd.bin
     pkgs.freebsd.fdisk
+    pkgs.freebsd.fsck
     pkgs.freebsd.geom
     pkgs.freebsd.ifconfig
     pkgs.freebsd.locale
     pkgs.freebsd.localedef
     pkgs.freebsd.newfs
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+    pkgs.freebsd.zfs
   ];
 
   defaultPackageNames = [ ];
