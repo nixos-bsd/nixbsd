@@ -70,4 +70,22 @@ in [
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
   ./virtualisation/build-vm.nix
+
+  ./services/x11/xserver.nix
+  #"${extPath}/services/x11/gdk-pixbuf.nix"
+  ./services/x11/desktop-managers/default.nix
+  ./services/x11/desktop-managers/xfce.nix
+  ./services/x11/display-managers/default.nix
+  ./services/x11/display-managers/sddm.nix
+  ./services/x11/window-managers/default.nix
+  ./services/system/dbus.nix
+  ./programs/dconf.nix
+  ./config/fonts/fontconfig.nix
+  "${extPath}/config/fonts/packages.nix"
+  "${extPath}/config/fonts/fontdir.nix"
+  "${extPath}/config/fonts/ghostscript.nix"
+  "${extPath}/config/xdg/autostart.nix"
+  "${extPath}/config/xdg/mime.nix"
+  "${extPath}/config/xdg/icons.nix"
+  "${extPath}/config/xdg/menus.nix"
 ]

@@ -19,7 +19,7 @@ let
   cfg = config.rc;
   mkRcScript = { provides, command, commandArgs, shell, requires, before
     , keywords, hasPidfile, commands, dummy, description, binDeps
-    , defaultBinDeps, environment, extraConfig, precmds, ... }:
+    , defaultBinDeps, environment, extraConfig, precmds, postcmds, ... }:
     let
       extraCommands =
         builtins.attrNames (builtins.removeAttrs commands defaultCommands);
@@ -69,25 +69,39 @@ let
         extra_commands="${concatStringsSep " " extraCommands}"
       '' + concatStringsSep "" (mapAttrsToList (cmd_name: cmd_value: ''
         ${cmd_name}_cmd="${name}_${cmd_name}"
-      '') definedCommands) + concatStringsSep "" (mapAttrsToList
+      '') definedCommands)
+      + concatStringsSep "" (mapAttrsToList
         (cmd_name: cmd_value: ''
           ${cmd_name}_precmd="${name}_${cmd_name}_precmd"
-        '') precmds) + "\n" + concatStringsSep "\n" (mapAttrsToList
-          (cmd_name: cmd_value: ''
-            ${name}_${cmd_name}() {
-            ${cmd_value}
-            }
-          '') definedCommands) + concatStringsSep "\n" (mapAttrsToList
-            (cmd_name: cmd_value: ''
-              ${name}_${cmd_name}_precmd() {
-              ${cmd_value}
-              }
-            '') precmds) + ''
-              ${extraConfig}
+        '') precmds) + "\n"
+      + concatStringsSep "" (mapAttrsToList
+        (cmd_name: cmd_value: ''
+          ${cmd_name}_postcmd="${name}_${cmd_name}_postcmd"
+        '') postcmds) + "\n"
+      + concatStringsSep "\n" (mapAttrsToList
+        (cmd_name: cmd_value: ''
+          ${name}_${cmd_name}() {
+          ${cmd_value}
+          }
+        '') definedCommands)
+      + concatStringsSep "\n" (mapAttrsToList
+        (cmd_name: cmd_value: ''
+          ${name}_${cmd_name}_precmd() {
+          ${cmd_value}
+          }
+        '') precmds)
+      + concatStringsSep "\n" (mapAttrsToList
+        (cmd_name: cmd_value: ''
+          ${name}_${cmd_name}_postcmd() {
+          ${cmd_value}
+          }
+        '') postcmds)
+      + ''
+        ${extraConfig}
 
-              load_rc_config ${name}
-              run_rc_command "$1"
-            '');
+        load_rc_config ${name}
+        run_rc_command "$1"
+      '');
     };
   mkRcDir = scriptCfg:
     pkgs.runCommand "rc.d" { scripts = builtins.map mkRcScript scriptCfg; } ''
