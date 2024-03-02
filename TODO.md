@@ -40,6 +40,9 @@
 - [ ] syslogd remote listening
 - [ ] newsyslog in cron
 
+# maybe???
+- [ ] veriexec (sign nix store paths, load signatures into kernel)
+
 # Packages
 - [ ] Clean up gcc without breaking musl
 - [x] Figure out why git is failing

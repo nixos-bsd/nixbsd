@@ -35,14 +35,23 @@ let
 
     # Most provided by glibc or util-linux on Linux
     pkgs.freebsd.bin
+    pkgs.freebsd.devfs
+    pkgs.freebsd.dmesg
     pkgs.freebsd.fdisk
     pkgs.freebsd.fsck
     pkgs.freebsd.geom
     pkgs.freebsd.ifconfig
+    pkgs.freebsd.kldconfig
+    pkgs.freebsd.kldload
+    pkgs.freebsd.kldstat
+    pkgs.freebsd.kldunload
     pkgs.freebsd.locale
     pkgs.freebsd.localedef
+    pkgs.freebsd.mdconfig
     pkgs.freebsd.newfs
+    pkgs.freebsd.newfs_msdos
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+    pkgs.freebsd.swapon
     pkgs.freebsd.zfs
   ];
 
