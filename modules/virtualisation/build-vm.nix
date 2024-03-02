@@ -20,6 +20,7 @@ in {
   config = {
     system.build = {
       vm = lib.mkDefault config.virtualisation.vmVariant.system.build.vm;
+      systemImage = lib.mkDefault config.virtualisation.vmVariant.system.build.systemImage;
     };
   };
 

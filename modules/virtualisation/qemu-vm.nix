@@ -1013,6 +1013,8 @@ in {
       } $out/bin/run-${config.system.name}-vm
     '';
 
+    system.build.systemImage = systemImage;
+
     # TODO: enable guest agent when it exists
     # TODO: disable ntpd when it exists
     # TODO: configure xserver
