@@ -35,6 +35,7 @@ let
 
     # Most provided by glibc or util-linux on Linux
     pkgs.freebsd.bin
+    pkgs.freebsd.bsdlabel
     pkgs.freebsd.devfs
     pkgs.freebsd.dmesg
     pkgs.freebsd.fdisk
