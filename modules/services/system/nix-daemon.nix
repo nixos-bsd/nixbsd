@@ -107,7 +107,7 @@ in {
       hasPidfile = true;
       command = "${pkgs.freebsd.daemon}/bin/daemon";
       commandArgs =
-        [ "-p" "/var/run/nix-daemon.pid" "${nixPackage}/bin/nix-daemon" ];
+        [ "-p" "/var/run/nix_daemon.pid" "${nixPackage}/bin/nix-daemon" ];
     };
 
     # Set up the environment variables for running Nix.
