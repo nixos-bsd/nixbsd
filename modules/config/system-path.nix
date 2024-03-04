@@ -36,6 +36,7 @@ let
     # Most provided by glibc or util-linux on Linux
     pkgs.freebsd.bin
     pkgs.freebsd.bsdlabel
+    pkgs.freebsd.cap_mkdb
     pkgs.freebsd.devfs
     pkgs.freebsd.dmesg
     pkgs.freebsd.fdisk
@@ -51,7 +52,10 @@ let
     pkgs.freebsd.mdconfig
     pkgs.freebsd.newfs
     pkgs.freebsd.newfs_msdos
+    pkgs.freebsd.ping
+    pkgs.freebsd.pwd_mkdb
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+    pkgs.freebsd.services_mkdb
     pkgs.freebsd.swapon
     pkgs.freebsd.zfs
   ];
