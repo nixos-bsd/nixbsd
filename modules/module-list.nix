@@ -7,7 +7,6 @@ in [
   "${extPath}/config/system-environment.nix"
   "${extPath}/misc/assertions.nix"
   "${extPath}/misc/ids.nix"
-  "${extPath}/misc/label.nix"
   "${extPath}/misc/meta.nix"
   "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
