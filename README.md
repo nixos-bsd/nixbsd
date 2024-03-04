@@ -29,7 +29,7 @@ When possible, modules are taken directly from nixpkgs without copying
 
 Some modules are copied with modification from nixpkgs. The original files remain under the [MIT License](https://github.com/NixOS/nixpkgs/blob/master/COPYING) and copyright the original contributors.
 
-Unfortunately, upstreaming NixBSD into NixOS would require a fair amount of reogranization and changes to init systems,
+Unfortunately, upstreaming NixBSD into NixOS would require a fair amount of reorganization and changes to init systems,
 so is unlikely to happen anytime soon.
 
 ### freebsd-src
