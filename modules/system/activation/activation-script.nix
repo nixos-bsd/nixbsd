@@ -75,6 +75,9 @@ let
       # used as a garbage collection root.
       ln -sfn "$(readlink -f "$systemConfig")" /run/current-system
 
+      # Likewise, the first system will be the booted-system
+      [ -e /run/booted-system ] || ln -sfn "$(readlink -f "$systemConfig")" /run/booted-system
+
       exit $_status
     '';
 
