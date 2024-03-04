@@ -44,11 +44,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1709342329,
-        "narHash": "sha256-w5zDczFSMizXBsTQPRsw1P9r4rxUIR4/F2jtfn6A1kQ=",
+        "lastModified": 1709518505,
+        "narHash": "sha256-+QYABIAK4VaTNkuveE6uN4K57Dpj/C3xb+k0bQahD4s=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "397df537c8273ee539ea79183d59ea40543326d2",
+        "rev": "468946c724c010e58f1f98e437fa355bbaae13a1",
         "type": "github"
       },
       "original": {

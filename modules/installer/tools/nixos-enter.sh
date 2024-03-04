@@ -3,18 +3,6 @@
 
 set -e
 
-# Re-exec ourselves in a private mount namespace so that our bind
-# mounts get cleaned up automatically.
-if [ -z "$NIXOS_ENTER_REEXEC" ]; then
-    export NIXOS_ENTER_REEXEC=1
-    if [ "$(id -u)" != 0 ]; then
-        extraFlags="-r"
-    fi
-    exec unshare --fork --mount --uts --mount-proc --pid $extraFlags -- "$0" "$@"
-else
-    mount --make-rprivate /
-fi
-
 mountPoint=/mnt
 system=/nix/var/nix/profiles/system
 command=("$system/sw/bin/bash" "--login")
@@ -58,7 +46,7 @@ fi
 
 mkdir -p "$mountPoint/dev"
 chmod 0755 "$mountPoint/dev"
-mount -t devfs "$mountPoint/dev"
+mount -t devfs devfs "$mountPoint/dev"
 
 # modified from https://github.com/archlinux/arch-install-scripts/blob/bb04ab435a5a89cd5e5ee821783477bc80db797f/arch-chroot.in#L26-L52
 chroot_add_resolv_conf() {
