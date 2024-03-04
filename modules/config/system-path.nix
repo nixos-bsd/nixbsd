@@ -57,6 +57,7 @@ let
     pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
     pkgs.freebsd.services_mkdb
     pkgs.freebsd.swapon
+    pkgs.freebsd.sysctl
     pkgs.freebsd.zfs
   ];
 
