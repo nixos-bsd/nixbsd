@@ -67,7 +67,7 @@ Note, however, that trusted substituters can maliciously modify outputs, so only
 * To see what is happening, you might want to use [nix-output-monitor](https://github.com/maralorn/nix-output-monitor). For flake commands you can replace `nix` with `nom` to use it.
 
 ## Contributing
-We'd be happy to review any pull requests! If you'd like to ask some questions message [artemist](https://github.com/artemist) on Matrix (@artemist:mildlyfunctional.gay).
+We'd be happy to review any pull requests! If you have any problems please open an issue on this repo, we're using this issue tracker for nix and nixpkgs issues as well.
 
 Contributions should be formatted with [nixfmt](https://github.com/serokell/nixfmt). While you can use `nix fmt`,
 that will rebuild the universe. You may want to run `nix-shell -p nixfmt --run "nixfmt ."` instead.
