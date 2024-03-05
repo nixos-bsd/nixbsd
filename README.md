@@ -84,3 +84,10 @@ nix build .#base.vm
 result/bin/run-nixbsd-base-vm
 # login as root:toor or bestie:toor
 ```
+
+or to just build and try a VM to play with without a local checkout:
+```shell
+nix run 'github:nixos-bsd/nixbsd#extra.vm'
+```
+but see the above warning about substituter trust before accepting the requested substitutor.
+This will put VM state files in the current directory.
