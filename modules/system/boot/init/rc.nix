@@ -256,6 +256,12 @@ in {
         default = { };
       };
 
+      options.postcmds = mkOption {
+        type = types.attrsOf types.str;
+        description = "A mapping from command name to postcommand text.";
+        default = { };
+      };
+
       options.extraConfig = mkOption {
         type = types.lines;
         description =

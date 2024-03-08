@@ -74,20 +74,21 @@ in
       xfce4-notifyd
       xfce4-screenshooter
       xfce4-session
-      xfce4-settings
+      #xfce4-settings
+      xfconf  # TODO remove
       xfce4-taskmanager
       xfce4-terminal
     ] # TODO: NetworkManager doesn't belong here
-      ++ optional config.networking.networkmanager.enable networkmanagerapplet
-      ++ optional config.powerManagement.enable xfce4-power-manager
-      ++ optionals config.hardware.pulseaudio.enable [
-        pavucontrol
-        # volume up/down keys support:
-        # xfce4-pulseaudio-plugin includes all the functionalities of xfce4-volumed-pulse
-        # but can only be used with xfce4-panel, so for no-desktop usage we still include
-        # xfce4-volumed-pulse
-        (if cfg.noDesktop then xfce4-volumed-pulse else xfce4-pulseaudio-plugin)
-      ] ++ optionals cfg.enableXfwm [
+      #++ optional config.networking.networkmanager.enable networkmanagerapplet
+      #++ optional config.powerManagement.enable xfce4-power-manager
+      #++ optionals config.hardware.pulseaudio.enable [
+      #  pavucontrol
+      #  # volume up/down keys support:
+      #  # xfce4-pulseaudio-plugin includes all the functionalities of xfce4-volumed-pulse
+      #  # but can only be used with xfce4-panel, so for no-desktop usage we still include
+      #  # xfce4-volumed-pulse
+      #  (if cfg.noDesktop then xfce4-volumed-pulse else xfce4-pulseaudio-plugin)
+      ++ optionals cfg.enableXfwm [
         xfwm4
         xfwm4-themes
       ] ++ optionals (!cfg.noDesktop) [
@@ -127,7 +128,7 @@ in
     #services.gvfs.enable = true;
     #services.tumbler.enable = true;
     #services.system-config-printer.enable = (mkIf config.services.printing.enable (mkDefault true));
-    #services.xserver.libinput.enable = mkDefault true; # used in xfce4-settings-manager
+    services.xserver.libinput.enable = mkDefault true; # used in xfce4-settings-manager
 
     # Enable default programs
     programs.dconf.enable = true;

@@ -56,6 +56,10 @@ in rec {
           x86_64-linux =
             "${qemuPkg}/bin/qemu-system-x86_64 -machine type=q35,accel=hvf:tcg -cpu max";
         };
+        x86_64-freebsd = rec {
+          inherit (otherHostGuestMatrix.x86_64-darwin) x86_64-linux;
+          x86_64-freebsd = x86_64-linux;
+        };
       };
 
       throwUnsupportedHostSystem = let

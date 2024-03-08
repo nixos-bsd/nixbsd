@@ -323,10 +323,17 @@ in
           description = lib.mdDoc "Script executed before the display manager is started.";
         };
 
-        execCmd = mkOption {
+        # used to be execCmd. had to switch to execProg + execArgs to make rc happy
+        execProg = mkOption {
           type = types.str;
           example = literalExpression ''"''${pkgs.lightdm}/bin/lightdm"'';
-          description = lib.mdDoc "Command to start the display manager.";
+          description = lib.mdDoc "Executable for the display manager.";
+        };
+
+        execArgs = mkOption {
+          type = types.str;
+          default = "";
+          description = lib.mdDoc "Shell args for the display manager";
         };
 
         environment = mkOption {

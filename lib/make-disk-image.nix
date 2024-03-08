@@ -351,9 +351,9 @@ in pkgs.runCommand name { } ''
     echo '/set type=file uid=0 gid=0' >>.mtree
     echo '/set type=dir uid=0 gid=0' >>.mtree
     echo '/set type=link uid=0 gid=0' >>.mtree
-    find . -type d | awk '{ print $0, "type=dir" }' >>.mtree
-    find . -type f | awk '{ print $0, "type=file" }' >>.mtree
-    find . -type l | awk '{ print $0, "type=link" }' >>.mtree
+    find . -type d | awk '{ gsub(/ /, "\\s", $0); print $0, "type=dir" }' >>.mtree
+    find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>.mtree
+    find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>.mtree
     popd
     makefs -o version=2 -o label=$LABEL -b 10% -F $SOURCE/.mtree $DEST $SOURCE
   }

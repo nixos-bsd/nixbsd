@@ -7,11 +7,12 @@ let
   # Abbreviations.
   cfg = config.services.xserver;
   xorg = pkgs.xorg;
+  hasDm = cfg.displayManager.sddm.enable;
 
 
   # Map video driver names to driver packages. FIXME: move into card-specific modules.
   knownVideoDrivers = {
-    scfb = { modules = [ pkgs.freebsd.xf86-video-scfb ]; driverName = "scfb"; };
+    scfb = { modules = [ pkgs.freebsd.xf86-video-scfb ]; driverName = "scfb"; display = true; };
 
     # modesetting does not have a xf86videomodesetting package as it is included in xorgserver
     modesetting = {};
@@ -263,7 +264,7 @@ in
 
       videoDrivers = mkOption {
         type = types.listOf types.str;
-        default = [ "modesetting" "fbdev" ];
+        default = [ "modesetting" "scfb" ];
         example = [
           "nvidia" "nvidiaLegacy390" "nvidiaLegacy340" "nvidiaLegacy304"
           "amdgpu-pro"
@@ -284,17 +285,6 @@ in
 
           For unfree "nvidia*", the supported GPU lists are on
           https://www.nvidia.com/object/unix.html
-        '';
-      };
-
-      videoDriver = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        example = "i810";
-        description = lib.mdDoc ''
-          The name of the video driver for your graphics card.  This
-          option is obsolete; please set the
-          {option}`services.xserver.videoDrivers` instead.
         '';
       };
 
@@ -617,8 +607,6 @@ in
 
     #hardware.opengl.enable = mkDefault true;
 
-    services.xserver.videoDrivers = mkIf (cfg.videoDriver != null) [ cfg.videoDriver ];
-
     # FIXME: somehow check for unknown driver names.
     services.xserver.drivers = flip concatMap cfg.videoDrivers (name:
       let driver =
@@ -681,6 +669,7 @@ in
         xorg.xinput
         xorg.xprop
         xorg.xauth
+        xorg.xinit
         pkgs.xterm
         pkgs.xdg-utils
         xorg.xf86inputevdev.out # get evdev.4 man page
@@ -705,13 +694,13 @@ in
 
     #systemd.defaultUnit = mkIf cfg.autorun "graphical.target";
 
-    rc.services.display-manager =
+    rc.services.display-manager = mkIf hasDm
       {
         provides = "display_manager";
         description = "Display Manager";
         requires = ["LOGIN" "cleanvar" "syscons" "dbus"];
         keywordShutdown = true;
-        command = "${cfg.displayManager.job.execCmd}";
+        command = "${cfg.displayManager.job.execProg}";
         commands = {
           start = ''
             	local iter
@@ -725,7 +714,7 @@ in
                         iter=$((''${iter} + 1))
                 done
 
-                ${cfg.displayManager.job.execCmd} ) &
+                ${cfg.displayManager.job.execProg} ${cfg.displayManager.job.execArgs} ) &
           '';
         };
         precmds = {
@@ -736,10 +725,11 @@ in
           '';
         };
 
-        environment =
-          optionalAttrs config.hardware.opengl.setLdLibraryPath
-            { LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.addOpenGLRunpath.driverLink ]; }
-          // cfg.displayManager.job.environment;
+        #environment =
+        #  optionalAttrs config.hardware.opengl.setLdLibraryPath
+        #    { LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.addOpenGLRunpath.driverLink ]; }
+        #  // cfg.displayManager.job.environment;
+        environment = cfg.displayManager.job.environment;
       };
 
     services.xserver.displayManager.xserverArgs =
@@ -759,6 +749,8 @@ in
       concatLists (catAttrs "modules" cfg.drivers) ++
       [ xorg.xorgserver.out
         xorg.xf86inputevdev.out
+        xorg.xf86inputmouse.out
+        xorg.xf86inputkeyboard.out
       ];
 
     system.checks = singleton (pkgs.runCommand "xkb-validated" {
@@ -772,6 +764,10 @@ in
       XKB_CONFIG_ROOT="$dir" xkbvalidate "$model" "$layout" "$variant" "$options"
       touch "$out"
     '');
+
+    services.xserver.moduleSection = ''
+      Load "shadow"
+    '';
 
     services.xserver.config =
       ''

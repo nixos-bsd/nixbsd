@@ -9,7 +9,7 @@ let
   homeDir = "/run/dbus";
 
   configDir = pkgs.makeDBusConf {
-    inherit (cfg) apparmor;
+    #inherit (cfg) apparmor;
     suidHelper = "${config.security.wrapperDir}/dbus-daemon-launch-helper";
     serviceDirectories = cfg.packages;
   };
@@ -92,7 +92,7 @@ in
         provides = "dbus";
         command = "${pkgs.dbus}/bin/dbus-daemon";
         hasPidfile = true;
-        requres = ["DAEMON" "ldconfig"];
+        requires = ["DAEMON" "ldconfig"];
         precmds = {
           start = ''
             mkdir -p /var/lib/dbus

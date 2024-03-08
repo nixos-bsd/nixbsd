@@ -227,7 +227,7 @@ in
         QML2_IMPORT_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtQmlPrefix;
       };
 
-      execCmd = "exec /run/current-system/sw/bin/sddm";
+      execProg = "${pkgs.plasma5Packages.sddm}/bin/sddm";
     };
 
     security.pam.services = {

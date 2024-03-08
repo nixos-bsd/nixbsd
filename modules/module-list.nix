@@ -88,4 +88,6 @@ in [
   "${extPath}/config/xdg/mime.nix"
   "${extPath}/config/xdg/icons.nix"
   "${extPath}/config/xdg/menus.nix"
+  ./services/x11/hardware/libinput.nix
+  ./services/devd.nix
 ]
