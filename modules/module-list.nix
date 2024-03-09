@@ -1,8 +1,8 @@
 nixpkgsPath:
 let extPath = "${nixpkgsPath}/nixos/modules";
 in [
-  "${extPath}/config/nix.nix"
   "${extPath}/config/nix-remote-build.nix"
+  "${extPath}/config/nix.nix"
   "${extPath}/config/shells-environment.nix"
   "${extPath}/config/system-environment.nix"
   "${extPath}/misc/ids.nix"
@@ -16,6 +16,11 @@ in [
   "${extPath}/programs/environment.nix"
   "${extPath}/programs/less.nix"
   "${extPath}/programs/nano.nix"
+  "${extPath}/programs/zsh/oh-my-zsh.nix"
+  "${extPath}/programs/zsh/zsh-autoenv.nix"
+  "${extPath}/programs/zsh/zsh-autosuggestions.nix"
+  "${extPath}/programs/zsh/zsh-syntax-highlighting.nix"
+  "${extPath}/programs/zsh/zsh.nix"
   "${extPath}/security/ca.nix"
   "${extPath}/security/sudo.nix"
   "${extPath}/system/activation/activatable-system.nix"

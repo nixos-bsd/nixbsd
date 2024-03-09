@@ -316,9 +316,6 @@ in {
     })
 
     (mkIf cfg.nixos.enable {
-      # As of writing nothing has a meta.doc, so set one here so there's at least one definition
-      meta.doc = "/dev/null";
-
       system.build.manual = manual;
 
       environment.systemPackages = [ ]
