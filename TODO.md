@@ -31,14 +31,16 @@
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
 - [ ] jails
 - [ ] figure else what else has to be in requiredPackages
-- [ ] Figure out how to generate documentation
-- [ ] switch-to-configuration
-- [ ] nixos-install
+- [x] Figure out how to generate documentation
+- [x] switch-to-configuration
+- [x] nixos-install
+- [ ] switch-to-configuration switch
 - [ ] fsck
 
 # Nice to have modules
 - [ ] syslogd remote listening
 - [ ] newsyslog in cron
+- [ ] cache nixbsd module documentation
 
 # maybe???
 - [ ] veriexec (sign nix store paths, load signatures into kernel)

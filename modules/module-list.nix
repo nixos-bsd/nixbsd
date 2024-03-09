@@ -30,6 +30,7 @@ in [
   ./config/user-class.nix
   ./config/users-groups.nix
   ./installer/tools/tools.nix
+  ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix

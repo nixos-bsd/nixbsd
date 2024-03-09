@@ -1,5 +1,5 @@
 { config, options, lib, pkgs, utils, modules, baseModules, extraModules
-, modulesPath, specialArgs, ... }:
+, modulesPath, specialArgs, _nixbsdNixpkgsPath, ... }:
 
 with lib;
 
@@ -13,8 +13,9 @@ let
       f = import m;
       instance = f (mapAttrs (n: _: abort "evaluating ${n} for `meta` failed")
         (functionArgs f));
-    in cfg.nixos.options.splitBuild && builtins.isPath m && isFunction f
-    && instance ? options && instance.meta.buildDocsInSandbox or true;
+    in cfg.nixos.options.splitBuild && builtins.isPath m
+    && hasPrefix _nixbsdNixpkgsPath m && isFunction f && instance ? options
+    && instance.meta.buildDocsInSandbox or true;
 
   docModules =
     let p = partition canCacheDocs (baseModules ++ cfg.nixos.extraModules);
@@ -24,7 +25,7 @@ let
         ++ optionals cfg.nixos.includeAllModules (extraModules ++ modules);
     };
 
-  manual = import ../../doc/manual rec {
+  manual = import "${_nixbsdNixpkgsPath}/nixos/doc/manual" rec {
     inherit pkgs config;
     version = config.system.nixos.release;
     revision = "release-${version}";
@@ -135,31 +136,6 @@ let
   };
 
 in {
-  imports = [
-    ./man-db.nix
-    ./mandoc.nix
-    ./assertions.nix
-    ./meta.nix
-    ../config/system-path.nix
-    ../system/etc/etc.nix
-    (mkRenamedOptionModule [ "programs" "info" "enable" ] [
-      "documentation"
-      "info"
-      "enable"
-    ])
-    (mkRenamedOptionModule [ "programs" "man" "enable" ] [
-      "documentation"
-      "man"
-      "enable"
-    ])
-    (mkRenamedOptionModule [ "services" "nixosManual" "enable" ] [
-      "documentation"
-      "nixos"
-      "enable"
-    ])
-    (mkRemovedOptionModule [ "documentation" "nixos" "options" "allowDocBook" ]
-      "DocBook option documentation is no longer supported")
-  ];
 
   options = {
 
@@ -340,6 +316,9 @@ in {
     })
 
     (mkIf cfg.nixos.enable {
+      # As of writing nothing has a meta.doc, so set one here so there's at least one definition
+      meta.doc = "/dev/null";
+
       system.build.manual = manual;
 
       environment.systemPackages = [ ]

@@ -7,10 +7,7 @@ let
 in {
   options.services.getty = {
     enabled = (mkEnableOption "getty") // { default = true; };
-    package = mkOption {
-      type = types.package;
-      default = pkgs.freebsd.getty;
-    };
+    package = mkPackageOption pkgs [ "freebsd" "getty" ] { };
   };
 
   config = mkIf cfg.enabled {
