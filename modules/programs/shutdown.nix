@@ -22,7 +22,7 @@ in {
         '';
       };
 
-      package = mkPackageOption pkgs "freebsd.shutdown";
+      package = mkPackageOption pkgs [ "freebsd" "shutdown" ] { };
     };
   };
 

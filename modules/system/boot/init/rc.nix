@@ -114,6 +114,7 @@ in {
   };
   options.rc.services = mkOption {
     default = { };
+    description = "Definition of rc services";
     type = types.attrsOf (types.submodule ({ config, ... }: {
       options.provides = mkOption {
         type = types.either identType (types.listOf identType);

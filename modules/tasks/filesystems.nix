@@ -253,7 +253,7 @@ in {
     boot.mountProcfs = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mkDoc ''
+      description = lib.mdDoc ''
         Whether to mount /proc at boot. This is considered deprecated behavior by FreeBSD.
       '';
     };

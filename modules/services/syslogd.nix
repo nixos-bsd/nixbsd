@@ -32,6 +32,10 @@ let
           "local6"
           "local7"
         ]);
+        description = lib.mdDoc ''
+          The part of the system generating the message, similar to `LOG_`
+          values used in the {manpage}`syslog(3)` function.
+        '';
         default = null;
       };
       comparisonFlag = mkOption {

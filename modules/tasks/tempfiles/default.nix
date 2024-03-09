@@ -28,7 +28,7 @@ let
         default = [ ];
         example = [ "-d" "-e" "-i" "-U" ];
         description = lib.mdDoc ''
-          Extra flags to pass to {manfile}`mtree(8)`.
+          Extra flags to pass to {manpage}`mtree(8)`.
         '';
       };
     };

@@ -523,12 +523,8 @@ in {
       default = "default";
       type = types.enum (lib.attrNames tempaddrValues);
       description = lib.mdDoc ''
-        Whether to enable IPv6 Privacy Extensions for interfaces not
-        configured explicitly in
-        [](#opt-networking.interfaces._name_.tempAddress).
-
-        This sets the ipv6.conf.*.use_tempaddr sysctl for all
-        interfaces. Possible values are:
+        Whether to enable IPv6 Privacy Extensions for all interfaces
+        Possible values are:
 
         ${tempaddrDoc}
       '';
