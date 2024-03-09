@@ -6,6 +6,8 @@ in [
   "${extPath}/config/shells-environment.nix"
   "${extPath}/config/system-environment.nix"
   "${extPath}/misc/ids.nix"
+  "${extPath}/misc/man-db.nix"
+  "${extPath}/misc/mandoc.nix"
   "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
   "${extPath}/programs/bash/bash-completion.nix"
