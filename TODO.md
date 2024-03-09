@@ -49,4 +49,4 @@
 - [ ] Clean up gcc without breaking musl
 - [x] Figure out why git is failing
 - [ ] Subsetting in locales (save a little build time and like 20MiB)
-- [ ] Separate debug from packages (currently bin/.debug contains debug info)
+- [x] Separate debug from packages (currently bin/.debug contains debug info)
