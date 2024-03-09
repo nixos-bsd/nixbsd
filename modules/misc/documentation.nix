@@ -25,7 +25,7 @@ let
         ++ optionals cfg.nixos.includeAllModules (extraModules ++ modules);
     };
 
-  manual = import "${_nixbsdNixpkgsPath}/nixos/doc/manual" rec {
+  manual = import ../../doc/manual rec {
     inherit pkgs config;
     version = config.system.nixos.release;
     revision = "release-${version}";

@@ -1,5 +1,5 @@
 { pkgs, options, config, version, revision, extraSources ? [ ]
-, baseOptionsJSON ? null, warningsAreErrors ? true, prefix ? ../../.. }:
+, baseOptionsJSON ? null, warningsAreErrors ? true, prefix ? pkgs.path }:
 
 with pkgs;
 
@@ -30,7 +30,7 @@ let
       };
   };
 
-  nixos-lib = import ../../lib { };
+  nixos-lib = import "${pkgs.path}/nixos/lib" { };
 
   testOptionsDoc = let
     eval = nixos-lib.evalTest {
@@ -45,10 +45,10 @@ let
       opt // {
         # Clean up declaration sites to not refer to the NixOS source tree.
         declarations = map (decl:
-          if hasPrefix (toString ../../..) (toString decl) then
+          if hasPrefix pkgs.path (toString decl) then
             let
-              subpath = removePrefix "/"
-                (removePrefix (toString ../../..) (toString decl));
+              subpath =
+                removePrefix "/" (removePrefix pkgs.path (toString decl));
             in {
               url = "https://github.com/NixOS/nixpkgs/blob/master/${subpath}";
               name = subpath;
@@ -62,7 +62,7 @@ let
   };
 
   testDriverMachineDocstrings = pkgs.callPackage
-    ../../../nixos/lib/test-driver/nixos-test-driver-docstrings.nix { };
+    "${pkgs.path}/nixos/lib/test-driver/nixos-test-driver-docstrings.nix" { };
 
   prepareManualFromMD = ''
     cp -r --no-preserve=all $inputs/* .
@@ -102,8 +102,8 @@ in rec {
     dst=$out/${common.outputPath}
     mkdir -p $dst
 
-    cp ${../../../doc/style.css} $dst/style.css
-    cp ${../../../doc/overrides.css} $dst/overrides.css
+    cp ${"${pkgs.path}/doc/style.css"} $dst/style.css
+    cp ${"${pkgs.path}/doc/overrides.css"} $dst/overrides.css
     cp -r ${pkgs.documentation-highlighter} $dst/highlightjs
 
     ${prepareManualFromMD}
