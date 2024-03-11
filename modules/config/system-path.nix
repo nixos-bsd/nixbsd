@@ -17,6 +17,7 @@ let
     pkgs.curl
     pkgs.diffutils
     pkgs.findutils
+    pkgs.flock
     pkgs.gawk
     pkgs.getent
     pkgs.gnugrep

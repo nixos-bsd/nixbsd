@@ -1,11 +1,6 @@
 { config, lib, pkgs, ... }:
 
-let
-
-  perlWrapped =
-    pkgs.perl.withPackages (p: with p; [ ConfigIniFiles FileSlurp ]);
-
-in {
+{
 
   options = {
     system.switch.enable = lib.mkOption {
@@ -28,18 +23,19 @@ in {
     system.activatableSystemBuilderCommands = ''
       mkdir $out/bin
       substitute ${
-        ./switch-to-configuration.pl
+        ./switch-to-configuration.sh
       } $out/bin/switch-to-configuration \
         --subst-var out \
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
+        --subst-var-by diffutils "${pkgs.diffutils}" \
         --subst-var-by distroId ${
           lib.escapeShellArg config.system.nixos.distroId
         } \
         --subst-var-by installBootLoader ${
           lib.escapeShellArg config.system.build.installBootLoader
         } \
-        --subst-var-by perl "${perlWrapped}" \
+        --subst-var-by bash "${pkgs.bash}" \
         --subst-var-by shell "${pkgs.bash}/bin/sh" \
         --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
         ;
@@ -47,11 +43,7 @@ in {
       chmod +x $out/bin/switch-to-configuration
       ${lib.optionalString
       (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
-        if ! output=$(${perlWrapped}/bin/perl -c $out/bin/switch-to-configuration 2>&1); then
-          echo "switch-to-configuration syntax is not valid:"
-          echo "$output"
-          exit 1
-        fi
+        # TODO syntax checking
       ''}
     '';
   };

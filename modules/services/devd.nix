@@ -22,6 +22,8 @@ in {
       fi
     '';
   };
-  config.environment.etc.devd.source = mkIf cfg.enable "${pkgs.freebsd.devd}/etc/devd";
+  config.environment.etc = mkIf cfg.enable {
+    devd.source = "${pkgs.freebsd.devd}/etc/devd";
+  };
 }
 

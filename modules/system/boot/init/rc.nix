@@ -215,6 +215,13 @@ in {
         default = false;
       };
 
+      options.keywordUser = mkOption {
+        type = types.bool;
+        description =
+          "Whether this service should be run iff a user is starting a session.";
+        default = false;
+      };
+
       options.requires = mkOption {
         type = types.listOf types.str;
         description =
@@ -242,7 +249,8 @@ in {
         ++ optionals config.keywordFirstboot [ "firstboot" ]
         ++ optionals config.keywordNostart [ "nostart" ]
         ++ optionals config.keywordSuspend [ "suspend" ]
-        ++ optionals config.keywordResume [ "resume" ];
+        ++ optionals config.keywordResume [ "resume" ]
+        ++ optionals config.keywordUser [ "user" ];
 
       options.commands = mkOption {
         type = types.attrsOf (types.nullOr types.str);

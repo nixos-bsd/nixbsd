@@ -670,13 +670,25 @@ let
             };
           }];
 
-          session = autoOrderRules [{
-            name = "lastlog";
-            enable = cfg.updateWtmp;
-            control = "required";
-            modulePath = "pam_lastlog.so";
-            settings = { silent = true; };
-          }];
+          session = autoOrderRules [
+            {
+              name = "lastlog";
+              enable = cfg.updateWtmp;
+              control = "required";
+              modulePath = "pam_lastlog.so";
+              settings = { silent = true; };
+            }
+            {
+              name = "rcSession";
+              enable = cfg.startSession;
+              control = "required";
+              modulePath = "pam_exec.so";
+              settings = {
+                seteuid = true;
+              };
+              args = ["/bin/sh" "-c" "USER_LOGIN=$PAM_USER /bin/sh /etc/rc"];
+            }
+          ];
         };
 
       };
