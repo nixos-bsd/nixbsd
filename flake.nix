@@ -21,7 +21,10 @@
       inherit (nixpkgs) lib;
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd" ];
       configBase = ./configurations;
-      makeSystem = module: self.lib.nixbsdSystem { modules = [ module ]; };
+      makeSystem = name: module:
+        self.lib.nixbsdSystem {
+          modules = [ module { networking.hostName = "nixbsd-${name}"; } ];
+        };
     in {
       lib.nixbsdSystem = args:
         import ./lib/eval-config.nix (args // {
@@ -31,7 +34,7 @@
         } // lib.optionalAttrs (!args ? system) { system = null; });
 
       nixosConfigurations =
-        lib.mapAttrs (name: _: makeSystem (configBase + "/${name}"))
+        lib.mapAttrs (name: _: makeSystem name (configBase + "/${name}"))
         (builtins.readDir configBase);
     } // (utils.lib.eachSystem supportedSystems (system:
       let

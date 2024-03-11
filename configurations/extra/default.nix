@@ -1,6 +1,5 @@
 { pkgs, ... }: {
   imports = [ ../base/default.nix ];
-  networking.hostName = "nixbsd-extra";
 
   nix.settings = {
     trusted-users = [ "@wheel" ];
@@ -8,6 +7,8 @@
   };
 
   environment.systemPackages = with pkgs; [
+    file
+    freebsd.truss
     gitMinimal
     htop
     nix-top
