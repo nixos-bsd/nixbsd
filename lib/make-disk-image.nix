@@ -92,13 +92,13 @@ diskSize ? "auto"
 
 , # additional disk space to be added to the image if diskSize "auto"
 # is used
-additionalSpace ? "512M"
+additionalSpace ? "2g"
 
 , # size of the boot partition, is only used if partitionTableType is
 # either "efi" or "hybrid"
 # This will be undersized slightly, as this is actually the offset of
 # the end of the partition. Generally it will be 1MiB smaller.
-bootSize ? "32m"
+bootSize ? "128m"
 
 , # The files and directories to be placed in the target file system.
 # This is a list of attribute sets {source, target, mode, user, group} where
@@ -348,14 +348,14 @@ in pkgs.runCommand name { } ''
     LABEL="$3"
 
     pushd $SOURCE
-    echo '/set type=file uid=0 gid=0' >>.mtree
-    echo '/set type=dir uid=0 gid=0' >>.mtree
-    echo '/set type=link uid=0 gid=0' >>.mtree
-    find . -type d | awk '{ gsub(/ /, "\\s", $0); print $0, "type=dir" }' >>.mtree
-    find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>.mtree
-    find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>.mtree
+    echo '/set type=file uid=0 gid=0' >>../.mtree
+    echo '/set type=dir uid=0 gid=0' >>../.mtree
+    echo '/set type=link uid=0 gid=0' >>../.mtree
+    find . -type d | awk '{ gsub(/ /, "\\s", $0); print $0, "type=dir" }' >>../.mtree
+    find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>../.mtree
+    find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>../.mtree
     popd
-    makefs -o version=2 -o label=$LABEL -b 10% -F $SOURCE/.mtree $DEST $SOURCE
+    makefs -b ${additionalSpace} -o version=2 -o label=$LABEL -b 10% -F $SOURCE/../.mtree $DEST $SOURCE
   }
 
   buildFatImage() {

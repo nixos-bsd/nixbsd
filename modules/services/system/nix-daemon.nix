@@ -108,6 +108,7 @@ in {
       command = "${pkgs.freebsd.daemon}/bin/daemon";
       commandArgs =
         [ "-p" "/var/run/nix_daemon.pid" "${nixPackage}/bin/nix-daemon" ];
+      procname = "${nixPackage}/bin/nix-daemon";
 
       precmds.stop = ''
         kill -INT $(cat $pidfile) &>/dev/null || true

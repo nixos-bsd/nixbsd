@@ -335,7 +335,7 @@ in {
       command = "${cfg.package}/bin/syslogd";
       commandArgs = socketArgs ++ cfg.extraParams;
       commands.reload = null;
-      hasPidfile = true;
+      #hasPidfile = true;
       provides = "syslogd";
       requires = [ "FILESYSTEMS" "newsyslog" ];
       # requires = [ "FILESYSTEMS" "mountcritremote" "newsyslog" "netif" ];

@@ -20,10 +20,17 @@ in {
       if ! checkyesno devd_enable; then
         sysctl hw.bus.devctl_queue=0
       fi
+      mkdir -p /run/dbus
     '';
   };
   config.environment.etc = mkIf cfg.enable {
     devd.source = "${pkgs.freebsd.devd}/etc/devd";
+    "devd.conf".text = ''
+      options {
+        directory "/etc/devd";
+        pid-file "/var/run/devd.pid";
+      };
+    '';
   };
 }
 

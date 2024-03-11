@@ -243,7 +243,7 @@ let
     installBootLoader = cfg.useDefaultFilesystems;
     touchEFIVars = cfg.useEFIBoot;
     diskSize = "auto";
-    additionalSpace = "0M";
+    additionalSpace = "10g";
     copyChannel = false;
     OVMF = cfg.efi.OVMF;
   };
@@ -259,7 +259,7 @@ let
     installBootLoader = false;
     touchEFIVars = false;
     diskSize = "auto";
-    additionalSpace = "0M";
+    additionalSpace = "2g";
     copyChannel = false;
   };
 

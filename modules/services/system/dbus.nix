@@ -97,7 +97,7 @@ in
           start = ''
             mkdir -p /var/lib/dbus
             ${pkgs.dbus}/bin/dbus-uuidgen --ensure
-            mkdir -p /var/run/dbus
+            mkdir -p /var/run/dbus /run/dbus
           '';
         };
         environment = {

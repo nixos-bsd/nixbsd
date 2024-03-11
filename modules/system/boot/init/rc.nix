@@ -18,7 +18,7 @@ let
   ];
   cfg = config.rc;
   mkRcScript = { provides, command, commandArgs, shell, requires, before
-    , keywords, hasPidfile, commands, dummy, description, binDeps
+    , keywords, hasPidfile, commands, dummy, description, binDeps, procname
     , defaultBinDeps, environment, extraConfig, precmds, postcmds, ... }:
     let
       extraCommands =
@@ -30,7 +30,7 @@ let
       else
         builtins.elemAt provides 0;
     in pkgs.writeTextFile {
-      name = "${name}.in";
+      inherit name;
       executable = true;
       text = ''
         #!${shell}${shell.shellPath or ""}
@@ -52,17 +52,19 @@ let
         # DESCRIPTION: ${description}
       '' + optionalString (!dummy) (''
 
+        export PATH=${makeBinPath (binDeps ++ defaultBinDeps)}:$PATH
         . /etc/rc.subr
 
         name="${name}"
-        rcvar="${name}_enabled"
+        rcvar="${name}_enable"
         ${concatStringsSep "\n"
         (mapAttrsToList (k: v: "export " + toShellVar k v) definedEnvironment)}
-        export PATH=${makeBinPath (binDeps ++ defaultBinDeps)}:$PATH
       '' + optionalString (command != null) ''
         command="${command}"
       '' + optionalString (builtins.length commandArgs != 0) ''
         command_args="${escapeShellArgs commandArgs}"
+      '' + optionalString (procname != null) ''
+        procname="${procname}"
       '' + optionalString hasPidfile ''
         pidfile="/var/run/${name}.pid"
       '' + optionalString ((builtins.length extraCommands) != 0) ''
@@ -104,10 +106,11 @@ let
       '');
     };
   mkRcDir = scriptCfg:
-    pkgs.runCommand "rc.d" { scripts = builtins.map mkRcScript scriptCfg; } ''
+    pkgs.runCommand "rc.d" {} (''
       mkdir -p $out
-      ln -s $scripts $out
-    '';
+    '' + lib.concatStringsSep "" (builtins.map (target: ''
+      ln -s ${mkRcScript target} $out/${if (builtins.isString target.provides) then target.provides else builtins.elemAt target.provides 0}
+    '') scriptCfg));
   mkRcBool = b: if b then "YES" else "NO";
   mkRcLiteral = val:
     "'" + (replaceStrings [ "'" ] [ "'\"'\"'" ]
@@ -158,6 +161,12 @@ in {
         type = types.bool;
         default = false;
         description = "Whether to automatically create a pidfile";
+      };
+
+      options.procname = mkOption {
+        type = types.nullOr types.pathInStore;
+        description = "The executable that must be running in order for the service to be up";
+        default = null;
       };
 
       options.shell = mkOption {
@@ -341,7 +350,7 @@ in {
       nameValuePair ((if (builtins.isString val.provides) then
         val.provides
       else
-        builtins.elemAt val.provides 0) + "_enabled") "YES") cfg.services);
+        builtins.elemAt val.provides 0) + "_enable") "YES") cfg.services);
     environment.etc."rc" = {
       source = "${cfg.package}/etc/*";
       target = ".";

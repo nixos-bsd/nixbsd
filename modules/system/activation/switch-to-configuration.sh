@@ -37,14 +37,14 @@ if ! ( [ -f "/etc/NIXOS" ] || grep 'ID="@distroId@"' &>/dev/null ); then
 	exit 1
 fi
 
-mkdir -p /run/nixos
-exec 100>>/run/nixos/switch-to-configuration.lock || { echo "Could not open lock"; exit 1 }
-flock -n 100 || { echo "Could not acquire lock"; exit 1 }
+@coreutils@/bin/mkdir -p /run/nixos
+exec 100>>/run/nixos/switch-to-configuration.lock || { echo "Could not open lock"; exit 1; }
+@flock@/bin/flock -n 100 || { echo "Could not acquire lock"; exit 1; }
 
 case "$action" in
 	switch|boot)
 		@bash@/bin/bash <<EOF
-@installBootLoader@
+@installBootLoader@ $toplevel
 EOF
 		[[ "$?" = 0 ]] || exit 1
 		;;
@@ -59,7 +59,7 @@ fi
 # collect live statuses for all targets
 declare -A currentStatus
 for targetPath in /etc/rc.d/*; do
-	[[ -f "$targetPath" -a -x "$targetPath" ]] || continue
+	[[ -f "$targetPath" && -x "$targetPath" ]] || continue
 	targetName="${targetPath##*/}"
 	if "$targetPath" status &>/dev/null; then
 		currentStatus["$targetName"]=live
@@ -70,10 +70,10 @@ done
 
 # collect set of targets we want to switch to
 declare -A actions
-for targetPath in $toplevel/etc/rc.d/*; do
-	[[ -f "$targetPath" -a -x "$targetPath" ]] || continue
+for targetPath in "$toplevel"/etc/rc.d/*; do
+	[[ -f "$targetPath" && -x "$targetPath" ]] || continue
 	targetName="${targetPath##*/}"
-	if [[ "${currentStatus["$targetName"]}" = "live"; then
+	if [[ "${currentStatus["$targetName"]}" = "live" ]]; then
 		# test if it needs to be restarted because the target script (incl hashes) changed
 		if ! @diffutils@/bin/diff -q "/etc/rc.d/$targetName" "$targetPath" &>/dev/null; then
 			actions["$targetName"]=restart
@@ -105,8 +105,7 @@ if [[ "$action" = "dry-activate" ]]; then
 	done
 
 	echo >&2 "## would activate the configuration:"
-	"$out/dry-activate" >&2
-	exit 0
+	"$out/dry-activate" "$out" >&2
 
 	echo >&2 "## would restart the following units:"
 	for targetName in "${!actions[@]}"; do
@@ -126,7 +125,7 @@ for targetName in "${!actions[@]}"; do
 done
 
 res=0
-$out/activate || res=2
+"$out/activate" "$out" || res=2
 
 for targetName in "${!actions[@]}"; do
 	case "${actions["$targetName"]}" in start|restart) "/etc/rc.d/$targetName" start || res=3 ;; esac

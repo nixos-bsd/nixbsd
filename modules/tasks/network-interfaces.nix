@@ -566,7 +566,6 @@ in {
         # No need to handle no hostname, it can't be null
         # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
         commands.start = ''
-          rcorder -n "Setting hostname"
           hostname ${escapeShellArg cfg.fqdnOrHostName}
         '';
       };

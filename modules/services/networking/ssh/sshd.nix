@@ -645,7 +645,7 @@ in {
       # TODO: @artemist: add NSS modules here
       binDeps = [ cfgc.package pkgs.gawk ];
 
-      hasPidfile = true;
+      #hasPidfile = true;
       command = "${cfgc.package}/bin/sshd";
       precmds.start = flip concatMapStrings cfg.hostKeys (k: ''
         if ! [ -s "${k.path}" ]; then
@@ -682,7 +682,7 @@ in {
       mkIf (authPrincipalsFiles != { }) "/etc/ssh/authorized_principals.d/%u";
 
     services.openssh.extraConfig = mkOrder 0 ''
-      UsePAM yes
+      #UsePAM yes
 
       Banner ${
         if cfg.banner == null then

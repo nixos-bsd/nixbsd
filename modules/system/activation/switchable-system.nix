@@ -29,6 +29,7 @@
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
         --subst-var-by diffutils "${pkgs.diffutils}" \
+        --subst-var-by flock "${pkgs.flock}" \
         --subst-var-by distroId ${
           lib.escapeShellArg config.system.nixos.distroId
         } \
