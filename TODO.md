@@ -26,7 +26,7 @@
 - [ ] GPU drivers
 - [ ] Linux emulation
     - [ ] chroot other OS
-    - [ ] "chroot" nixpkgs with shared store
+    - [x] "chroot" nixpkgs with shared store
     - [ ] "chroot" nixos with service config
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
 - [ ] jails

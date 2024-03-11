@@ -58,6 +58,7 @@ in [
   ./system/activation/top-level.nix
   ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
+  ./system/boot/linux.nix
   ./system/boot/loader/stand
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
