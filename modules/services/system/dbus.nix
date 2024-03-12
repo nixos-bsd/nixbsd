@@ -91,7 +91,7 @@ in
       rc.services.dbus = {
         provides = "dbus";
         command = "${pkgs.dbus}/bin/dbus-daemon";
-        hasPidfile = true;
+        #hasPidfile = true;
         requires = ["DAEMON" "ldconfig"];
         precmds = {
           start = ''

@@ -206,7 +206,7 @@ in {
       requires = [ "FILESYSTEMS" ];
       before = [ "NETWORKING" ];
       description = "DHCP Client";
-      hasPidfile = true;
+      #hasPidfile = true;
       keywordNojailvnet = true;
       binDeps = with pkgs; [
         config.networking.resolvconf.package

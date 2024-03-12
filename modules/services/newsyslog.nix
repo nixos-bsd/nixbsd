@@ -251,7 +251,7 @@ in {
     rc.services.newsyslog = {
       description = "Logfile rotation";
       provides = "newsyslog";
-      requires = [ "FILESYSTEMS" "tempfiles" ];
+      requires = [ "FILESYSTEMS" /*"tempfiles"*/ ];
       command = "${cfg.package}/bin/newsyslog";
       commandArgs = [ "-C" "-f" (toString configFile) ] ++ cfg.extraArgs;
       commands.stop = ":";
