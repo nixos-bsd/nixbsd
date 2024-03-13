@@ -8,6 +8,11 @@
       # We don't need another nixpkgs clone, it won't evaluate anyway
       inputs.nixpkgs-regression.follows = "nixpkgs";
     };
+    mini-tmpfiles = {
+      url = "github:nixos-bsd/mini-tmpfiles";
+      inputs.nixpkgs-freebsd.follows = "nixpkgs";
+      inputs.utils.follows = "utils";
+    };
   };
 
   nixConfig = {
@@ -16,7 +21,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, utils, nix }:
+  outputs = { self, nixpkgs, utils, nix, mini-tmpfiles }:
     let
       inherit (nixpkgs) lib;
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd" ];
@@ -30,7 +35,10 @@
         import ./lib/eval-config.nix (args // {
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
-          specialArgs = { nixFlake = nix; } // (args.specialArgs or { });
+          specialArgs = {
+            nixFlake = nix;
+            mini-tmpfiles-flake = mini-tmpfiles;
+          } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });
 
       nixosConfigurations =

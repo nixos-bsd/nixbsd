@@ -11,6 +11,7 @@
     freebsd.truss
     gitMinimal
     htop
+    mini-tmpfiles
     nix-top
     tmux
     unzip
