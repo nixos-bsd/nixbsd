@@ -1,4 +1,4 @@
-{ config, lib, pkgs, _nixbsdNixpkgsPath, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -10,8 +10,7 @@ let
   cfg = dmcfg.lightdm;
   sessionData = dmcfg.sessionData;
 
-  npDot = /${_nixbsdNixpkgsPath}/nixos/modules/services/x11/display-managers;
-  setSessionScript = pkgs.callPackage /${npDot}/account-service-util.nix { };
+  setSessionScript = pkgs.callPackage ./account-service-util.nix { };
 
   inherit (pkgs) lightdm writeScript writeText;
 
@@ -74,13 +73,13 @@ in
   # here determines the default: later modules (if enable) are
   # preferred.
   imports = [
-    /${npDot}/lightdm-greeters/gtk.nix
-    /${npDot}/lightdm-greeters/mini.nix
-    /${npDot}/lightdm-greeters/enso-os.nix
-    /${npDot}/lightdm-greeters/pantheon.nix
-    /${npDot}/lightdm-greeters/tiny.nix
-    /${npDot}/lightdm-greeters/slick.nix
-    /${npDot}/lightdm-greeters/mobile.nix
+    ./lightdm-greeters/gtk.nix
+    ./lightdm-greeters/mini.nix
+    ./lightdm-greeters/enso-os.nix
+    ./lightdm-greeters/pantheon.nix
+    ./lightdm-greeters/tiny.nix
+    ./lightdm-greeters/slick.nix
+    ./lightdm-greeters/mobile.nix
     (mkRenamedOptionModule [ "services" "xserver" "displayManager" "lightdm" "autoLogin" "enable" ] [
       "services"
       "xserver"
@@ -236,7 +235,7 @@ in
     # Enable the accounts daemon to find lightdm's dbus interface
     environment.systemPackages = [ lightdm ];
 
-    security.polkit.enable = true;
+    #security.polkit.enable = true;
 
     security.pam.services.lightdm.text = ''
         auth      substack      login
