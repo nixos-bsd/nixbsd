@@ -90,4 +90,7 @@ in [
   "${extPath}/config/xdg/menus.nix"
   ./services/x11/hardware/libinput.nix
   ./services/devd.nix
+  ./services/desktops/seatd.nix
+  ./services/x11/display-managers/lightdm.nix
+  ./services/desktops/accountsservice.nix
 ]
