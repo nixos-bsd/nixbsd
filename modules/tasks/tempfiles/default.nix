@@ -65,20 +65,20 @@ in {
   };
 
   config = {
-    #rc.services.tempfiles = {
-    #  description = "Setup tempfiles from specifications";
-    #  provides = "tempfiles";
-    #  commands.start = concatMapStringsSep "\n" (spec:
-    #    escapeShellArgs
-    #    ([ "${cfg.package}/bin/mtree" "-f" spec.file "-p" spec.root ]
-    #      ++ spec.extraFlags)) cfg.specs;
-    #};
+    rc.services.tempfiles = {
+      description = "Setup tempfiles from specifications";
+      provides = "tempfiles";
+      commands.start = concatMapStringsSep "\n" (spec:
+        escapeShellArgs
+        ([ "${cfg.package}/bin/mtree" "-f" spec.file "-p" spec.root ]
+          ++ spec.extraFlags)) cfg.specs;
+    };
 
-    #services.tempfiles.specs = mkIf cfg.useDefaultSpecs [{
-    #  text = readFile ./BSD.var.dist;
-    #  root = "/var";
-    #  extraFlags = [ "-d" "-e" "-i" "-U" ];
-    #}];
+    services.tempfiles.specs = mkIf cfg.useDefaultSpecs [{
+      text = readFile ./BSD.var.dist;
+      root = "/var";
+      extraFlags = [ "-d" "-e" "-i" "-U" ];
+    }];
   };
 }
 
