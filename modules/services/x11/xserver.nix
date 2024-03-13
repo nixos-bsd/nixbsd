@@ -7,7 +7,8 @@ let
   # Abbreviations.
   cfg = config.services.xserver;
   xorg = pkgs.xorg;
-  hasDm = cfg.displayManager.sddm.enable;
+  hasDm = cfg.displayManager.sddm.enable
+      || cfg.displayManager.lightdm.enable;
 
 
   # Map video driver names to driver packages. FIXME: move into card-specific modules.
@@ -593,17 +594,6 @@ in
   ###### implementation
 
   config = mkIf cfg.enable {
-
-    #services.xserver.displayManager.sddm.enable =
-    #  let dmConf = cfg.displayManager;
-    #      default = !(dmConf.sddm.enable);
-    #  in mkIf (default) (mkDefault true);
-
-    ## so that the service won't be enabled when only startx is used
-    #rc.services.display-manager.enable  =
-    #  let dmConf = cfg.displayManager;
-    #      noDmUsed = !(dmConf.sddm.enable);
-    #  in mkIf (noDmUsed) (mkDefault false);
 
     #hardware.opengl.enable = mkDefault true;
 
