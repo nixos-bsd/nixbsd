@@ -74,8 +74,8 @@ in
       xfce4-notifyd
       xfce4-screenshooter
       xfce4-session
-      #xfce4-settings
-      xfconf  # TODO remove
+      xfce4-settings
+      #xfconf  # TODO remove
       xfce4-taskmanager
       xfce4-terminal
     ] # TODO: NetworkManager doesn't belong here
