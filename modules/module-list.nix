@@ -96,5 +96,5 @@ in [
   ./services/desktops/accountsservice.nix
   ./security/polkit.nix
   "${extPath}/programs/xfconf.nix"
-  "${extPath}/programs/thunar.nix"
+  ./programs/thunar.nix
 ]
