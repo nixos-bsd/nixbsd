@@ -64,6 +64,7 @@ in [
   ./system/boot/kernel.nix
   ./system/boot/linux.nix
   ./system/boot/loader/stand
+  ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
