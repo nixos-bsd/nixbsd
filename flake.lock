@@ -42,11 +42,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1710385089,
-        "narHash": "sha256-h2Ye9+1j9Dsq3qm0r7k7xzjFGldzuLGfmWLY42qFfQE=",
+        "lastModified": 1710394685,
+        "narHash": "sha256-GShGDK+Q5DTYJxf7gxry2nm0uSBMXUCVOHLw/8KVKCI=",
         "owner": "nixos-bsd",
         "repo": "mini-tmpfiles",
-        "rev": "d5270c5eb27fd3539d7e510b5e6bffc547e66309",
+        "rev": "00e0a08ea63a843e939d80547bb695e51784aaef",
         "type": "github"
       },
       "original": {
@@ -83,11 +83,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1710393668,
-        "narHash": "sha256-+AxeME+x0+kPgrtEO3gmt1PDWwwMp0GTp2tWmd8HvEE=",
+        "lastModified": 1710397339,
+        "narHash": "sha256-nI1h0mgg7gh3dF6xl/D1QfR0rpHeazi/sB/9MKL/Dhw=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "24821aa88ab64a9bd4df5731d9a9e1d9729facb7",
+        "rev": "e27b890e9621f978f74936a41109c979cd6daeb5",
         "type": "github"
       },
       "original": {
