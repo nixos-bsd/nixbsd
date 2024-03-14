@@ -18,6 +18,24 @@ in {
       '';
     };
 
+    boot.extraModulePackages = mkOption {
+      type = types.listOf types.package;
+      default = [ ];
+      example =
+        literalExpression "with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ]";
+      description =
+        lib.mdDoc "A list of additional packages supplying kernel modules.";
+    };
+
+    system.moduleEnvironment = mkOption {
+      type = types.package;
+      internal = true;
+      description = lib.mdDoc ''
+        Linked environment of the kernel and all module packages, so that they can be linked into
+        kernel-modules in the toplevel derivation.
+      '';
+    };
+
     boot.kernelEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -32,11 +50,16 @@ in {
     };
   };
 
-  config = mkIf config.boot.kernel.enable (let
-    kernelPath = "${cfg.package}/${config.system.boot.loader.kernelFile}";
-    modulesPath = "${cfg.package}/${config.system.boot.loader.modulesPath}";
+  config = mkIf cfg.enable (let
+    kernelPath = "${config.system.moduleEnvironment}/kernel/kernel";
+    modulePath = "${config.system.moduleEnvironment}/kernel";
   in {
     system.build = { inherit (config.boot) kernel; };
+    system.moduleEnvironment = pkgs.buildEnv {
+      name = "sys-with-modules";
+      paths = [ cfg.package ] ++ config.boot.extraModulePackages;
+      pathsToLink = [ "/kernel" ];
+    };
 
     system.systemBuilderCommands = ''
       if [ ! -f ${kernelPath} ]; then
@@ -46,11 +69,11 @@ in {
       fi
 
       ln -s ${kernelPath} $out/kernel
-      ln -s ${modulesPath} $out/kernel-modules
+      ln -s ${modulePath} $out/kernel-modules
     '';
 
     boot.kernelEnvironment = {
-      module_path = modulesPath;
+      module_path = modulePath;
       init_shell = config.environment.binsh;
     };
   });

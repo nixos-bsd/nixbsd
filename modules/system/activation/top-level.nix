@@ -75,23 +75,6 @@ in {
         Id string of the used bootloader.
       '';
     };
-    system.boot.loader.kernelFile = mkOption {
-      internal = true;
-      default = "kernel/kernel";
-      type = types.str;
-      description = lib.mdDoc ''
-        Name of the kernel file to be passed to the bootloader, relative to output root
-      '';
-    };
-
-    system.boot.loader.modulesPath = mkOption {
-      internal = true;
-      default = "kernel";
-      type = types.str;
-      description = lib.mdDoc ''
-        Path to the kernel modules, relative to the output root
-      '';
-    };
 
     system.build = {
       toplevel = mkOption {

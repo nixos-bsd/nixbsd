@@ -18,7 +18,7 @@ let
           "org.nixos.bootspec.v1" = {
             system = pkgs.stdenv.hostPlatform.system;
             kernel =
-              "${config.boot.kernel.package}/${config.system.boot.loader.kernelFile}";
+              "${config.boot.kernel.package}/kernel/kernel";
             kernelParams = [ ];
             label =
               "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
