@@ -40,7 +40,7 @@ in
       command = "${pkgs.freebsd.daemon}/bin/daemon";
       procname = "${pkgs.seatd.bin}/bin/seatd";
       commandArgs =
-        [ "-s" "err" "-T" "seatd" "-p" "/var/run/seatd.pid" "" procname "-g" "video"];
+        [ "-s" "err" "-T" "seatd" "-p" "/var/run/seatd.pid" procname "-g" "video"];
     };
   };
 }
