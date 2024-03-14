@@ -128,7 +128,7 @@ res=0
 "$out/activate" "$out" || res=2
 
 for targetPath in $(@rcorder@/bin/rcorder /etc/rc.d/*) ; do
-	targetName = "${targetPath##*/}"
+	targetName="${targetPath##*/}"
 	case "${actions["$targetName"]}" in start|restart) "/etc/rc.d/$targetName" start || res=3 ;; esac
 done
 
