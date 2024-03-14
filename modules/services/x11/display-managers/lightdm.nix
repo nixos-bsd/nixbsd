@@ -40,6 +40,7 @@ let
   lightdmConf = writeText "lightdm.conf"
     ''
       [LightDM]
+      minimum-vt=9
       ${optionalString cfg.greeter.enable ''
         greeter-user = ${config.users.users.lightdm.name}
         greeters-directory = ${cfg.greeter.package}
