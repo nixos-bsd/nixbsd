@@ -35,10 +35,6 @@ in {
         package
       ];
 
-      systemd.packages = [
-        package
-      ];
-
       programs.xfconf.enable = true;
     }
   );
