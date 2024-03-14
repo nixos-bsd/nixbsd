@@ -200,8 +200,12 @@ in
 
     # Set default session in session chooser to a specified values – basically ignore session history.
     # Auto-login is already covered by a config value.
+    # lightdm relaunches itself via just `lightdm`, so needs to be on the PATH
     services.xserver.displayManager.job.preStart = optionalString (!dmcfg.autoLogin.enable && dmcfg.defaultSession != null) ''
       ${setSessionScript}/bin/set-session ${dmcfg.defaultSession}
+      mkdir -p /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
+      chown lightdm:lightdm /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
+      export PATH=${lightdm}/sbin:$PATH
     '';
 
     # setSessionScript needs session-files in XDG_DATA_DIRS
@@ -211,13 +215,6 @@ in
     #rc.services.display-manager.requires = [
     #  "accounts-daemon"
     #];
-
-    # lightdm relaunches itself via just `lightdm`, so needs to be on the PATH
-    rc.services.display-manager.precmds.start = ''
-      mkdir -p /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
-      chown lightdm:lightdm /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
-      export PATH=${lightdm}/sbin:$PATH
-    '';
 
     services.xserver.displayManager.job.execProg = "${lightdm}/sbin/lightdm";
 
