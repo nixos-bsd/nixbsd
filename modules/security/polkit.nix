@@ -62,9 +62,8 @@ in
     rc.services.polkit = {
       provides = "polkit";
       requires = ["DAEMON"];
-      commands.start = ''
-        ${pkgs.polkit.out}/lib/polkit-1/polkitd ${optionalString (!cfg.debug) "--no-debug"};
-      '';
+      command = "${pkgs.polkit.out}/lib/polkit-1/polkitd";
+      commandArgs = optionals (!cfg.debug) ["--no-debug"];
     };
 
     # The polkit daemon reads action/rule files
