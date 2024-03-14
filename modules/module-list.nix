@@ -38,6 +38,7 @@ in [
   ./config/system-path.nix
   ./config/user-class.nix
   ./config/users-groups.nix
+  ./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix

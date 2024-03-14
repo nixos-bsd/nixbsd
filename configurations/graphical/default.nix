@@ -2,7 +2,7 @@
   imports = [ ../base/default.nix ];
   environment.etc.machine-id.text = "53ce9ee8540445a49241d28f5ca77d52";
 
-  boot.extraModulePackages = with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ];
+  hardware.opengl.enable = true;
   # Intel kmod firmware is unfree, allow all unfree firmware
   nixpkgs.config.allowUnfreePredicate = pkg:
     ((pkg.meta or {}).sourceProvenance or []) == [ lib.sourceTypes.binaryFirmware ];
