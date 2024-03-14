@@ -7,6 +7,8 @@
   nixpkgs.config.allowUnfreePredicate = pkg:
     ((pkg.meta or {}).sourceProvenance or []) == [ lib.sourceTypes.binaryFirmware ];
 
+  programs.sway.enable = true;
+
   services.dbus.enable = true;
   services.xserver = {
     enable = true;

@@ -20,6 +20,7 @@ in [
   "${extPath}/programs/nano.nix"
   "${extPath}/programs/neovim.nix"
   "${extPath}/programs/vim.nix"
+  "${extPath}/programs/xwayland.nix"
   "${extPath}/programs/zsh/oh-my-zsh.nix"
   "${extPath}/programs/zsh/zsh-autoenv.nix"
   "${extPath}/programs/zsh/zsh-autosuggestions.nix"
@@ -48,6 +49,7 @@ in [
   ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./programs/ssh.nix
+  ./programs/wayland/sway.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
