@@ -236,7 +236,7 @@ in
     # Enable the accounts daemon to find lightdm's dbus interface
     environment.systemPackages = [ lightdm ];
 
-    #security.polkit.enable = true;
+    security.polkit.enable = true;
 
     security.pam.services.lightdm.text = ''
         auth      include      login

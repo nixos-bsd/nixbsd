@@ -121,8 +121,8 @@ in
 
     # Enable helpful DBus services.
     #services.udisks2.enable = true;
-    #security.polkit.enable = true;
-    #services.accounts-daemon.enable = true;
+    security.polkit.enable = true;
+    services.accounts-daemon.enable = true;
     #services.upower.enable = config.powerManagement.enable;
     #services.gnome.glib-networking.enable = true;
     #services.gvfs.enable = true;
