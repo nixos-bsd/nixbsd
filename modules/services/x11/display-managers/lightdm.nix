@@ -213,6 +213,11 @@ in
 
     # lightdm relaunches itself via just `lightdm`, so needs to be on the PATH
     rc.services.display-manager.precmds.start = ''
+      mkdir -p /run/lightdm
+      mkdir -p /var/cache/lightdm
+      mkdir -p /var/lib/lightdm
+      mkdir -p /var/lib/lightdm-data
+      mkdir -p /var/log/lightdm
       export PATH=${lightdm}/sbin:$PATH
     '';
 
