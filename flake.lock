@@ -42,11 +42,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1710394685,
-        "narHash": "sha256-GShGDK+Q5DTYJxf7gxry2nm0uSBMXUCVOHLw/8KVKCI=",
+        "lastModified": 1710455207,
+        "narHash": "sha256-lh+l7ziJ3qu9MlruWbxeTI25gQt+tEVv1nUuNLFdMI4=",
         "owner": "nixos-bsd",
         "repo": "mini-tmpfiles",
-        "rev": "00e0a08ea63a843e939d80547bb695e51784aaef",
+        "rev": "80316199ffbc4b42c37711a554c3559c5cf0a5ce",
         "type": "github"
       },
       "original": {
