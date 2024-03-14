@@ -75,7 +75,6 @@ in
       xfce4-screenshooter
       xfce4-session
       xfce4-settings
-      #xfconf  # TODO remove
       xfce4-taskmanager
       xfce4-terminal
     ] # TODO: NetworkManager doesn't belong here
@@ -96,7 +95,7 @@ in
         xfdesktop
       ] ++ optional cfg.enableScreensaver xfce4-screensaver) excludePackages;
 
-    #programs.xfconf.enable = true;
+    programs.xfconf.enable = true;
     #programs.thunar.enable = true;
 
     environment.pathsToLink = [
