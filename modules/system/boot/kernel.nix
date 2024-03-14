@@ -59,6 +59,11 @@ in {
       name = "sys-with-modules";
       paths = [ cfg.package ] ++ config.boot.extraModulePackages;
       pathsToLink = [ "/kernel" ];
+
+      # No way to run kldxref with compat
+      postBuild = lib.optionalString pkgs.stdenv.buildPlatform.isFreeBSD ''
+        ${pkgs.freebsd.kldxref}/bin/kldxref $out/kernel
+      '';
     };
 
     system.systemBuilderCommands = ''
