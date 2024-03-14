@@ -96,7 +96,7 @@ in
       ] ++ optional cfg.enableScreensaver xfce4-screensaver) excludePackages;
 
     programs.xfconf.enable = true;
-    #programs.thunar.enable = true;
+    programs.thunar.enable = true;
 
     environment.pathsToLink = [
       "/share/xfce4"
