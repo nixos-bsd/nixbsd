@@ -83,11 +83,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1710397339,
-        "narHash": "sha256-nI1h0mgg7gh3dF6xl/D1QfR0rpHeazi/sB/9MKL/Dhw=",
+        "lastModified": 1710399092,
+        "narHash": "sha256-7TWsebIs6MZtgHRsfEMPOOV1BNUwBnRGA/Qx3od8q2w=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "e27b890e9621f978f74936a41109c979cd6daeb5",
+        "rev": "e41ae0e6abca7d7c249ae6884b9442e1cff15640",
         "type": "github"
       },
       "original": {
