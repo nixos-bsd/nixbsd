@@ -10,8 +10,7 @@
     };
     mini-tmpfiles = {
       url = "github:nixos-bsd/mini-tmpfiles";
-      inputs.nixpkgs-freebsd.follows = "nixpkgs";
-      inputs.nixpkgs-nixos.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs";
       inputs.utils.follows = "utils";
     };
   };

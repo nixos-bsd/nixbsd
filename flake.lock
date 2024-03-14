@@ -34,10 +34,7 @@
     },
     "mini-tmpfiles": {
       "inputs": {
-        "nixpkgs-freebsd": [
-          "nixpkgs"
-        ],
-        "nixpkgs-nixos": [
+        "nixpkgs": [
           "nixpkgs"
         ],
         "utils": [
@@ -45,11 +42,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1710384428,
-        "narHash": "sha256-ZUimgioewg1/ZVyTU2bK5xobOTiqw4hUhvQmHN7udgQ=",
+        "lastModified": 1710385089,
+        "narHash": "sha256-h2Ye9+1j9Dsq3qm0r7k7xzjFGldzuLGfmWLY42qFfQE=",
         "owner": "nixos-bsd",
         "repo": "mini-tmpfiles",
-        "rev": "f7992be802e40919d9f91c0a9774a738c4079ba0",
+        "rev": "d5270c5eb27fd3539d7e510b5e6bffc547e66309",
         "type": "github"
       },
       "original": {
