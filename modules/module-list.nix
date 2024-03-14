@@ -93,4 +93,5 @@ in [
   ./services/desktops/seatd.nix
   ./services/x11/display-managers/lightdm.nix
   ./services/desktops/accountsservice.nix
+  ./security/polkit.nix
 ]
