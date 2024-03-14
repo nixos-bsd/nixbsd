@@ -241,10 +241,10 @@ in
     #security.polkit.enable = true;
 
     security.pam.services.lightdm.text = ''
-        auth      substack      login
-        account   include       login
-        password  substack      login
-        session   include       login
+        auth      include      login
+        account   include      login
+        password  include      login
+        session   include      login
     '';
 
     security.pam.services.lightdm-greeter.text = ''
