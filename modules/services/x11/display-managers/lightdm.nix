@@ -227,6 +227,7 @@ in
     environment.etc."lightdm/users.conf".source = usersConf;
 
     services.dbus.enable = true;
+    services.seatd.enable = true;
     services.dbus.packages = [ lightdm ];
 
     # lightdm uses the accounts daemon to remember language/window-manager per user
@@ -245,18 +246,15 @@ in
     '';
 
     security.pam.services.lightdm-greeter.text = ''
-        auth     required       pam_succeed_if.so audit quiet_success user = lightdm
         auth     optional       pam_permit.so
 
-        account  required       pam_succeed_if.so audit quiet_success user = lightdm
         account  sufficient     pam_unix.so
 
         password required       pam_deny.so
 
-        session  required       pam_succeed_if.so audit quiet_success user = lightdm
-        session  required       pam_env.so conffile=/etc/pam/environment readenv=0
+        #session  required       pam_env.so conffile=/etc/pam/environment readenv=0
         #session  optional       ''${config.systemd.package}/lib/security/pam_systemd.so
-        session  optional       pam_keyinit.so force revoke
+        #session  optional       pam_keyinit.so force revoke
         session  optional       pam_permit.so
     '';
 
