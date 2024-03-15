@@ -58,8 +58,16 @@ let
 
       # Early mounts
       specialMount() {
-        mkdir -m 0755 -p "$2"
-        mount -o "$3" -t "$4" "$1" "$2"
+        SRC="$1"
+        DST="$2"
+        OPT="$3"
+        TYP="$4"
+        [ "$TYP" = tmpfs ] && SRC=tmpfs
+        [ "$TYP" = devfs ] && SRC=devfs
+        mount | grep "$SRC on $DST" &>/dev/null && return 0
+
+        mkdir -m 0755 -p "$DST"
+        mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
       mount -u -w /
       source ${config.system.build.earlyMountScript}
