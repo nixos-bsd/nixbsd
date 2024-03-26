@@ -20,7 +20,7 @@ we have been using for most development. It's based off staging and has some cha
 the stdenv that also affects stdenv, so you have to rebuild everything from bootstrap.
 
 This will require a fair amount of work to clean up to an upstreamable state,
-but it should not require masive reorganization
+but it should not require massive reorganization
 
 ### [NixBSD](https://github.com/nixos-bsd/nixbsd)
 This repository contains modules for building a system, like the `nixos` directory in nixpkgs.
@@ -54,12 +54,12 @@ All outputs from `system.build` are available, plus a few more. When developing 
 
 The `closureInfo` and `vmImageRunnerClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
 
-### Subtituter
-There is a substituter (binary cache) in the flake.
+### Substitutor
+There is a substitutor (binary cache) in the flake.
 If Artemis remembers, this should contain everything in `.#base.vmImageRunnerClosureInfo` and
 could save you a few hours.
 
-Note, however, that trusted substituters can maliciously modify outputs, so only use it if you trust Artemis.
+Note, however, that trusted substitutors can maliciously modify outputs, so only use it if you trust Artemis.
 
 ### Tips
 * Building `vmImageRunner` for a minimal configuration can take over 8 hours on a fast machine, so keeping around `vmImageRunnerClosureInfo` is highly recommended. Just `base.vmImageRunnerClosureInfo` takes over 30GiB though, so you may want to delete it if you're low on space.
@@ -89,5 +89,5 @@ or to just build and try a VM to play with without a local checkout:
 ```shell
 nix run 'github:nixos-bsd/nixbsd#extra.vm'
 ```
-but see the above warning about substituter trust before accepting the requested substitutor.
+but see the above warning about substitutor trust before accepting the requested substitutor.
 This will put VM state files in the current directory.
