@@ -20,7 +20,7 @@ we have been using for most development. It's based off staging and has some cha
 the stdenv that also affects stdenv, so you have to rebuild everything from bootstrap.
 
 This will require a fair amount of work to clean up to an upstreamable state,
-but it should not require masive reorganization
+but it should not require massive reorganization
 
 ### [NixBSD](https://github.com/nixos-bsd/nixbsd)
 This repository contains modules for building a system, like the `nixos` directory in nixpkgs.
@@ -89,5 +89,5 @@ or to just build and try a VM to play with without a local checkout:
 ```shell
 nix run 'github:nixos-bsd/nixbsd#extra.vm'
 ```
-but see the above warning about substituter trust before accepting the requested substitutor.
+but see the above warning about substituter trust before accepting the requested substituter.
 This will put VM state files in the current directory.
