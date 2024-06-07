@@ -102,38 +102,38 @@ let
     inherit (cfg.nixos.options) warningsAreErrors;
   };
 
-  nixos-help = let
-    helpScript = pkgs.writeShellScriptBin "nixos-help" ''
-      # Finds first executable browser in a colon-separated list.
-      # (see how xdg-open defines BROWSER)
-      browser="$(
-        IFS=: ; for b in $BROWSER; do
-          [ -n "$(type -P "$b" || true)" ] && echo "$b" && break
-        done
-      )"
-      if [ -z "$browser" ]; then
-        browser="$(type -P xdg-open || true)"
-        if [ -z "$browser" ]; then
-          browser="${pkgs.w3m-nographics}/bin/w3m"
-        fi
-      fi
-      exec "$browser" ${manual.manualHTMLIndex}
-    '';
+  #nixos-help = let
+  #  helpScript = pkgs.writeShellScriptBin "nixos-help" ''
+  #    # Finds first executable browser in a colon-separated list.
+  #    # (see how xdg-open defines BROWSER)
+  #    browser="$(
+  #      IFS=: ; for b in $BROWSER; do
+  #        [ -n "$(type -P "$b" || true)" ] && echo "$b" && break
+  #      done
+  #    )"
+  #    if [ -z "$browser" ]; then
+  #      browser="$(type -P xdg-open || true)"
+  #      if [ -z "$browser" ]; then
+  #        browser="${pkgs.w3m-nographics}/bin/w3m"
+  #      fi
+  #    fi
+  #    exec "$browser" ${manual.manualHTMLIndex}
+  #  '';
 
-    desktopItem = pkgs.makeDesktopItem {
-      name = "nixos-manual";
-      desktopName = "NixOS Manual";
-      genericName = "System Manual";
-      comment = "View NixOS documentation in a web browser";
-      icon = "nix-snowflake";
-      exec = "nixos-help";
-      categories = [ "System" ];
-    };
+  #  desktopItem = pkgs.makeDesktopItem {
+  #    name = "nixos-manual";
+  #    desktopName = "NixOS Manual";
+  #    genericName = "System Manual";
+  #    comment = "View NixOS documentation in a web browser";
+  #    icon = "nix-snowflake";
+  #    exec = "nixos-help";
+  #    categories = [ "System" ];
+  #  };
 
-  in pkgs.symlinkJoin {
-    name = "nixos-help";
-    paths = [ helpScript desktopItem ];
-  };
+  #in pkgs.symlinkJoin {
+  #  name = "nixos-help";
+  #  paths = [ helpScript desktopItem ];
+  #};
 
 in {
 
@@ -320,7 +320,7 @@ in {
 
       environment.systemPackages = [ ]
         ++ optional cfg.man.enable manual.nixos-configuration-reference-manpage
-        ++ optionals cfg.doc.enable [ manual.manualHTML nixos-help ];
+        ++ optionals cfg.doc.enable [ manual.manualHTML ];
     })
 
   ]);
