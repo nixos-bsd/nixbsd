@@ -83,16 +83,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1711250189,
-        "narHash": "sha256-fRKegr/eFnTrOjjTGnUUWZtgqQWszGJQfdbx//0Vak8=",
+        "lastModified": 1717511157,
+        "narHash": "sha256-n1M5gU02qxTrGLsZ8HQyAqziOAw+D5p5lqwkOCy3j9A=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "31ea88a0b9edfcb6b52bd8cf71f0876dbbe89934",
+        "rev": "0627863c130c7a200de749e6dcb24292d66bed62",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "freebsd-staging",
+        "ref": "staging-test",
         "repo": "nixpkgs",
         "type": "github"
       }
