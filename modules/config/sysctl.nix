@@ -23,7 +23,7 @@ in {
       example = literalExpression ''
         { "kern.sync_on_panic" = false; "kern.maxvnodes" = 4096; }
       '';
-      description = lib.mdDoc ''
+      description = ''
         Runtime parameters of the FreeBSD kernel, as set by
         {manpage}`sysctl(8)`.  Note that sysctl
         parameters names must be enclosed in quotes

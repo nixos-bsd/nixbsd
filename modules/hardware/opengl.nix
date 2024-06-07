@@ -24,7 +24,7 @@ in
 
     hardware.opengl = {
       enable = mkOption {
-        description = lib.mdDoc ''
+        description = ''
           Whether to enable OpenGL drivers. This is needed to enable
           OpenGL support in X11 systems, as well as for Wayland compositors
           like sway and Weston. It is enabled by default
@@ -40,7 +40,7 @@ in
       driSupport = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Whether to enable accelerated OpenGL rendering through the
           Direct Rendering Interface (DRI).
         '';
@@ -49,7 +49,7 @@ in
       driModulePackages = mkOption {
         type = types.listOf types.package;
         default = with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ];
-        description = lib.mdDoc ''
+        description = ''
           Kernel modules to install to enable the direct rendering interface
         '';
       };
@@ -57,7 +57,7 @@ in
       package = mkOption {
         type = types.package;
         internal = true;
-        description = lib.mdDoc ''
+        description = ''
           The package that provides the OpenGL implementation.
         '';
       };
@@ -66,7 +66,7 @@ in
         type = types.listOf types.package;
         default = [];
         example = literalExpression "with pkgs; [ intel-media-driver intel-ocl intel-vaapi-driver ]";
-        description = lib.mdDoc ''
+        description = ''
           Additional packages to add to OpenGL drivers.
           This can be used to add OpenCL drivers, VA-API/VDPAU drivers etc.
 
@@ -80,7 +80,7 @@ in
         type = types.bool;
         internal = true;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Whether the `LD_LIBRARY_PATH` environment variable
           should be set to the locations of driver libraries. Drivers which
           rely on overriding libraries should set this to true. Drivers which

@@ -32,7 +32,7 @@ let
           "local6"
           "local7"
         ]);
-        description = lib.mdDoc ''
+        description = ''
           The part of the system generating the message, similar to `LOG_`
           values used in the {manpage}`syslog(3)` function.
         '';
@@ -41,7 +41,7 @@ let
       comparisonFlag = mkOption {
         type = types.strMatching "!?[<=>]+";
         default = ">=";
-        description = lib.mdDoc ''
+        description = ''
           How to compare the message's level with the rule's level.
           Default is >=, meaning all messages with a level greater or
           equal to specified will be matched;
@@ -60,7 +60,7 @@ let
           "none"
         ]);
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Message severity to compare against with compareFlag.
           If this is null then all messages will be matched and compareFlag will be ignored.
         '';
@@ -68,7 +68,7 @@ let
       text = mkOption {
         type = types.str;
         example = "*.emerg";
-        description = lib.mdDoc ''
+        description = ''
           Full text of selector.
         '';
       };
@@ -117,7 +117,7 @@ let
     selectors = mkOption {
       type = types.nonEmptyListOf (types.submodule selectorSubmodule);
       default = [ { } ];
-      description = lib.mdDoc ''
+      description = ''
         Facility/level selectors to match.
       '';
     };
@@ -125,7 +125,7 @@ let
     includedPrograms = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = ''
         Executables names to match.
       '';
     };
@@ -133,7 +133,7 @@ let
     excludedPrograms = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = ''
         Executables to ignore.
       '';
     };
@@ -141,7 +141,7 @@ let
     includedHosts = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = ''
         Hostnames to match.
         The special value `@` means only the current host.
       '';
@@ -150,7 +150,7 @@ let
     excludedHosts = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = ''
         Hostnames to ignore.
       '';
     };
@@ -158,7 +158,7 @@ let
     propertyFilter = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         The "property-based" filter to apply to the rule.
         For syntax see {manpage}`syslog.conf(5)`.
       '';
@@ -166,7 +166,7 @@ let
 
     text = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = ''
         Full text of a rule. This should revert any state changes it makes,
         e.g. to hostname or program filter rules.
       '';
@@ -179,7 +179,7 @@ let
         type = types.path;
         default = name;
         example = "/var/log/messages";
-        description = lib.mdDoc ''
+        description = ''
           Destination file for matched logs.
         '';
       };
@@ -187,7 +187,7 @@ let
         type = types.bool;
         default = true;
         example = false;
-        description = lib.mdDoc ''
+        description = ''
           Whether to sync after writing new messages.
           Disabling this could increase performance but cause data loss.
         '';
@@ -204,7 +204,7 @@ let
         type = types.listOf types.str;
         default = [ name ];
         example = [ ];
-        description = lib.mdDoc ''
+        description = ''
           Users to send messages to.
           Empty means "all logged in users".
         '';
@@ -225,7 +225,7 @@ let
         type = types.str;
         default = name;
         example = "[2001:db8::1234]:8514";
-        description = lib.mdDoc ''
+        description = ''
           Destination syslogd to send messages.
           Can be an IPv4 address, IPv6 address in brackets, or hostname,
           plus an optional port after a colon.
@@ -242,7 +242,7 @@ let
         type = types.str;
         default = name;
         example = "exec /path/to/my/program.sh";
-        description = lib.mdDoc ''
+        description = ''
           Command to run when messages are recieved.
           This is run in a subshell, so exec is recommended if that is not needed.
           The command will run once the first message is recieved and recieve all
@@ -259,7 +259,7 @@ in {
       package = mkOption {
         type = types.package;
         default = pkgs.freebsd.syslogd;
-        description = lib.mdDoc ''
+        description = ''
           freebsd.syslogd package
         '';
       };
@@ -271,7 +271,7 @@ in {
       extraSockets = mkOption {
         type = types.listOf types.path;
         default = [ ];
-        description = lib.mdDoc ''
+        description = ''
           Extra socket files to listen on. This is intended for jails/containers.
         '';
       };
@@ -280,7 +280,7 @@ in {
         type = types.listOf types.str;
         default = [ ];
         example = [ "-4" ];
-        description = lib.mdDoc ''
+        description = ''
           Extra arguments to call syslogd with.
         '';
       };
@@ -288,28 +288,28 @@ in {
       fileActions = mkOption {
         type = types.attrsOf (types.submodule fileActionSubmodule);
         default = { };
-        description = lib.mdDoc ''
+        description = ''
           Actions outputting to a file.
         '';
       };
       userActions = mkOption {
         type = types.attrsOf (types.submodule userActionSubmodule);
         default = { };
-        description = lib.mdDoc ''
+        description = ''
           Actions outputting to a user's console.
         '';
       };
       remoteActions = mkOption {
         type = types.attrsOf (types.submodule remoteActionSubmodule);
         default = { };
-        description = lib.mdDoc ''
+        description = ''
           Actions that send to a remote syslogd.
         '';
       };
       commandActions = mkOption {
         type = types.attrsOf (types.submodule commandActionSubmodule);
         default = { };
-        description = lib.mdDoc ''
+        description = ''
           Actions that run a command filter.
         '';
       };

@@ -15,7 +15,7 @@ let
       options = {
         address = mkOption {
           type = types.str;
-          description = lib.mdDoc ''
+          description = ''
             IPv${
               toString v
             } address of the interface. Leave empty to configure the
@@ -26,7 +26,7 @@ let
         prefixLength = mkOption {
           type = types.addCheck types.int
             (n: n >= 0 && n <= (if v == 4 then 32 else 128));
-          description = lib.mdDoc ''
+          description = ''
             Subnet mask of the interface, specified as the number of
             bits in the prefix (`${if v == 4 then "24" else "64"}`).
           '';
@@ -38,13 +38,13 @@ let
     options = {
       address = mkOption {
         type = types.str;
-        description = lib.mdDoc "IPv${toString v} address of the network.";
+        description = "IPv${toString v} address of the network.";
       };
 
       prefixLength = mkOption {
         type = types.addCheck types.int
           (n: n >= 0 && n <= (if v == 4 then 32 else 128));
-        description = lib.mdDoc ''
+        description = ''
           Subnet mask of the network, specified as the number of
           bits in the prefix (`${if v == 4 then "24" else "64"}`).
         '';
@@ -53,14 +53,14 @@ let
       via = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "IPv${toString v} address of the next hop.";
+        description = "IPv${toString v} address of the next hop.";
       };
 
       flags = mkOption {
         type = types.listOf types.str;
         default = [ ];
         example = [ "xresolve" "nostatic" ];
-        description = lib.mdDoc ''
+        description = ''
           Route flags, as can be seen in {manpage}`route(8)`.
           These do not contain a value, just a flag. This is
           in contrast with modifiers, which contain a flag and a value.
@@ -74,7 +74,7 @@ let
           mtu = "1492";
           ifa = if v == 4 then "192.0.2.2" else "2001:db8::acab";
         };
-        description = lib.mdDoc ''
+        description = ''
           Route modifiers that may be changed by the kernel automatically.
           Most are listed in {manpage}`route(8)`, though some, like `weight`
           are undocumented.
@@ -85,7 +85,7 @@ let
         type = types.attrsOf types.str;
         default = { };
         example = { mtu = "1492"; };
-        description = lib.mdDoc ''
+        description = ''
           Route modifiers that may not be changed by the kernel automatically.
           Most are listed in {manpage}`route(8)`, though some, like `weight`
           are undocumented.
@@ -102,21 +102,21 @@ let
 
       address = mkOption {
         type = types.str;
-        description = lib.mdDoc "The default gateway address.";
+        description = "The default gateway address.";
       };
 
       interface = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "enp0s3";
-        description = lib.mdDoc "The default gateway interface.";
+        description = "The default gateway interface.";
       };
 
       metric = mkOption {
         type = types.nullOr types.int;
         default = null;
         example = 42;
-        description = lib.mdDoc "The default gateway metric/preference.";
+        description = "The default gateway metric/preference.";
       };
 
     };
@@ -129,13 +129,13 @@ let
       name = mkOption {
         example = "eth0";
         type = types.str;
-        description = lib.mdDoc "Name of the interface.";
+        description = "Name of the interface.";
       };
 
       useDHCP = mkOption {
         type = types.nullOr types.bool;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Whether this interface should be configured with DHCP. Overrides the
           default set by {option}`networking.useDHCP`. If `null` (the default),
           DHCP is enabled if the interface has no IPv4 addresses configured
@@ -157,7 +157,7 @@ let
           }
         ];
         type = with types; listOf (submodule (addrOpts 4));
-        description = lib.mdDoc ''
+        description = ''
           List of IPv4 addresses that will be statically assigned to the interface.
         '';
       };
@@ -175,7 +175,7 @@ let
           }
         ];
         type = with types; listOf (submodule (addrOpts 6));
-        description = lib.mdDoc ''
+        description = ''
           List of IPv6 addresses that will be statically assigned to the interface.
         '';
       };
@@ -194,7 +194,7 @@ let
           }
         ];
         type = with types; listOf (submodule (routeOpts 4));
-        description = lib.mdDoc ''
+        description = ''
           List of extra IPv4 static routes that will be assigned to the interface.
 
           ::: {.warning}
@@ -225,7 +225,7 @@ let
           }
         ];
         type = with types; listOf (submodule (routeOpts 6));
-        description = lib.mdDoc ''
+        description = ''
           List of extra IPv6 static routes that will be assigned to the interface.
         '';
       };
@@ -234,7 +234,7 @@ let
         default = null;
         example = "00:11:22:33:44:55";
         type = types.nullOr (types.str);
-        description = lib.mdDoc ''
+        description = ''
           MAC address of the interface. Leave empty to use the default.
         '';
       };
@@ -243,7 +243,7 @@ let
         default = null;
         example = 9000;
         type = types.nullOr types.int;
-        description = lib.mdDoc ''
+        description = ''
           MTU size for packets leaving the interface. Leave empty to use the default.
         '';
       };
@@ -251,7 +251,7 @@ let
       virtual = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = ''
           Whether this interface is virtual and should be created by tunctl.
           This is mainly useful for creating bridges between a host and a virtual
           network such as VPN or a virtual machine.
@@ -261,7 +261,7 @@ let
       virtualOwner = mkOption {
         default = "root";
         type = types.str;
-        description = lib.mdDoc ''
+        description = ''
           In case of a virtual device, the user who owns it.
         '';
       };
@@ -271,7 +271,7 @@ let
         defaultText =
           literalExpression ''if hasPrefix "tun" name then "tun" else "tap"'';
         type = with types; enum [ "tun" "tap" ];
-        description = lib.mdDoc ''
+        description = ''
           The type of interface to create.
           The default is TUN for an interface name starting
           with "tun", otherwise TAP.
@@ -333,7 +333,7 @@ in {
       # reasons (as undocumented feature):
       type =
         types.strMatching "^$|^[[:alnum:]]([[:alnum:]_-]{0,61}[[:alnum:]])?$";
-      description = lib.mdDoc ''
+      description = ''
         The name of the machine. Leave it empty if you want to obtain it from a
         DHCP server (if using DHCP). The hostname must be a valid DNS label (see
         RFC 1035 section 2.3.1: "Preferred name syntax", RFC 1123 section 2.1:
@@ -365,7 +365,7 @@ in {
         '';
       defaultText =
         literalExpression ''"''${networking.hostName}.''${networking.domain}"'';
-      description = lib.mdDoc ''
+      description = ''
         The fully qualified domain name (FQDN) of this host. It is the result
         of combining `networking.hostName` and `networking.domain.` Using this
         option will result in an evaluation error if the hostname is empty or
@@ -383,7 +383,7 @@ in {
       defaultText = literalExpression ''
         if cfg.domain == null then cfg.hostName else cfg.fqdn
       '';
-      description = lib.mdDoc ''
+      description = ''
         Either the fully qualified domain name (FQDN), or just the host name if
         it does not exists.
 
@@ -397,7 +397,7 @@ in {
       default = null;
       example = "4e98920d";
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = ''
         The 32-bit host ID of the machine, formatted as 8 hexadecimal characters.
 
         You should try to make this ID unique among your machines. You can
@@ -422,7 +422,7 @@ in {
       };
       type = types.nullOr
         (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
-      description = lib.mdDoc ''
+      description = ''
         The default gateway. It can be left empty if it is auto-detected through DHCP.
         It can be specified as a string or an option set along with a network interface.
       '';
@@ -436,7 +436,7 @@ in {
       };
       type = types.nullOr
         (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
-      description = lib.mdDoc ''
+      description = ''
         The default ipv6 gateway. It can be left empty if it is auto-detected through DHCP.
         It can be specified as a string or an option set along with a network interface.
       '';
@@ -446,7 +446,7 @@ in {
       default = null;
       example = 524288;
       type = types.nullOr types.int;
-      description = lib.mdDoc ''
+      description = ''
         The window size of the default gateway. It limits maximal data bursts that TCP peers
         are allowed to send to us.
       '';
@@ -456,7 +456,7 @@ in {
       type = types.listOf types.str;
       default = [ ];
       example = [ "130.161.158.4" "130.161.33.17" ];
-      description = lib.mdDoc ''
+      description = ''
         The list of nameservers.  It can be left empty if it is auto-detected through DHCP.
       '';
     };
@@ -465,7 +465,7 @@ in {
       default = [ ];
       example = [ "example.com" "home.arpa" ];
       type = types.listOf types.str;
-      description = lib.mdDoc ''
+      description = ''
         The list of search paths used when resolving domain names.
       '';
     };
@@ -474,7 +474,7 @@ in {
       default = null;
       example = "home.arpa";
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = ''
         The domain.  It can be left empty if it is auto-detected through DHCP.
       '';
     };
@@ -483,7 +483,7 @@ in {
       type = types.lines;
       default = "";
       example = "text=anything; echo You can put $text here.";
-      description = lib.mdDoc ''
+      description = ''
         Shell commands to be executed at the end of the
         `network-setup` systemd service.  Note that if
         you are using DHCP to obtain the network configuration,
@@ -499,7 +499,7 @@ in {
           prefixLength = 25;
         }];
       };
-      description = lib.mdDoc ''
+      description = ''
         The configuration for each network interface.
 
         Please note that {option}`systemd.network.netdevs` has more features
@@ -512,7 +512,7 @@ in {
     networking.useDHCP = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = ''
         Whether to use DHCP to obtain an IP address and other
         configuration for all network interfaces that do not have any manually
         configured IPv4 addresses.
@@ -522,7 +522,7 @@ in {
     networking.tempAddresses = mkOption {
       default = "default";
       type = types.enum (lib.attrNames tempaddrValues);
-      description = lib.mdDoc ''
+      description = ''
         Whether to enable IPv6 Privacy Extensions for all interfaces
         Possible values are:
 

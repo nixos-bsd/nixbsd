@@ -19,28 +19,28 @@ let
   wrapperType = lib.types.submodule ({ name, config, ... }: {
     options.source = lib.mkOption {
       type = lib.types.path;
-      description = lib.mdDoc "The absolute path to the program to be wrapped.";
+      description = "The absolute path to the program to be wrapped.";
     };
     options.program = lib.mkOption {
       type = with lib.types; nullOr str;
       default = name;
-      description = lib.mdDoc ''
+      description = ''
         The name of the wrapper program. Defaults to the attribute name.
       '';
     };
     options.owner = lib.mkOption {
       type = lib.types.str;
-      description = lib.mdDoc "The owner of the wrapper program.";
+      description = "The owner of the wrapper program.";
     };
     options.group = lib.mkOption {
       type = lib.types.str;
-      description = lib.mdDoc "The group of the wrapper program.";
+      description = "The group of the wrapper program.";
     };
     options.permissions = lib.mkOption {
       type = fileModeType;
       default = "u+rx,g+x,o+x";
       example = "a+rx";
-      description = lib.mdDoc ''
+      description = ''
         The permissions of the wrapper program. The format is that of a
         symbolic or numeric file mode understood by {command}`chmod`.
       '';
@@ -49,13 +49,13 @@ let
       type = lib.types.bool;
       default = false;
       description =
-        lib.mdDoc "Whether to add the setuid bit to the wrapper program.";
+        "Whether to add the setuid bit to the wrapper program.";
     };
     options.setgid = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description =
-        lib.mdDoc "Whether to add the setgid bit to the wrapper program.";
+        "Whether to add the setgid bit to the wrapper program.";
     };
   });
 
@@ -107,7 +107,7 @@ in {
             };
         }
       '';
-      description = lib.mdDoc ''
+      description = ''
         This option effectively allows adding setuid/setgid bits, capabilities,
         changing file ownership and permissions of a program without directly
         modifying it. This works by creating a wrapper program under the
@@ -120,7 +120,7 @@ in {
       default = "50%";
       example = "10G";
       type = lib.types.str;
-      description = lib.mdDoc ''
+      description = ''
         Size limit for the /run/wrappers tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax. WARNING: don't set to less than 64MB.
       '';
@@ -130,7 +130,7 @@ in {
       type = lib.types.path;
       default = "/run/wrappers/bin";
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         This option defines the path to the wrapper programs. It
         should not be overridden.
       '';

@@ -39,27 +39,27 @@ let
       mountPoint = mkOption {
         example = "/mnt/usb";
         type = nonEmptyWithoutTrailingSlash;
-        description = lib.mdDoc "Location of the mounted file system.";
+        description = "Location of the mounted file system.";
       };
 
       device = mkOption {
         default = null;
         example = "/dev/ada0p1";
         type = types.nullOr nonEmptyStr;
-        description = lib.mdDoc "Location of the device.";
+        description = "Location of the device.";
       };
 
       fsType = mkOption {
         default = "auto";
         example = "ext3";
         type = nonEmptyStr;
-        description = lib.mdDoc "Type of the file system.";
+        description = "Type of the file system.";
       };
 
       options = mkOption {
         default = [ ];
         example = [ "data=journal" ];
-        description = lib.mdDoc "Options used to mount the file system.";
+        description = "Options used to mount the file system.";
         type = types.listOf nonEmptyStr;
       };
 
@@ -67,7 +67,7 @@ let
         default = [ ];
         example = [ "/persist" ];
         type = types.listOf nonEmptyWithoutTrailingSlash;
-        description = lib.mdDoc ''
+        description = ''
           List of paths that should be mounted before this one. This filesystem's
           {option}`device` and {option}`mountPoint` are always
           checked and do not need to be included explicitly. If a path is added
@@ -81,7 +81,7 @@ let
         default = true;
         example = false;
         type = types.bool;
-        description = lib.mdDoc "Mount the filesystem as read/write.";
+        description = "Mount the filesystem as read/write.";
       };
     };
 
@@ -99,13 +99,13 @@ let
         default = null;
         example = "root-partition";
         type = types.nullOr nonEmptyStr;
-        description = lib.mdDoc "Label of the device (if any).";
+        description = "Label of the device (if any).";
       };
 
       noCheck = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Disable running fsck on this filesystem.";
+        description = "Disable running fsck on this filesystem.";
       };
     };
   };
@@ -180,7 +180,7 @@ in {
       '';
       type =
         types.attrsOf (types.submodule [ coreFileSystemOpts fileSystemOpts ]);
-      description = lib.mdDoc ''
+      description = ''
         The file systems to be mounted.  It must include an entry for
         the root directory (`mountPoint = "/"`).  Each
         entry in the list is an attribute set with the following fields:
@@ -201,21 +201,21 @@ in {
       internal = true;
       default = [ ];
       description =
-        lib.mdDoc "Packages supplying file system mounters and checkers.";
+        "Packages supplying file system mounters and checkers.";
     };
 
     boot.supportedFilesystems = mkOption {
       default = [ ];
       example = [ "btrfs" ];
       type = types.listOf types.str;
-      description = lib.mdDoc "Names of supported filesystem types.";
+      description = "Names of supported filesystem types.";
     };
 
     boot.specialFileSystems = mkOption {
       default = { };
       type = types.attrsOf (types.submodule coreFileSystemOpts);
       internal = true;
-      description = lib.mdDoc ''
+      description = ''
         Special filesystems that are mounted very early during boot.
       '';
     };
@@ -224,7 +224,7 @@ in {
       default = "5%";
       example = "32m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = ''
         Size limit for the /dev tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -234,7 +234,7 @@ in {
       default = "50%";
       example = "256m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = ''
         Size limit for the /dev/shm tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -244,7 +244,7 @@ in {
       default = "25%";
       example = "256m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = ''
         Size limit for the /run tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -253,7 +253,7 @@ in {
     boot.mountProcfs = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = ''
         Whether to mount /proc at boot. This is considered deprecated behavior by FreeBSD.
       '';
     };

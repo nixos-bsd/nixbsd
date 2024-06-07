@@ -7,7 +7,7 @@ with lib; {
       type = types.bool;
       default = true;
       example = false;
-      description = lib.mdDoc ''
+      description = ''
         Overlay nix with the development version.
 
         This only works when building with a flake and `nixpkgs.pkgs` is not set manually.
@@ -24,7 +24,7 @@ with lib; {
       type = types.bool;
       default = true;
       example = false;
-      description = lib.mdDoc ''
+      description = ''
         Overlay mini-tmpfiles. (github:nixos-bsd/mini-tmpfiles)
         This is currently nonfunctional, but is intended to become a dependency of
         nixbsd to handle the responsibilities systemd-tmpfiles handles on nixos. For now

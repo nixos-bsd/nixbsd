@@ -21,7 +21,7 @@ in
           name = "wmii";
           start = "...";
         }];
-        description = lib.mdDoc ''
+        description = ''
           Internal option used to add some common line to window manager
           scripts before forwarding the value to the
           `displayManager`.

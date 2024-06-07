@@ -17,7 +17,7 @@ let
 in {
   options = {
     boot.loader.stand = {
-      enable = mkEnableOption (mdDoc ''
+      enable = mkEnableOption (''
         Use the FreeBSD boot loader.
       '');
 
@@ -25,7 +25,7 @@ in {
         default = 20;
         example = 10;
         type = types.int;
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of configurations in the boot menu.
         '';
       };
@@ -33,7 +33,7 @@ in {
       populateCmd = mkOption {
         type = types.str;
         readOnly = true;
-        description = lib.mdDoc ''
+        description = ''
           Contains the builder command used to populate an image,
           honoring all options except the `-c <path-to-default-configuration>`
           argument.

@@ -26,7 +26,7 @@ in {
       mountLinux = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Mount linux filesystems (e.g. linprocfs, linsysfs)
         '';
       };
@@ -34,7 +34,7 @@ in {
       setFallback = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Fallback to Linux
         '';
       };

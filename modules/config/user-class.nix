@@ -13,13 +13,13 @@ let
       options = {
         cur = mkOption {
           type = baseType;
-          description = lib.mdDoc ''
+          description = ''
             Maximum value at start
           '';
         };
         max = mkOption {
           type = baseType;
-          description = lib.mdDoc ''
+          description = ''
             Maximum value user is allowed to set
           '';
         };
@@ -31,14 +31,14 @@ let
       names = mkOption {
         type = types.listOf types.str;
         default = [ name ];
-        description = lib.mdDoc ''
+        description = ''
           Names of this user class
         '';
       };
       text = mkOption {
         type = types.str;
         internal = true;
-        description = lib.mdDoc ''
+        description = ''
           Text of the line in login.conf
         '';
       };
@@ -47,98 +47,98 @@ let
       coredumpsize = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum coredump size limit
         '';
       };
       cputime = mkOption {
         type = limit time;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           CPU usage limit
         '';
       };
       datasize = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum data size limit
         '';
       };
       filesize = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum file size limit
         '';
       };
       maxproc = mkOption {
         type = limit number;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of processes
         '';
       };
       memorylocked = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum locked in core memory size limit
         '';
       };
       memoryuse = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum of core memory use size limit
         '';
       };
       openfiles = mkOption {
         type = limit number;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of open files per process
         '';
       };
       sbsize = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum permitted socketbuffer size
         '';
       };
       vmemoryuse = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum permitted total VM usage per process
         '';
       };
       stacksize = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum stack size limit
         '';
       };
       pseudoterminals = mkOption {
         type = limit number;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of pseudoterminals
         '';
       };
       swapuse = mkOption {
         type = limit size;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum swap space size limit
         '';
       };
       umtxp = mkOption {
         type = limit number;
         default = "unlimited";
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of process-shared pthread locks
         '';
       };
@@ -146,7 +146,7 @@ let
       # Environment
       charset = mkOption {
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = ''
           MIME character set used by applications
         '';
       };
@@ -154,28 +154,28 @@ let
         type =
           types.strMatching "default|all|[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*";
         default = "default";
-        description = lib.mdDoc ''
+        description = ''
           List of cpus to bind the user to
         '';
       };
       hushlogin = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Disable the login banner
         '';
       };
       ignorenologin = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Login not prevented by nologin
         '';
       };
       ftp-chroot = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Limit FTP access with chroot to the user home directory
         '';
       };
@@ -183,42 +183,42 @@ let
         # TODO: validate this more, see `man 7 maclabel`
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Default MAC (Manditory Access Control) policy
         '';
       };
       lang = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Language, sets LANG environment variable
         '';
       };
       mail = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Sets MAIL environment variable
         '';
       };
       manpath = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Default search path for manpages
         '';
       };
       nocheckmail = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Don't display mail status at login
         '';
       };
       nologin = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           If the file exists it will be displayed and the login session will
           be terminated
         '';
@@ -226,21 +226,21 @@ let
       path = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Default search path
         '';
       };
       priority = mkOption {
         type = types.nullOr (types.ints.between (-20) 20);
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Initial nice level
         '';
       };
       requirehome = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Require a valid home directory to login
         '';
       };
@@ -289,7 +289,7 @@ in {
         daemon = { };
       };
       type = types.attrsOf (types.submodule classOpts);
-      description = lib.mdDoc ''
+      description = ''
         User classes, as seen in /etc/login.conf
       '';
     };

@@ -16,28 +16,28 @@ let
       path = mkOption {
         type = types.path;
         default = name;
-        description = lib.mdDoc ''
+        description = ''
           Path to the file to create. If it already exists it may be rotated.
         '';
       };
       owner = mkOption {
         type = with types; nullOr (either str int);
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Owner of archived files, either a username or a uid.
         '';
       };
       group = mkOption {
         type = with types; nullOr (either str int);
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Owning group of archived files, either a group name or a gid.
         '';
       };
       mode = mkOption {
         type = types.strMatching "0?[0-7]{3}";
         default = "600";
-        description = lib.mdDoc ''
+        description = ''
           File mode for the log and archive files, in octal.
           Execute permissions will be ignored.
         '';
@@ -45,7 +45,7 @@ let
       count = mkOption {
         type = types.ints.unsigned;
         default = 7;
-        description = lib.mdDoc ''
+        description = ''
           Maximum number of archived log files at a time.
           This does not include the currently active file.
         '';
@@ -53,14 +53,14 @@ let
       size = mkOption {
         type = types.nullOr types.ints.positive;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Maximum size of an archived log file, in KiB
         '';
       };
       when = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           When to rotate log files, regardless of size.
           For format see {manpage}`newsyslog.conf(5)`
         '';
@@ -68,7 +68,7 @@ let
       pidFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Path to pidfile of process to signal. If `pidFile`, `pidGroupFile`, and `commandFile` are all `null`,
           then a signal is sent to `syslogd`.
         '';
@@ -76,7 +76,7 @@ let
       pidGroupFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Path to pidfile of process group to signal. If `pidFile`, `pidGroupFile`, and `commandFile` are all `null`,
           then a signal is sent to `syslogd`.
         '';
@@ -84,7 +84,7 @@ let
       commandFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = ''
           Path to a process to call when file is rotated.
           If `pidFile`, `pidGroupFile`, and `commandFile` are all `null`,
           then a signal is sent to `syslogd`.
@@ -93,70 +93,70 @@ let
       signal = mkOption {
         type = types.str;
         default = "SIGHUP";
-        description = lib.mdDoc ''
+        description = ''
           Signal to send when file is rotated.
         '';
       };
       flags.binary = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           The file is binary, meaning don't insert a rotation message.
         '';
       };
       flags.create = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Create the log file if it does not exist.
         '';
       };
       flags.compression = mkOption {
         type = compressionType;
         default = cfg.defaultCompression;
-        description = lib.mdDoc ''
+        description = ''
           Method used to compress archived files.
         '';
       };
       flags.noDump = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Mark the file as UF_NODUMP, so it may not be backed up.
         '';
       };
       flags.noEmptyRotate = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Don't rotate the log file if empty.
         '';
       };
       flags.isGlob = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Marks path as a glob.
         '';
       };
       flags.noSignal = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Don't signal the calling process
         '';
       };
       flags.noCompressFirst = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Don't compress the 0th archived file.
         '';
       };
       flags.alternateMessage = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = ''
           Use an RFC5424 rotation message instead of RFC3164.
         '';
       };
@@ -214,7 +214,7 @@ in {
       type = types.listOf types.str;
       default = [ ];
       example = [ "-a" "/var/log/archive" ];
-      description = lib.mdDoc ''
+      description = ''
         Extra arguments to call `newsyslog` with.
       '';
     };
@@ -223,7 +223,7 @@ in {
       type = compressionType;
       default = "bzip2";
       example = "zstd";
-      description = lib.mdDoc ''
+      description = ''
         Compression to use for logfiles when no other is specified.
       '';
     };
@@ -232,7 +232,7 @@ in {
       type = types.bool;
       default = true;
       example = false;
-      description = lib.mdDoc ''
+      description = ''
         Create files specified in syslogd by default.
       '';
     };
@@ -240,7 +240,7 @@ in {
     logfiles = mkOption {
       type = types.attrsOf (types.submodule logfileSubmodule);
       default = { };
-      description = lib.mdDoc ''
+      description = ''
         List of logfiles to create and rotate. These are primarily used for syslogd,
         but can also be used for other daemons like ftp.
       '';

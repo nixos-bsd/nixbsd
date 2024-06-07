@@ -6,20 +6,20 @@ let
     options = {
       file = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = ''
           Directory specification file, in mtree format.
         '';
       };
       text = mkOption {
         type = types.nullOr types.lines;
-        description = lib.mdDoc ''
+        description = ''
           Raw text of the mtree file.
         '';
       };
       root = mkOption {
         type = types.path;
         example = "/var";
-        description = lib.mdDoc ''
+        description = ''
           Directory the mtree file should be applied to.
         '';
       };
@@ -27,7 +27,7 @@ let
         type = types.listOf types.str;
         default = [ ];
         example = [ "-d" "-e" "-i" "-U" ];
-        description = lib.mdDoc ''
+        description = ''
           Extra flags to pass to {manpage}`mtree(8)`.
         '';
       };
@@ -43,20 +43,20 @@ in {
       package = mkOption {
         type = types.package;
         default = pkgs.freebsd.mtree;
-        description = lib.mdDoc ''
+        description = ''
           `mtree` package to use when setting up tempfiles.
         '';
       };
       specs = mkOption {
         type = types.listOf (types.submodule mtreeSubmodule);
-        description = lib.mdDoc ''
+        description = ''
           Specifications to apply.
         '';
       };
       useDefaultSpecs = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Apply default rules, which populate var.
           Some services may fail if this is not set or replicated.
         '';

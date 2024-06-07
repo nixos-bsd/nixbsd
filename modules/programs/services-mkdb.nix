@@ -6,7 +6,7 @@ in {
     programs.services-mkdb.package = mkOption {
       type = types.package;
       default = pkgs.freebsd.services_mkdb;
-      description = lib.mdDoc ''
+      description = ''
         Package to use for services_mkdb. This is used to make the /etc/services file
         and optionally to generate /var/db/services
       '';

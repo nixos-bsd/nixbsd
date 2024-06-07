@@ -70,7 +70,7 @@ in {
     internal = true;
     type = types.bool;
     default = false;
-    description = lib.mdDoc ''
+    description = ''
       Disable nixos-rebuild, nixos-generate-config, nixos-installer
       and other NixOS tools. This is useful to shrink embedded,
       read-only systems which are not expected to be rebuild or

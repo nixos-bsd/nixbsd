@@ -111,7 +111,7 @@ in {
     networking.dhcpcd.enable = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = ''
         Whether to enable dhcpcd for device configuration. This is mainly to
         explicitly disable dhcpcd (for example when using networkd).
       '';
@@ -120,7 +120,7 @@ in {
     networking.dhcpcd.persistent = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = ''
         Whenever to leave interfaces configured on dhcpcd daemon
         shutdown. Set to true if you have your root or store mounted
         over the network or this machine accepts SSH connections
@@ -132,7 +132,7 @@ in {
     networking.dhcpcd.denyInterfaces = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = ''
         Disable the DHCP client for any interface whose name matches
         any of the shell glob patterns in this list. The purpose of
         this option is to blacklist virtual interfaces such as those
@@ -143,7 +143,7 @@ in {
     networking.dhcpcd.allowInterfaces = mkOption {
       type = types.nullOr (types.listOf types.str);
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         Enable the DHCP client for any interface whose name matches
         any of the shell glob patterns in this list. Any interface not
         explicitly matched by this pattern will be denied. This pattern only
@@ -154,7 +154,7 @@ in {
     networking.dhcpcd.extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = ''
         Literal string to append to the config file generated for dhcpcd.
       '';
     };
@@ -162,7 +162,7 @@ in {
     networking.dhcpcd.IPv6rs = mkOption {
       type = types.nullOr types.bool;
       default = null;
-      description = lib.mdDoc ''
+      description = ''
         Force enable or disable solicitation and receipt of IPv6 Router Advertisements.
         This is required, for example, when using a static unique local IPv6 address (ULA)
         and global IPv6 address auto-configuration with SLAAC.
@@ -174,7 +174,7 @@ in {
       default = "";
       example =
         "if [[ $reason =~ BOUND ]]; then echo $interface: Routers are $new_routers - were $old_routers; fi";
-      description = lib.mdDoc ''
+      description = ''
         Shell code that will be run after all other hooks. See
         `man dhcpcd-run-hooks` for details on what is possible.
       '';
@@ -184,7 +184,7 @@ in {
       type =
         types.enum [ "background" "any" "ipv4" "ipv6" "both" "if-carrier-up" ];
       default = "any";
-      description = lib.mdDoc ''
+      description = ''
         This option specifies when the dhcpcd service will fork to background.
         If set to "background", dhcpcd will fork to background immediately.
         If set to "ipv4" or "ipv6", dhcpcd will wait for the corresponding IP

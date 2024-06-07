@@ -7,7 +7,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Whether to enable the `shutdown` and `poweroff` commands.
           These are generally setuid so that members of a certain group can run them.
           This is unrelated to `reboot` and `halt`, among others
@@ -17,7 +17,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "wheel";
-        description = lib.mdDoc ''
+        description = ''
           Group which can run the `shutdown` and `poweroff` commands.
         '';
       };

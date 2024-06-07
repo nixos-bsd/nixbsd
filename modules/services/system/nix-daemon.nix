@@ -44,7 +44,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = ''
           Whether to enable Nix.
           Disabling Nix makes the system hard to modify and the Nix programs and configuration will not be made available by NixOS itself.
         '';
@@ -54,7 +54,7 @@ in {
         type = types.package;
         default = pkgs.nix;
         defaultText = literalExpression "pkgs.nix";
-        description = lib.mdDoc ''
+        description = ''
           This option specifies the Nix package instance to use throughout the system.
         '';
       };
@@ -64,12 +64,12 @@ in {
         type = types.attrs;
         internal = true;
         default = { };
-        description = lib.mdDoc "Environment variables used by Nix.";
+        description = "Environment variables used by Nix.";
       };
 
       nrBuildUsers = mkOption {
         type = types.int;
-        description = lib.mdDoc ''
+        description = ''
           Number of `nixbld` user accounts created to
           perform secure concurrent builds.  If you receive an error
           message saying that “all build users are currently in use”,

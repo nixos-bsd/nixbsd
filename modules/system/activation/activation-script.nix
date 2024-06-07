@@ -108,17 +108,17 @@ let
           type = types.listOf types.str;
           default = [ ];
           description =
-            lib.mdDoc "List of dependencies. The script will run after these.";
+            "List of dependencies. The script will run after these.";
         };
         text = mkOption {
           type = types.lines;
-          description = lib.mdDoc "The content of the script.";
+          description = "The content of the script.";
         };
       } // optionalAttrs withDry {
         supportsDryActivation = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = ''
             Whether this activation script supports being dry-activated.
             These activation scripts will also be executed on dry-activate
             activations with the environment variable
@@ -148,7 +148,7 @@ in {
         }
       '';
 
-      description = lib.mdDoc ''
+      description = ''
         A set of shell script fragments that are executed when a NixOS
         system configuration is activated.  Examples are updating
         /etc, creating accounts, and so on.  Since these are executed
@@ -162,7 +162,7 @@ in {
     };
 
     system.dryActivationScript = mkOption {
-      description = lib.mdDoc
+      description = 
         "The shell script that is to be run when dry-activating a system.";
       readOnly = true;
       internal = true;
@@ -177,7 +177,7 @@ in {
       example = literalExpression ''"''${pkgs.busybox}/bin/env"'';
       type = types.nullOr types.path;
       visible = false;
-      description = lib.mdDoc ''
+      description = ''
         The env(1) executable that is linked system-wide to
         `/usr/bin/env`.
       '';
@@ -190,7 +190,7 @@ in {
       #             from the log.
       default =
         "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
-      description = lib.mdDoc ''
+      description = ''
         A program that writes a bootloader installation script to the path passed in the first command line argument.
 
         See `nixos/modules/system/activation/switch-to-configuration.pl`.
@@ -207,7 +207,7 @@ in {
     boot.postMountCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = ''
         Shell commands to be executed immediately after the stage 1
         filesystems have been mounted.
       '';

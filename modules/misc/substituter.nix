@@ -6,7 +6,7 @@ in {
     nixbsd.enableExtraSubstituters = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = ''
         Enable extra substituters from the NixBSD developers
       '';
     };

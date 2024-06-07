@@ -76,13 +76,13 @@ let
   };
 in {
   options.boot.bootspec = {
-    enable = lib.mkEnableOption (lib.mdDoc
+    enable = lib.mkEnableOption (
       "the generation of RFC-0125 bootspec in $system/boot.json, e.g. /run/current-system/boot.json")
       // {
         default = true;
         internal = true;
       };
-    enableValidation = lib.mkEnableOption (lib.mdDoc ''
+    enableValidation = lib.mkEnableOption (''
       the validation of bootspec documents for each build.
             This will introduce Go in the build-time closure as we are relying on [Cuelang](https://cuelang.org/) for schema validation.
             Enable this option if you want to ascertain that your documents are correct
@@ -93,7 +93,7 @@ in {
       type = lib.types.attrsOf
         lib.types.anything; # <namespace>: { ...namespace-specific fields }
       default = { };
-      description = lib.mdDoc ''
+      description = ''
         User-defined data that extends the bootspec document.
 
         To reduce incompatibility and prevent names from clashing
