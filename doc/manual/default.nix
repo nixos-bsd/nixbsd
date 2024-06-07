@@ -94,7 +94,6 @@ in rec {
     mkdir -p $dst
 
     cp ${"${pkgs.path}/doc/style.css"} $dst/style.css
-    cp ${"${pkgs.path}/doc/overrides.css"} $dst/overrides.css
     cp -r ${pkgs.documentation-highlighter} $dst/highlightjs
 
     ${prepareManualFromMD}
@@ -104,7 +103,6 @@ in rec {
       --revision ${lib.escapeShellArg revision} \
       --generator "nixos-render-docs ${lib.version}" \
       --stylesheet style.css \
-      --stylesheet overrides.css \
       --stylesheet highlightjs/mono-blue.css \
       --script ./highlightjs/highlight.pack.js \
       --script ./highlightjs/loader.js \
