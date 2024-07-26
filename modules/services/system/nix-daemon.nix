@@ -83,7 +83,7 @@ in {
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ nixPackage pkgs.nix-info ]
-      ++ optional (config.programs.bash.enableCompletion)
+      ++ optional (config.programs.bash.completion.enable)
       pkgs.nix-bash-completions;
 
     services.tempfiles.specs = [{
