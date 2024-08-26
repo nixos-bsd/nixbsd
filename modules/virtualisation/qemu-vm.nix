@@ -52,12 +52,6 @@ let
 
   };
 
-  selectPartitionTableLayout = { useEFIBoot, useDefaultFilesystems }:
-    if useDefaultFilesystems then
-      if useEFIBoot then "efi" else "legacy"
-    else
-      "none";
-
   driveCmdline = idx:
     { file, driveExtraOpts, deviceExtraOpts, ... }:
     let
@@ -79,6 +73,11 @@ let
 
   drivesCmdLine = drives:
     concatStringsSep "\\\n    " (imap1 driveCmdline drives);
+
+  espDerivation = hostPkgs.runCommand "ESP" {} ''
+    mkdir -p $out
+    ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel} -d $out -g 0
+  '';
 
   # Shell script to start the VM.
   startVM = ''
@@ -103,7 +102,7 @@ let
       toString config.virtualisation.diskImage
     }}") || test -z "$NIX_DISK_IMAGE"
 
-    if test -n "$NIX_DISK_IMAGE" && (! test -e "$NIX_DISK_IMAGE" || ! ${qemu}/bin/qemu-img info "$NIX_DISK_IMAGE" | grep ${systemImage}/nixos.qcow2 &>/dev/null); then
+    if test -n "$NIX_DISK_IMAGE" && (! test -e "$NIX_DISK_IMAGE" || ! ${qemu}/bin/qemu-img info "$NIX_DISK_IMAGE" | grep ${config.system.build.systemImage}/nixos.qcow2 &>/dev/null); then
         echo "Virtualisation disk image doesn't exist or needs rebase, creating..."
 
         ${
@@ -115,7 +114,7 @@ let
             # FIXME: raise this issue to upstream.
             ${qemu}/bin/qemu-img create \
               -f qcow2 \
-              -b ${systemImage}/nixos.qcow2 \
+              -b ${config.system.build.systemImage}/nixos.qcow2 \
               -F qcow2 \
               "$NIX_DISK_IMAGE"
           '' else if cfg.useDefaultFilesystems then ''
@@ -167,7 +166,7 @@ let
       # We still need the EFI var from the make-disk-image derivation
       # because our "switch-to-configuration" process might
       # write into it and we want to keep this data.
-      ''cp ${systemImage}/efi-vars.fd "$NIX_EFI_VARS"''}
+      ''cp ${config.virtualisation.efi.variables} "$NIX_EFI_VARS"''}
         chmod 0644 "$NIX_EFI_VARS"
       fi
     ''}
@@ -193,7 +192,11 @@ let
         ${concatStringsSep " " config.virtualisation.qemu.networkingOptions} \
         ${
           concatStringsSep " \\\n    " (mapAttrsToList (tag: share:
-            "-virtfs local,path=${share.source},security_model=none,mount_tag=${tag}")
+              if share.type == "9p"
+                then "-virtfs local,path=${share.source},security_model=none,mount_tag=${tag}"
+              else if share.type == "fat"
+                then "-drive format=raw,file=fat:rw:${share.source}"
+              else throw "Bad share type '${share.type}'")
             config.virtualisation.sharedDirectories)
         } \
         ${drivesCmdLine config.virtualisation.qemu.drives} \
@@ -221,46 +224,19 @@ let
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
   systemImage = import ../../lib/make-disk-image.nix {
-    inherit pkgs config lib;
-    contents = [{
-      target = "/etc/reginfo";
-      source = "${regInfo}/registration";
-    }];
+    inherit pkgs lib;
+    partitions = [
+      (import ../../lib/make-partition-image.nix {
+        inherit pkgs lib;
+        label = "root";
+        filesystem = "ufs";
+        makeRootDirs = true;
+        totalSize = "10g";
+      })
+    ];
+    totalSize = "auto";
     format = "qcow2";
-    onlyNixStore = false;
-    label = rootFilesystemLabel;
-    partitionTableType = selectPartitionTableLayout {
-      inherit (cfg) useDefaultFilesystems useEFIBoot;
-    };
-    # Bootloader should be installed on the system image only if we are booting through bootloaders.
-    # Though, if a user is not using our default filesystems, it is possible to not have any ESP
-    # or a strange partition table that's incompatible with GRUB configuration.
-    # As a consequence, this may lead to disk image creation failures.
-    # To avoid this, we prefer to let the user find out about how to install the bootloader on its ESP/disk.
-    # Usually, this can be through building your own disk image.
-    # TODO: If a user is interested into a more fine grained heuristic for `installBootLoader`
-    # by examining the actual contents of `cfg.fileSystems`, please send a PR.
-    installBootLoader = cfg.useDefaultFilesystems;
-    touchEFIVars = cfg.useEFIBoot;
-    diskSize = "auto";
-    additionalSpace = "10g";
-    copyChannel = false;
-    OVMF = cfg.efi.OVMF;
-  };
-
-  storeImage = import ../../lib/make-disk-image.nix {
-    name = "nix-store-image";
-    inherit pkgs config lib;
-    additionalPaths = [ regInfo ];
-    format = "qcow2";
-    onlyNixStore = true;
-    label = nixStoreFilesystemLabel;
-    partitionTableType = "none";
-    installBootLoader = false;
-    touchEFIVars = false;
-    diskSize = "auto";
-    additionalSpace = "2g";
-    copyChannel = false;
+    partitionTableType = "efi";
   };
 
 in {
@@ -296,7 +272,7 @@ in {
 
     virtualisation.diskImage = mkOption {
       type = types.nullOr types.str;
-      default = "./${config.system.name}.qcow2";
+      default = null;
       defaultText = literalExpression ''"./''${config.system.name}.qcow2"'';
       description = ''
         Path to the disk image containing the root filesystem.
@@ -321,8 +297,8 @@ in {
 
     virtualisation.bootPartition = mkOption {
       type = types.nullOr types.path;
-      default =
-        if cfg.useEFIBoot then "/dev/msdosfs/${espFilesystemLabel}" else null;
+      default = null;
+        #if cfg.useEFIBoot then "/dev/msdosfs/${espFilesystemLabel}" else null;
       defaultText = literalExpression ''
         if cfg.useEFIBoot then "/dev/msdosfs/${espFilesystemLabel}" else null'';
       example = "/dev/msdosfs/esp";
@@ -388,7 +364,7 @@ in {
     virtualisation.sharedDirectories = mkOption {
       type = types.attrsOf (types.submodule {
         options.source = mkOption {
-          type = types.str;
+          type = types.path;
           description = 
             "The path of the directory to share, can be a shell variable";
         };
@@ -396,6 +372,11 @@ in {
           type = types.path;
           description = 
             "The mount point of the directory inside the virtual machine";
+        };
+        options.type = mkOption {
+          type = types.str;
+          description = "The type of the virtual device, can be '9p' or 'fat'";
+          default = "9p";
         };
       });
       default = { };
@@ -407,8 +388,8 @@ in {
       };
       description = ''
         An attributes set of directories that will be shared with the
-        virtual machine using VirtFS (9P filesystem over VirtIO).
-        The attribute name will be used as the 9P mount tag.
+        virtual machine using passthrough technologies.
+        If 9p is used, the attribute name will be used as the mount tag.
       '';
     };
 
@@ -556,7 +537,7 @@ in {
 
     virtualisation.writableStore = mkOption {
       type = types.bool;
-      default = cfg.mountHostNixStore;
+      default = false;
       defaultText = literalExpression "cfg.mountHostNixStore";
       description = ''
         If enabled, the Nix store in the VM is made writable by
@@ -691,7 +672,7 @@ in {
 
     virtualisation.mountHostNixStore = mkOption {
       type = types.bool;
-      default = false;
+      default = true;
       description = ''
         Mount the host Nix store as a 9p mount.
       '';
@@ -834,13 +815,106 @@ in {
 
       mkdir -p $targetRoot/boot
 
-      ${optionalString cfg.writableStore ''
+      ${/*optionalString cfg.writableStore ''
         echo "mounting overlay filesystem on /nix/store..."
         mkdir -p -m 0755 $targetRoot/nix/.rw-store/store $targetRoot/nix/.rw-store/work $targetRoot/nix/store
         mount -t overlay overlay $targetRoot/nix/store \
           -o lowerdir=$targetRoot/nix/.ro-store,upperdir=$targetRoot/nix/.rw-store/store,workdir=$targetRoot/nix/.rw-store/work || fail
-      ''}
+      ''*/""}
     '';
+
+    boot.initmd.contents = lib.mkIf config.virtualisation.mountHostNixStore [config.boot.kernelEnvironment.init0_path];
+    boot.kernelEnvironment.init0_path = builtins.toString (pkgs.runCommandCC "init0" {} ''
+      $CC -x c -o $out - <<EOF
+      #include <stdio.h>
+      #include <sys/param.h>
+      #include <sys/mount.h>
+      #include <sys/uio.h>
+      #include <sys/reboot.h>
+      #include <sys/stat.h>
+      #include <kenv.h>
+      #include <errno.h>
+      #include <unistd.h>
+      #include <string.h>
+      
+      int main(int argc, char **argv, char **envp) {
+          char errmsg[256] = "";
+          puts("In init0");
+          char *mountfrom = "${config.fileSystems."/".fsType}:${lib.optionalString (config.fileSystems."/".fsType != "tmpfs") config.fileSystems."/".device}";
+          char *fstype = "${config.fileSystems."/".fsType}";
+          if (kenv(KENV_SET, "vfs.root.mountfrom", mountfrom, strlen(mountfrom) + 1) < 0) {
+              perror("kenv(KENV_SET)");
+              return 6;
+          }
+          if (reboot(RB_REROOT) < 0) {
+              perror("reboot(RB_REROOT)");
+              return 5;
+          }
+          struct iovec iov3[10] = {
+              { .iov_base = (void*)"fstype", .iov_len = sizeof("fstype") },
+              { .iov_base = (void*)fstype, .iov_len = strlen(fstype) + 1 },
+              { .iov_base = (void*)"fspath", .iov_len = sizeof("fspath") },
+              { .iov_base = (void*)"/", .iov_len = sizeof("/") },
+              { .iov_base = (void*)"noro", .iov_len = sizeof("noro") },
+              { .iov_base = (void*)"", .iov_len = sizeof("") },
+              { .iov_base = (void*)"errmsg", .iov_len = sizeof("errmsg") },
+              { .iov_base = (void*)errmsg, .iov_len = sizeof(errmsg) },
+          };
+          if (nmount(iov3, 8, MNT_UPDATE | MNT_NOATIME) < 0) {
+              fprintf(stderr, "nmount: %s\n", errmsg);
+              return 102;
+          }
+          if (mkdir("/dev", 0755) < 0) {
+              if (errno != EEXIST) {
+                  return 100 + errno;
+              }
+          }
+          mkdir("/etc", 0755);
+          mkdir("/nix", 0755);
+          mkdir("/nix/store", 0755);
+          mkdir("/run", 0755);
+          mkdir("/tmp", 0755);
+          struct iovec iov2[10] = {
+              { .iov_base = (void*)"fstype", .iov_len = sizeof("fstype") },
+              { .iov_base = (void*)"devfs", .iov_len = sizeof("devfs") },
+              { .iov_base = (void*)"fspath", .iov_len = sizeof("fspath") },
+              { .iov_base = (void*)"/dev", .iov_len = sizeof("/dev") },
+              { .iov_base = (void*)"errmsg", .iov_len = sizeof("errmsg") },
+              { .iov_base = (void*)errmsg, .iov_len = sizeof(errmsg) },
+          };
+          if (nmount(iov2, 6, 0) < 0) {
+              fprintf(stderr, "nmount: %s\n", errmsg);
+              return 4;
+          }
+          struct iovec iov[10] = {
+              { .iov_base = (void*)"fstype", .iov_len = sizeof("fstype") },
+              { .iov_base = (void*)"p9fs", .iov_len = sizeof("p9fs") },
+              { .iov_base = (void*)"fspath", .iov_len = sizeof("fspath") },
+              { .iov_base = (void*)"/nix/store", .iov_len = sizeof("/nix/store") },
+              { .iov_base = (void*)"from", .iov_len = sizeof("from") },
+              { .iov_base = (void*)"nix-store", .iov_len = sizeof("nix-store") },
+              { .iov_base = (void*)"errmsg", .iov_len = sizeof("errmsg") },
+              { .iov_base = (void*)errmsg, .iov_len = sizeof(errmsg) },
+          };
+          if (nmount(iov, 8, 0) < 0) {
+              fprintf(stderr, "nmount: %s\n", errmsg);
+              return 3;
+          }
+          char init1_path[256];
+          if (kenv(KENV_GET, "init1_path", init1_path, sizeof(init1_path)) < 0) {
+              perror("kenv");
+              return 2;
+          }
+          argv[0] = init1_path;
+          execve(init1_path, argv, envp);
+          perror("execve");
+          return 1;
+      }
+      EOF
+    '');
+    boot.kernelEnvironment.initmd_name = "/boot/initmd";
+    boot.kernelEnvironment."vfs.root.mountfrom" = "ufs:/dev/md0";
+    boot.kernelEnvironment.virtio_p9fs_load = "YES";
 
     # After booting, register the closure of the paths in
     # `virtualisation.additionalPaths' in the Nix database in the VM.  This
@@ -864,6 +938,11 @@ in {
     virtualisation.additionalPaths = [ config.system.build.toplevel ];
 
     virtualisation.sharedDirectories = {
+      boot = mkIf (cfg.bootPartition == null) {
+        source = espDerivation;
+        target = "/boot";
+        type = "fat";
+      };
       nix-store = mkIf cfg.mountHostNixStore {
         source = builtins.storeDir;
         target = "/nix/store";
@@ -950,12 +1029,9 @@ in {
           "/nix/.ro-store"
         else
           share.target;
-        value.device = tag;
-        value.fsType = "9p";
-        #value.neededForBoot = true;
-        value.options =
-          [ "trans=virtio" "version=9p2000.L" "msize=${toString cfg.msize}" ]
-          ++ lib.optional (tag == "nix-store") "cache=loose";
+        value.device = if share.type == "9p" then tag else "/dev/msdosfs/QEMU%20VVFAT";
+        value.fsType = if share.type == "9p" then "p9fs" else "msdosfs";
+        value.options = if share.type == "9p" then [] else [];  # ???
       };
     in lib.mkMerge [
       (lib.mapAttrs' mkSharedDir cfg.sharedDirectories)
@@ -1013,7 +1089,7 @@ in {
       } $out/bin/run-${config.system.name}-vm
     '';
 
-    system.build.systemImage = systemImage;
+    system.build.systemImage = if config.virtualisation.diskImage == null then "" else systemImage;
 
     # TODO: enable guest agent when it exists
     # TODO: disable ntpd when it exists

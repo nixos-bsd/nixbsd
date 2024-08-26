@@ -57,6 +57,7 @@ let
       umask 0022
 
       # Early mounts
+      mount
       specialMount() {
         SRC="$1"
         DST="$2"

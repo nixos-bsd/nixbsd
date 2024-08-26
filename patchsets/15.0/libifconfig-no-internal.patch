@@ -2,8 +2,7 @@ diff --git a/lib/libifconfig/Makefile b/lib/libifconfig/Makefile
 index 6bdb202bec1d..ebc626901cfc 100644
 --- a/lib/libifconfig/Makefile
 +++ b/lib/libifconfig/Makefile
-@@ -1,7 +1,6 @@
- 
+@@ -1,6 +1,5 @@
  PACKAGE=	lib${LIB}
  LIB=		ifconfig
 -INTERNALLIB=	true
@@ -25,7 +24,7 @@ diff --git a/lib/libifconfig/Symbol.map b/lib/libifconfig/Symbol.map
 index 2d80fb31652a..8b08947112e5 100644
 --- a/lib/libifconfig/Symbol.map
 +++ b/lib/libifconfig/Symbol.map
-@@ -2,6 +2,8 @@ FBSD_1.6 {
+@@ -2,6 +2,8 @@
  	ifconfig_bridge_get_bridge_status;
  	ifconfig_bridge_free_bridge_status;
  	ifconfig_carp_get_info;
@@ -34,3 +33,19 @@ index 2d80fb31652a..8b08947112e5 100644
  	ifconfig_close;
  	ifconfig_create_interface;
  	ifconfig_create_interface_vlan;
+@@ -40,7 +42,6 @@
+ 	ifconfig_open;
+ 	ifconfig_set_capability;
+ 	ifconfig_set_description;
+-	ifconfig_set_fib;
+ 	ifconfig_set_metric;
+ 	ifconfig_set_mtu;
+ 	ifconfig_set_name;
+@@ -81,7 +82,6 @@
+ 	ifconfig_sfp_fc_speed_symbol;
+ 	ifconfig_sfp_id_description;
+ 	ifconfig_sfp_id_display;
+-	ifconfig_sfp_id_is_qsfp;
+ 	ifconfig_sfp_id_symbol;
+ 	ifconfig_sfp_rev_description;
+ 	ifconfig_sfp_rev_symbol;

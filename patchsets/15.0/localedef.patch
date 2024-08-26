@@ -28,25 +28,25 @@ index 44b7e3292eae..79c30b7cf372 100644
 --- a/usr.bin/localedef/charmap.c
 +++ b/usr.bin/localedef/charmap.c
 @@ -31,6 +31,7 @@
- /*
   * CHARMAP file handling for localedef.
   */
+ 
 +#include <stdint.h>
- #include <sys/cdefs.h>
  #include <sys/types.h>
  #include <sys/tree.h>
+ 
 diff --git a/usr.bin/localedef/collate.c b/usr.bin/localedef/collate.c
 index 2a080773a95e..3f0030c638f5 100644
 --- a/usr.bin/localedef/collate.c
 +++ b/usr.bin/localedef/collate.c
 @@ -31,6 +31,7 @@
- /*
   * LC_COLLATE database generation routines for localedef.
   */
+ 
 +#include <stdint.h>
- #include <sys/cdefs.h>
  #include <sys/types.h>
  #include <sys/tree.h>
+ 
 diff --git a/usr.bin/localedef/ctype.c b/usr.bin/localedef/ctype.c
 index ab7b76e57b2d..846c6d6480a8 100644
 --- a/usr.bin/localedef/ctype.c

@@ -2,12 +2,14 @@
 with lib;
 let
   cfg = config.boot.loader.stand;
+  initmd = if (config.boot.initmd.contents != []) then config.boot.initmd.image else null;
   builder = import ./stand-conf-builder.nix {
-    inherit pkgs;
+    inherit pkgs initmd;
     inherit (pkgs.freebsd) stand-efi;
   };
   populateBuilder = import ./stand-conf-builder.nix {
     pkgs = pkgs.buildPackages;
+    inherit initmd;
     inherit (pkgs.freebsd) stand-efi;
   };
   #timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;
@@ -48,11 +50,11 @@ in {
     system.boot.loader.id = "stand";
     boot.loader.stand.populateCmd = "${populateBuilder} ${builderArgs}";
 
-    boot.kernelEnvironment = mkIf (config.fileSystems ? "/")
-      (let fs = config.fileSystems."/";
-      in {
-        "vfs.root.mountfrom" = "${fs.fsType}:${fs.device}";
-        "vfs.root.mountfrom.options" = concatStringsSep "," fs.options;
-      });
+    #boot.kernelEnvironment = mkIf (config.fileSystems ? "/")
+    #  (let fs = config.fileSystems."/";
+    #  in {
+    #    "vfs.root.mountfrom" = "${fs.fsType}:${fs.device}";
+    #    "vfs.root.mountfrom.options" = concatStringsSep "," fs.options;
+    #  });
   };
 }

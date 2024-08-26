@@ -1,7 +1,6 @@
 --- a/sys/modules/aesni/Makefile	2023-12-16 09:19:28.454892154 -0700
-+++ b/sys/Modules/aesni/Makefile	2023-12-16 09:19:41.975047684 -0700
-@@ -1,6 +1,5 @@
- 
++++ b/sys/modules/aesni/Makefile	2023-12-16 09:19:41.975047684 -0700
+@@ -1,5 +1,4 @@
  .PATH: ${SRCTOP}/sys/crypto/aesni
 -.PATH: ${SRCTOP}/contrib/llvm-project/clang/lib/Headers
  

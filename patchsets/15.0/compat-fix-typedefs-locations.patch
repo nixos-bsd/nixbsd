@@ -1,9 +1,9 @@
 --- a/tools/build/cross-build/include/common/sys/_types.h
 +++ b/tools/build/cross-build/include/common/sys/_types.h
-@@ -47,3 +47,6 @@
-  * Neither GLibc nor macOS define __va_list but many FreeBSD headers require it.
-  */
- typedef __builtin_va_list __va_list;
+@@ -48,3 +48,6 @@
+ 
+ /* Needed for opensolaris compat. */
+ typedef	__int64_t	off64_t;
 +
 +typedef __UINTPTR_TYPE__ __uintptr_t;
 +typedef __INTPTR_TYPE__ __intptr_t;
@@ -27,6 +27,6 @@
  
 +#include <sys/_types.h>
 +
- #ifndef __size_t
- typedef __SIZE_TYPE__ __size_t;
- #endif
+ /*
+  * stddef.h for both gcc and clang will define __size_t when size_t has
+  * been defined (except on *BSD where it doesn't touch __size_t). So if

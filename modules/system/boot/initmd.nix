@@ -24,6 +24,7 @@ in {
       filesystem = "ufs";
       nixStorePath = "/nix/store";
       nixStoreClosure = config.boot.initmd.contents;
+      makeRootDirs = true;
     };
   };
 }

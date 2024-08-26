@@ -47,7 +47,7 @@ let
   '';
   builder = if filesystem == "ufs" then ufsBuilder else if filesystem == "fat" || filesystem == "efi" then fatBuilder
     else throw "Unknown filesystem type ${filesystem}";
-  contentsCopier = lib.optionalString (!lib.emptyList contents) ''
+  contentsCopier = lib.optionalString (contents != []) ''
     set -f
     sources_=(${lib.concatStringsSep " " sources})
     targets_=(${lib.concatStringsSep " " targets})
@@ -94,15 +94,18 @@ let
   rootDirMaker = lib.optionalString makeRootDirs ''
     mkdir -p $root/{etc,dev,tmp,boot,nix/store}
   '';
-  nixStoreClosurePaths = "${pkgs.closureOf { rootPaths = nixStoreClosure; }}/store-paths";
+  nixStoreClosurePaths = "${pkgs.closureInfo { rootPaths = nixStoreClosure; }}/store-paths";
   nixStoreCopier = lib.optionalString (nixStorePath != null) ''
     mkdir -p $root/${nixStorePath}
-    rsync -av --files-from=${nixStoreClosurePaths} $root/${nixStorePath}
+    for f in $(cat ${nixStoreClosurePaths}); do
+      cp -a $f $root/${nixStorePath}
+    done
   '';
 in pkgs.runCommand "partition-image-${label}" {
     passthru = {
       inherit filesystem label;
     };
+    nativeBuildInputs = [ pkgs.freebsd.makefs pkgs.rsync ];
   } ''
   root=$PWD/root
   mkdir -p $root

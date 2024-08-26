@@ -70,7 +70,7 @@ in let
     '';
   }.${partitionTableType};
 
-in pkgs.runCommand name { } ''
+in pkgs.runCommand name { nativeBuildInputs = [ pkgs.freebsd.mkimg ]; } ''
   mkdir $out
   ${partitionDiskScript}
   mkdir -p $out/nix-support
