@@ -279,6 +279,9 @@ in {
 
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
+    # Add the mount helpers to the system path so that `mount' can find them.
+    system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
+
     environment.systemPackages = with pkgs;
       [ freebsd.mount ] ++ config.system.fsPackages;
 
