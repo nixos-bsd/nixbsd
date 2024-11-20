@@ -485,7 +485,7 @@ in
                   providedSessions = [ sessionName ];
                 })
             )
-            (cartesianProductOfSets { dm = dms; wm = wms; })
+            (cartesianProduct { dm = dms; wm = wms; })
           );
 
     # Make xsessions and wayland sessions available in XDG_DATA_DIRS
