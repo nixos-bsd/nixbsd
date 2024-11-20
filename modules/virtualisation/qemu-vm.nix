@@ -220,7 +220,7 @@ let
 
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
-  systemImage = import ../../lib/make-disk-image.nix {
+  systemImage = pkgs.callPackage ../../lib/make-disk-image.nix {
     inherit pkgs config lib;
     contents = [{
       target = "/etc/reginfo";
