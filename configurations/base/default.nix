@@ -1,6 +1,8 @@
 { config, lib, ... }: {
   nixpkgs.hostPlatform = "x86_64-freebsd";
-  nixpkgs.config.freebsdBranch = "release/14.1.0";
+  nixpkgs.overlays = [
+    (import ../../overlays/freebsd-main.nix)
+  ];
 
   users.users.root.initialPassword = "toor";
 

@@ -53,10 +53,23 @@ function config.loadKernel(other_kernel)
 	local system = other_kernel or loader.getenv("system")
 	local entry = nixbsd_config.entries[system]
 	loader.setenv("init_path", entry.init)
+	initmd = nil
 	for k, v in pairs(entry.kernelEnvironment) do
 		loader.setenv(k, v)
+		if k == "init0_path" then
+			-- If we have a stage0 script, use it as an override
+			-- and toss the "real" init back to stage1
+			loader.setenv("init_path", v)
+			loader.setenv("init1_path", entry.init)
+		end
+		if k == "initmd_name" then
+			initmd = v
+		end
 	end
 	orig_loadKernel(entry.kernel)
+	if initmd ~= nil and initmd ~= "" then
+		loader.perform("load -t md_image " .. initmd)
+	end
 end
 
 require("loader_orig")
