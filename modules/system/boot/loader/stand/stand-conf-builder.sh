@@ -124,6 +124,10 @@ cp @loader_script@ $targetBoot/lua/loader.lua
 mv $tmpFile $targetBoot/lua/stand_config.lua
 mkdir -p $targetBoot/loader.conf.d
 
+if [ -n "@initmd@" ]; then
+cp "@initmd@" "$targetBoot/initmd"
+fi
+
 mkdir -p $target/efi/boot
 cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
 

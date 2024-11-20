@@ -1,6 +1,5 @@
 { config, lib, ... }: {
   nixpkgs.hostPlatform = "x86_64-freebsd";
-  nixpkgs.config.freebsdBranch = "release/14.1.0";
 
   users.users.root.initialPassword = "toor";
 
@@ -26,4 +25,6 @@
     device = "/dev/msdosfs/ESP";
     fsType = "msdosfs";
   };
+
+  virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
 }
