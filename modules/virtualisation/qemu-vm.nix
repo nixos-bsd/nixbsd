@@ -52,12 +52,6 @@ let
 
   };
 
-  selectPartitionTableLayout = { useEFIBoot, useDefaultFilesystems }:
-    if useDefaultFilesystems then
-      if useEFIBoot then "efi" else "legacy"
-    else
-      "none";
-
   driveCmdline = idx:
     { file, driveExtraOpts, deviceExtraOpts, ... }:
     let
@@ -136,11 +130,6 @@ let
     if [ -z "$TMPDIR" ] || [ -z "$USE_TMPDIR" ]; then
         TMPDIR=$(mktemp -d nix-vm.XXXXXXXXXX --tmpdir)
     fi
-
-    ${lib.optionalString (cfg.useNixStoreImage) ''
-      # Create a writable copy/snapshot of the store image.
-      ${qemu}/bin/qemu-img create -f qcow2 -F qcow2 -b ${storeImage}/${storeImage.filename} "$TMPDIR"/store.img
-    ''}
 
     # Create a directory for exchanging data with the VM.
     mkdir -p "$TMPDIR/xchg"
@@ -245,20 +234,6 @@ let
         }];
         nixStorePath = "/nix/store";
         nixStoreClosure = config.virtualisation.additionalPaths;
-      })
-    ];
-    format = "qcow2";
-    partitionTableType = "efi";
-  };
-
-  storeImage = pkgs.callPackage ../../lib/make-disk-image.nix {
-    inherit pkgs lib;
-    partitions = [
-      (pkgs.callPackage ../../lib/make-partition-image.nix {
-        inherit pkgs lib;
-        label = nixStoreFilesystemLabel;
-        filesystem = "ufs";
-        totalSize = "10g";
       })
     ];
     format = "qcow2";
@@ -556,28 +531,6 @@ in {
         });
     };
 
-    virtualisation.writableStore = mkOption {
-      type = types.bool;
-      default = cfg.mountHostNixStore;
-      defaultText = literalExpression "cfg.mountHostNixStore";
-      description = ''
-        If enabled, the Nix store in the VM is made writable by
-        layering an overlay filesystem on top of the host's Nix
-        store.
-
-        By default, this is enabled if you mount a host Nix store.
-      '';
-    };
-
-    virtualisation.writableStoreUseTmpfs = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Use a tmpfs for the writable store instead of writing to the VM's
-        own filesystem.
-      '';
-    };
-
     networking.primaryIPAddress = mkOption {
       type = types.str;
       default = "";
@@ -671,24 +624,6 @@ in {
           Enable the virtio-keyboard device.
         '';
       };
-    };
-
-    virtualisation.useNixStoreImage = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Build and use a disk image for the Nix store, instead of
-        accessing the host's one through 9p.
-
-        For applications which do a lot of reads from the store,
-        this can drastically improve performance, but at the cost of
-        disk space and image build time.
-
-        As an alternative, you can use a bootloader which will provide you
-        with a full NixOS system image containing a Nix store and
-        avoid mounting the host nix store through
-        {option}`virtualisation.mountHostNixStore`.
-      '';
     };
 
     virtualisation.mountHostNixStore = mkOption {
@@ -810,22 +745,6 @@ in {
       '';
     }];
 
-    warnings = optional (cfg.writableStore && cfg.useNixStoreImage
-      && opt.writableStore.highestPrio > lib.modules.defaultOverridePriority) ''
-        You have enabled ${opt.useNixStoreImage} = true,
-        without setting ${opt.writableStore} = false.
-
-        This causes a store image to be written to the store, which is
-        costly, especially for the binary cache, and because of the need
-        for more frequent garbage collection.
-
-        If you really need this combination, you can set ${opt.writableStore}
-        explicitly to true, incur the cost and make this warning go away.
-        Otherwise, we recommend
-
-          ${opt.writableStore} = false;
-      '';
-
     boot.postMountCommands = ''
       # Mark this as a NixOS machine.
       mkdir -p $targetRoot/etc
@@ -835,13 +754,6 @@ in {
       chmod 1777 $targetRoot/tmp
 
       mkdir -p $targetRoot/boot
-
-      ${optionalString cfg.writableStore ''
-        echo "mounting overlay filesystem on /nix/store..."
-        mkdir -p -m 0755 $targetRoot/nix/.rw-store/store $targetRoot/nix/.rw-store/work $targetRoot/nix/store
-        mount -t overlay overlay $targetRoot/nix/store \
-          -o lowerdir=$targetRoot/nix/.ro-store,upperdir=$targetRoot/nix/.rw-store/store,workdir=$targetRoot/nix/.rw-store/work || fail
-      ''}
     '';
 
     # After booting, register the closure of the paths in
@@ -926,12 +838,6 @@ in {
         deviceExtraOpts.bootindex = "1";
         deviceExtraOpts.serial = rootDriveSerialAttr;
       }])
-      (mkIf cfg.useNixStoreImage [{
-        name = "nix-store";
-        file = ''"$TMPDIR"/store.img'';
-        deviceExtraOpts.bootindex = "2";
-        driveExtraOpts.format = "qcow2";
-      }])
       (imap0 (idx: _: {
         file = "$(pwd)/empty${toString idx}.qcow2";
         driveExtraOpts.werror = "report";
@@ -948,10 +854,7 @@ in {
 
     virtualisation.fileSystems = let
       mkSharedDir = tag: share: {
-        name = if tag == "nix-store" && cfg.writableStore then
-          "/nix/.ro-store"
-        else
-          share.target;
+        name = share.target;
         value.device = tag;
         value.fsType = "9p";
         #value.neededForBoot = true;
@@ -981,18 +884,6 @@ in {
             "size=${toString config.boot.tmp.tmpfsSize}"
           ];
         };
-        "/nix/${if cfg.writableStore then ".ro-store" else "store"}" =
-          lib.mkIf cfg.useNixStoreImage {
-            device = "/dev/disk/by-label/${nixStoreFilesystemLabel}";
-            #neededForBoot = true;
-            options = [ "ro" ];
-          };
-        "/nix/.rw-store" =
-          lib.mkIf (cfg.writableStore && cfg.writableStoreUseTmpfs) {
-            fsType = "tmpfs";
-            options = [ "mode=0755" ];
-            #neededForBoot = true;
-          };
         "/boot" = lib.mkIf (cfg.bootPartition != null) {
           device = cfg.bootPartition;
           fsType = "msdosfs";
