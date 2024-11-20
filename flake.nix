@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/staging-test";
+    nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging-test";
     utils.url = "github:numtide/flake-utils";
     nix = {
       url = "github:rhelmot/nix/freebsd-staging";

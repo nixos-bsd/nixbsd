@@ -67,11 +67,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1717788617,
-        "narHash": "sha256-6WZQ3q/yn4PleNKwpN2lkYL3RB32Df426OEH1++m3YM=",
+        "lastModified": 1732006145,
+        "narHash": "sha256-hhgIuccEHyMf9E9+W54rjqvdj6mDQoYpn2X0URlGdu8=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "2c6b0ae3429dc5c17924cd834fd0c264c61ee7e6",
+        "rev": "b8d89f70ee7720f367a13928e2e5b45adb58bdc0",
         "type": "github"
       },
       "original": {
@@ -83,16 +83,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1721942297,
-        "narHash": "sha256-Cjm4facf31Sfk2NxUu5Q2QxNDwqSFqtVMo0LjOVdIcw=",
+        "lastModified": 1732049814,
+        "narHash": "sha256-lwUhtyRxfLpUSGvINjaC2wZyrZvsZDFyuXzMg0c6eD0=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "b3ab453fe3ff59de085ad002c940f3b754454447",
+        "rev": "bb527df6279c214cfc1e2d3f8ccc3d22b61ac36a",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "staging-test",
+        "ref": "freebsd-staging-test",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -125,11 +125,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1710146030,
-        "narHash": "sha256-SZ5L6eA7HJ/nmkzGG7/ISclqe6oZdOZTNoesiInkXPQ=",
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
         "owner": "numtide",
         "repo": "flake-utils",
-        "rev": "b1d9ab70662946ef0850d488da1c9019f3a9752a",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
         "type": "github"
       },
       "original": {
