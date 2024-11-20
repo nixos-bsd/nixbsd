@@ -103,7 +103,7 @@ let
       toString config.virtualisation.diskImage
     }}") || test -z "$NIX_DISK_IMAGE"
 
-    if test -n "$NIX_DISK_IMAGE" && (! test -e "$NIX_DISK_IMAGE" || ! ${qemu}/bin/qemu-img info "$NIX_DISK_IMAGE" | grep ${systemImage}/nixos.qcow2 &>/dev/null); then
+    if test -n "$NIX_DISK_IMAGE" && (! test -e "$NIX_DISK_IMAGE" || ! ${qemu}/bin/qemu-img info "$NIX_DISK_IMAGE" | grep ${systemImage}/${systemImage.filename} &>/dev/null); then
         echo "Virtualisation disk image doesn't exist or needs rebase, creating..."
 
         ${
@@ -115,7 +115,7 @@ let
             # FIXME: raise this issue to upstream.
             ${qemu}/bin/qemu-img create \
               -f qcow2 \
-              -b ${systemImage}/nixos.qcow2 \
+              -b ${systemImage}/${systemImage.filename} \
               -F qcow2 \
               "$NIX_DISK_IMAGE"
           '' else if cfg.useDefaultFilesystems then ''
@@ -139,7 +139,7 @@ let
 
     ${lib.optionalString (cfg.useNixStoreImage) ''
       # Create a writable copy/snapshot of the store image.
-      ${qemu}/bin/qemu-img create -f qcow2 -F qcow2 -b ${storeImage}/nixos.qcow2 "$TMPDIR"/store.img
+      ${qemu}/bin/qemu-img create -f qcow2 -F qcow2 -b ${storeImage}/${storeImage.filename} "$TMPDIR"/store.img
     ''}
 
     # Create a directory for exchanging data with the VM.
@@ -167,7 +167,7 @@ let
       # We still need the EFI var from the make-disk-image derivation
       # because our "switch-to-configuration" process might
       # write into it and we want to keep this data.
-      ''cp ${systemImage}/efi-vars.fd "$NIX_EFI_VARS"''}
+      ''cp ${config.virtualisation.efi.variables} "$NIX_EFI_VARS"''}
         chmod 0644 "$NIX_EFI_VARS"
       fi
     ''}
@@ -221,46 +221,48 @@ let
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
   systemImage = pkgs.callPackage ../../lib/make-disk-image.nix {
-    inherit pkgs config lib;
-    contents = [{
-      target = "/etc/reginfo";
-      source = "${regInfo}/registration";
-    }];
+    inherit pkgs lib;
+    partitions = [
+      (pkgs.callPackage ../../lib/make-partition-image.nix {
+        inherit pkgs lib;
+        label = espFilesystemLabel;
+        filesystem = "efi";
+        contents = [{
+          target = "/";
+          source = config.boot.loader.stand.espDerivation;
+        }];
+        totalSize = "64m";
+      })
+      (pkgs.callPackage ../../lib/make-partition-image.nix {
+        inherit pkgs lib;
+        label = rootFilesystemLabel;
+        filesystem = "ufs";
+        totalSize = "10g";
+        makeRootDirs = true;
+        contents = [{
+          target = "/etc/reginfo";
+          source = "${regInfo}/registration";
+        }];
+        nixStorePath = "/nix/store";
+        nixStoreClosure = config.virtualisation.additionalPaths;
+      })
+    ];
     format = "qcow2";
-    onlyNixStore = false;
-    label = rootFilesystemLabel;
-    partitionTableType = selectPartitionTableLayout {
-      inherit (cfg) useDefaultFilesystems useEFIBoot;
-    };
-    # Bootloader should be installed on the system image only if we are booting through bootloaders.
-    # Though, if a user is not using our default filesystems, it is possible to not have any ESP
-    # or a strange partition table that's incompatible with GRUB configuration.
-    # As a consequence, this may lead to disk image creation failures.
-    # To avoid this, we prefer to let the user find out about how to install the bootloader on its ESP/disk.
-    # Usually, this can be through building your own disk image.
-    # TODO: If a user is interested into a more fine grained heuristic for `installBootLoader`
-    # by examining the actual contents of `cfg.fileSystems`, please send a PR.
-    installBootLoader = cfg.useDefaultFilesystems;
-    touchEFIVars = cfg.useEFIBoot;
-    diskSize = "auto";
-    additionalSpace = "9g";
-    copyChannel = false;
-    OVMF = cfg.efi.OVMF;
+    partitionTableType = "efi";
   };
 
-  storeImage = import ../../lib/make-disk-image.nix {
-    name = "nix-store-image";
-    inherit pkgs config lib;
-    additionalPaths = [ regInfo ];
+  storeImage = pkgs.callPackage ../../lib/make-disk-image.nix {
+    inherit pkgs lib;
+    partitions = [
+      (pkgs.callPackage ../../lib/make-partition-image.nix {
+        inherit pkgs lib;
+        label = nixStoreFilesystemLabel;
+        filesystem = "ufs";
+        totalSize = "10g";
+      })
+    ];
     format = "qcow2";
-    onlyNixStore = true;
-    label = nixStoreFilesystemLabel;
-    partitionTableType = "none";
-    installBootLoader = false;
-    touchEFIVars = false;
-    diskSize = "auto";
-    additionalSpace = "2g";
-    copyChannel = false;
+    partitionTableType = "efi";
   };
 
 in {

@@ -40,6 +40,14 @@ in {
           Useful to have for sdImage.populateRootCommands
         '';
       };
+
+      espDerivation = mkOption {
+        type = types.pathInStore;
+        readOnly = true;
+        description = ''
+          The contents of the EFI System Partition.
+        '';
+      };
     };
   };
 
@@ -47,6 +55,10 @@ in {
     system.build.installBootLoader = "${builder} ${builderArgs}";
     system.boot.loader.id = "stand";
     boot.loader.stand.populateCmd = "${populateBuilder} ${builderArgs}";
+    boot.loader.stand.espDerivation = pkgs.runCommand "espDerivation" {} ''
+      mkdir -p $out
+      ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel} -d $out -g 0
+    '';
 
     boot.kernelEnvironment = mkIf (config.fileSystems ? "/")
       (let fs = config.fileSystems."/";
