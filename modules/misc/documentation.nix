@@ -320,7 +320,8 @@ in {
 
       environment.systemPackages = [ ]
         ++ optional cfg.man.enable manual.nixos-configuration-reference-manpage
-        ++ optionals cfg.doc.enable [ manual.manualHTML ];
+        #++ optionals cfg.doc.enable [ manual.manualHTML ]
+        ;
     })
 
   ]);
