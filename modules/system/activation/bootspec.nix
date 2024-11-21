@@ -17,11 +17,11 @@ let
         (cfg.extensions // {
           "org.nixos.bootspec.v1" = {
             system = pkgs.stdenv.hostPlatform.system;
-            kernel =
-              "${config.boot.kernel.package}/kernel/kernel";
+            kernel = config.boot.kernel.imagePath;
             kernelParams = [ ];
             label =
-              "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
+              #"${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
+              "blahhhhhhhh";
           };
           "gay.mildlyfunctional.nixbsd.v1" = {
             inherit (config.boot) kernelEnvironment;

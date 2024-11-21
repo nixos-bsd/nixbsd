@@ -231,7 +231,10 @@ in {
     };
 
     boot.devShmSize = mkOption {
-      default = "50%";
+      default = {
+        freebsd = "50%";
+        openbsd = "512m";
+      }.${config.boot.kernel.flavor};
       example = "256m";
       type = types.str;
       description = ''
@@ -241,7 +244,10 @@ in {
     };
 
     boot.runSize = mkOption {
-      default = "25%";
+      default = {
+        freebsd = "25%";
+        openbsd = "256m";
+      }.${config.boot.kernel.flavor};
       example = "256m";
       type = types.str;
       description = ''
@@ -280,10 +286,15 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
+    system.fsPackages = {
+      freebsd = [ pkgs.freebsd.mount_msdosfs ];
+      openbsd = [ pkgs.openbsd.mount_ffs ];
+    }.${config.boot.kernel.flavor};
 
-    environment.systemPackages = with pkgs;
-      [ freebsd.mount ] ++ config.system.fsPackages;
+    environment.systemPackages = config.system.fsPackages ++ {
+      freebsd = [ pkgs.freebsd.mount ];
+      openbsd = [ pkgs.openbsd.mount ];
+    }.${config.boot.kernel.flavor};
 
     environment.etc.fstab.text =
       let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
@@ -307,7 +318,17 @@ in {
     boot.specialFileSystems = {
       "/run" = {
         fsType = "tmpfs";
-        options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ];
+        options = [
+          "nosuid"
+          {
+            freebsd = "mode=755";
+            openbsd = "-m0755";
+          }.${config.boot.kernel.flavor}
+          {
+            freebsd = "size=${config.boot.runSize}";
+            openbsd = "-s${config.boot.runSize}";
+          }.${config.boot.kernel.flavor}
+        ];
       };
     } // (optionalAttrs (config.boot.mountProcfs) {
       "/proc" = {
@@ -316,42 +337,42 @@ in {
       };
     });
 
-    rc.services.mountcritlocal = {
-      description = "Mount local filesystems";
-      provides = "mountcritlocal";
-      requires = [ "root" ];
-      before = [ "FILESYSTEMS" ];
-      keywordShutdown = true;
-      keywordNojail = true;
-      binDeps = with pkgs;
-        [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
-        ++ config.system.fsPackages;
+    #rc.services.mountcritlocal = {
+    #  description = "Mount local filesystems";
+    #  provides = "mountcritlocal";
+    #  requires = [ "root" ];
+    #  before = [ "FILESYSTEMS" ];
+    #  keywordShutdown = true;
+    #  keywordNojail = true;
+    #  binDeps = with pkgs;
+    #    [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
+    #    ++ config.system.fsPackages;
 
-      commands.stop = "sync";
-      commands.start = ''
-        startmsg -n 'Mounting local filesystems:'
-        cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
-        err=$?
-        if [ $err -ne 0 ]; then
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'will retry after root mount hold release'
-          root_hold_wait
-          cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
-          err=$?
-        fi
+    #  commands.stop = "sync";
+    #  commands.start = ''
+    #    startmsg -n 'Mounting local filesystems:'
+    #    cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
+    #    err=$?
+    #    if [ $err -ne 0 ]; then
+    #      echo 'Mounting /etc/fstab filesystems failed,' \
+    #          'will retry after root mount hold release'
+    #      root_hold_wait
+    #      cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
+    #      err=$?
+    #    fi
 
-        startmsg '.'
+    #    startmsg '.'
 
-        case $err in
-        0)
-          ;;
-        *)
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'startup aborted'
-          stop_boot true
-          ;;
-        esac
-      '';
-    };
+    #    case $err in
+    #    0)
+    #      ;;
+    #    *)
+    #      echo 'Mounting /etc/fstab filesystems failed,' \
+    #          'startup aborted'
+    #      stop_boot true
+    #      ;;
+    #    esac
+    #  '';
+    #};
   };
 }

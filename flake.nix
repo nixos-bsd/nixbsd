@@ -28,7 +28,7 @@
       configBase = ./configurations;
       makeSystem = name: module:
         self.lib.nixbsdSystem {
-          modules = [ module { networking.hostName = "nixbsd-${name}"; } ];
+          modules = [ module {  } ];
         };
     in {
       lib.nixbsdSystem = args:
