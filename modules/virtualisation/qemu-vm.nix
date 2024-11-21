@@ -218,7 +218,7 @@ let
         filesystem = "efi";
         contents = [{
           target = "/";
-          source = config.boot.loader.stand.espDerivation;
+          source = config.boot.loader.espDerivation;
         }];
         totalSize = "64m";
       })
@@ -763,17 +763,17 @@ in {
     # allow `system.build.toplevel' to be included.  (If we had a direct
     # reference to ${regInfo} here, then we would get a cyclic
     # dependency.)
-    rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
-      description = "Load nix regInfo";
-      provides = "loadNixRegInfo";
-      commands.start = ''
-        REGINFO=/etc/reginfo
-        if [[ -e "$REGINFO" ]]; then
-          echo "Got reginfo '$REGINFO'"
-          ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
-        fi
-      '';
-    };
+    #rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
+    #  description = "Load nix regInfo";
+    #  provides = "loadNixRegInfo";
+    #  commands.start = ''
+    #    REGINFO=/etc/reginfo
+    #    if [[ -e "$REGINFO" ]]; then
+    #      echo "Got reginfo '$REGINFO'"
+    #      ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
+    #    fi
+    #  '';
+    #};
 
     virtualisation.additionalPaths = [ config.system.build.toplevel ];
 
@@ -788,7 +788,7 @@ in {
       };
     };
 
-    security.pki.installCACerts = mkIf cfg.useHostCerts false;
+    #security.pki.installCACerts = mkIf cfg.useHostCerts false;
 
     virtualisation.qemu.networkingOptions = let
       forwardingOptions = flip concatMapStrings cfg.forwardPorts
@@ -873,17 +873,17 @@ in {
             device = cfg.rootDevice;
             fsType = "ufs";
           });
-        "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
-          device = "tmpfs";
-          fsType = "tmpfs";
-          #neededForBoot = true;
-          # Sync with systemd's tmp.mount;
-          options = [
-            "mode=1777"
-            "nosuid"
-            "size=${toString config.boot.tmp.tmpfsSize}"
-          ];
-        };
+        #"/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
+        #  device = "tmpfs";
+        #  fsType = "tmpfs";
+        #  #neededForBoot = true;
+        #  # Sync with systemd's tmp.mount;
+        #  options = [
+        #    "mode=1777"
+        #    "nosuid"
+        #    "size=${toString config.boot.tmp.tmpfsSize}"
+        #  ];
+        #};
         "/boot" = lib.mkIf (cfg.bootPartition != null) {
           device = cfg.bootPartition;
           fsType = "msdosfs";
@@ -914,7 +914,7 @@ in {
     # TODO: disable wireless when it exists
 
     # Speed up booting by not waiting for ARP.
-    networking.dhcpcd.extraConfig = "noarp";
+    #networking.dhcpcd.extraConfig = "noarp";
 
   };
 

@@ -280,10 +280,10 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
+    #system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
 
-    environment.systemPackages = with pkgs;
-      [ freebsd.mount ] ++ config.system.fsPackages;
+    #environment.systemPackages = with pkgs;
+    #  [ freebsd.mount ] ++ config.system.fsPackages;
 
     environment.etc.fstab.text =
       let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
@@ -316,42 +316,42 @@ in {
       };
     });
 
-    rc.services.mountcritlocal = {
-      description = "Mount local filesystems";
-      provides = "mountcritlocal";
-      requires = [ "root" ];
-      before = [ "FILESYSTEMS" ];
-      keywordShutdown = true;
-      keywordNojail = true;
-      binDeps = with pkgs;
-        [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
-        ++ config.system.fsPackages;
+    #rc.services.mountcritlocal = {
+    #  description = "Mount local filesystems";
+    #  provides = "mountcritlocal";
+    #  requires = [ "root" ];
+    #  before = [ "FILESYSTEMS" ];
+    #  keywordShutdown = true;
+    #  keywordNojail = true;
+    #  binDeps = with pkgs;
+    #    [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
+    #    ++ config.system.fsPackages;
 
-      commands.stop = "sync";
-      commands.start = ''
-        startmsg -n 'Mounting local filesystems:'
-        cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
-        err=$?
-        if [ $err -ne 0 ]; then
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'will retry after root mount hold release'
-          root_hold_wait
-          cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
-          err=$?
-        fi
+    #  commands.stop = "sync";
+    #  commands.start = ''
+    #    startmsg -n 'Mounting local filesystems:'
+    #    cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
+    #    err=$?
+    #    if [ $err -ne 0 ]; then
+    #      echo 'Mounting /etc/fstab filesystems failed,' \
+    #          'will retry after root mount hold release'
+    #      root_hold_wait
+    #      cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
+    #      err=$?
+    #    fi
 
-        startmsg '.'
+    #    startmsg '.'
 
-        case $err in
-        0)
-          ;;
-        *)
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'startup aborted'
-          stop_boot true
-          ;;
-        esac
-      '';
-    };
+    #    case $err in
+    #    0)
+    #      ;;
+    #    *)
+    #      echo 'Mounting /etc/fstab filesystems failed,' \
+    #          'startup aborted'
+    #      stop_boot true
+    #      ;;
+    #    esac
+    #  '';
+    #};
   };
 }
