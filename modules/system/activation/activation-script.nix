@@ -4,6 +4,22 @@
 with lib;
 
 let
+  tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
+    mkdir -p $out/bin
+    $CC -x c - -o $out/bin/tosyslog <<EOF
+    #include <stdio.h>
+    #include <syslog.h>
+
+    int main(int argc, char **argv) {
+        openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), stdin)) {
+            syslog(LOG_ALERT, "%s", buffer);
+        }
+        return 0;
+    }
+    EOF
+  '');
 
   addAttributeName = mapAttrs (a: v:
     v // {
@@ -42,13 +58,15 @@ let
           v) withHeadlines;
     in ''
       #!${pkgs.runtimeShell}
-
       systemConfig='@out@'
 
       export PATH=/empty
       for i in ${toString path}; do
           PATH=$PATH:$i/bin:$i/sbin
       done
+
+      exec <>/dev/console 1>&0 2>&0
+      echo "## NixBSD system activation ##"
 
       _status=0
       trap "_status=1 _localstatus=\$?" ERR
@@ -69,7 +87,8 @@ let
         mkdir -m 0755 -p "$DST"
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      mount -u -w /
+
+      mount -u -w /dev/sd0a /
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
@@ -86,19 +105,33 @@ let
       # Likewise, the first system will be the booted-system
       [ -e /run/booted-system ] || ln -sfn "$(readlink -f "$systemConfig")" /run/booted-system
 
-      exit $_status
+      if [[ $_status != 0 ]]; then
+        echo '## NixBSD activation FAILED ##'
+        sleep 20
+        exit $_status
+      fi
     '';
 
   path = with pkgs;
-    map getBin [
+    map getBin ({
+      freebsd = [
+        freebsd.mount
+      ];
+      openbsd = [
+        openbsd.mount
+        openbsd.mount_ffs  # these are not bundled with mount(8)
+        openbsd.mount_tmpfs
+      ];
+    }.${config.boot.kernel.flavor} ++ [
       coreutils
       findutils
-      freebsd.mount
-      freebsd.nscd
-      freebsd.pwd_mkdb
-      getent
+      #freebsd.nscd
+      #freebsd.pwd_mkdb
+      #getent
       gnugrep
-    ];
+      bash  # need sh on path
+      tosyslog  # the most incredible debugging tool, my savior
+    ]);
 
   scriptType = withDry:
     with types;
@@ -229,11 +262,11 @@ in {
         rmdir --ignore-fail-on-non-empty /usr/bin /usr
       '';
 
-    systemd.tmpfiles.rules = [
-      #"d /nix/var/nix/gcroots -"
-      "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
-      #"D /var/empty 0555 root root -"
-      #"h /var/empty - - - - +i"
-    ];
+    #systemd.tmpfiles.rules = [
+    #  #"d /nix/var/nix/gcroots -"
+    #  "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
+    #  #"D /var/empty 0555 root root -"
+    #  #"h /var/empty - - - - +i"
+    #];
   };
 }

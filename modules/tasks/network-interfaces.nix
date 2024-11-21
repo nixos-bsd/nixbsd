@@ -325,7 +325,7 @@ in {
   options = {
 
     networking.hostName = mkOption {
-      default = config.system.nixos.distroId;
+      default = "nixbsd";
       defaultText = literalExpression "config.system.nixos.distroId";
       # Only allow hostnames without the domain name part (i.e. no FQDNs, see
       # e.g. "man 5 hostname") and require valid DNS labels (recommended
@@ -534,172 +534,172 @@ in {
 
   ###### implementation
 
-  config = {
-    assertions = (forEach interfaces (i: {
-      assertion = (i.virtual && i.virtualType == "tun") -> i.macAddress == null;
-      message = ''
-        Setting a MAC Address for tun device ${i.name} isn't supported.
-      '';
-    })) ++ [{
-      assertion = cfg.hostId == null
-        || (stringLength cfg.hostId == 8 && isHexString cfg.hostId);
-      message = "Invalid value given to the networking.hostId option.";
-    }];
+  #config = {
+  #  assertions = (forEach interfaces (i: {
+  #    assertion = (i.virtual && i.virtualType == "tun") -> i.macAddress == null;
+  #    message = ''
+  #      Setting a MAC Address for tun device ${i.name} isn't supported.
+  #    '';
+  #  })) ++ [{
+  #    assertion = cfg.hostId == null
+  #      || (stringLength cfg.hostId == 8 && isHexString cfg.hostId);
+  #    message = "Invalid value given to the networking.hostId option.";
+  #  }];
 
-    # loopback isn't setup or given an IPv4 address by default.
-    # Interface is given an IPv6 address once marked up
-    networking.interfaces.lo0 = {
-      ipv4.addresses = [{
-        address = "127.0.0.1";
-        prefixLength = 8;
-      }];
-    };
+  #  # loopback isn't setup or given an IPv4 address by default.
+  #  # Interface is given an IPv6 address once marked up
+  #  networking.interfaces.lo0 = {
+  #    ipv4.addresses = [{
+  #      address = "127.0.0.1";
+  #      prefixLength = 8;
+  #    }];
+  #  };
 
-    # Hostname/hostid stuff
-    environment.etc.hostid = mkIf (cfg.hostId != null) { source = hostidFile; };
-    environment.etc.hostname =
-      mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
-    rc.services = let
-      hostname = {
-        provides = "hostname";
-        before = [ "NETWORKING" ];
-        # No need to handle no hostname, it can't be null
-        # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
-        commands.start = ''
-          hostname ${escapeShellArg cfg.fqdnOrHostName}
-        '';
-      };
+  #  # Hostname/hostid stuff
+  #  environment.etc.hostid = mkIf (cfg.hostId != null) { source = hostidFile; };
+  #  environment.etc.hostname =
+  #    mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
+  #  rc.services = let
+  #    hostname = {
+  #      provides = "hostname";
+  #      before = [ "NETWORKING" ];
+  #      # No need to handle no hostname, it can't be null
+  #      # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
+  #      commands.start = ''
+  #        hostname ${escapeShellArg cfg.fqdnOrHostName}
+  #      '';
+  #    };
 
-      networkDefaults = let
-        formatDefaultGateway = proto: default:
-          let
-            parts = [ "route" "-${proto}" "-n" "add" "default" default.address ]
-              ++ optionals (default.interface != null) [
-                "-ifp"
-                default.interface
-              ] ++ optionals (default.metric != null) [
-                "-weight"
-                (toString default.metric)
-              ];
-          in ''
-            route -${proto} -n -q delete default
-            ${concatStringsSep " " parts}
-          '';
-      in {
-        description = "Setup defualt routes and DNS settings";
-        provides = "network_defaults";
-        before = [ "NETWORKING" ];
-        keywordNojailvnet = true;
-        binDeps = with pkgs; [ freebsd.route freebsd.bin coreutils ];
-        commands.start = ''
-          ${optionalString config.networking.resolvconf.enable ''
-            # Set the static DNS configuration, if given.
-            ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
-            ${optionalString (cfg.nameservers != [ ] && cfg.domain != null) ''
-              domain ${cfg.domain}
-            ''}
-            ${optionalString (cfg.search != [ ])
-            ("search " + concatStringsSep " " cfg.search)}
-            ${flip concatMapStrings cfg.nameservers (ns: ''
-              nameserver ${ns}
-            '')}
-            EOF
-          ''}
+  #    networkDefaults = let
+  #      formatDefaultGateway = proto: default:
+  #        let
+  #          parts = [ "route" "-${proto}" "-n" "add" "default" default.address ]
+  #            ++ optionals (default.interface != null) [
+  #              "-ifp"
+  #              default.interface
+  #            ] ++ optionals (default.metric != null) [
+  #              "-weight"
+  #              (toString default.metric)
+  #            ];
+  #        in ''
+  #          route -${proto} -n -q delete default
+  #          ${concatStringsSep " " parts}
+  #        '';
+  #    in {
+  #      description = "Setup defualt routes and DNS settings";
+  #      provides = "network_defaults";
+  #      before = [ "NETWORKING" ];
+  #      keywordNojailvnet = true;
+  #      binDeps = with pkgs; [ freebsd.route freebsd.bin coreutils ];
+  #      commands.start = ''
+  #        ${optionalString config.networking.resolvconf.enable ''
+  #          # Set the static DNS configuration, if given.
+  #          ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
+  #          ${optionalString (cfg.nameservers != [ ] && cfg.domain != null) ''
+  #            domain ${cfg.domain}
+  #          ''}
+  #          ${optionalString (cfg.search != [ ])
+  #          ("search " + concatStringsSep " " cfg.search)}
+  #          ${flip concatMapStrings cfg.nameservers (ns: ''
+  #            nameserver ${ns}
+  #          '')}
+  #          EOF
+  #        ''}
 
-          # Set the default gateway.
-          ${optionalString
-          (cfg.defaultGateway != null && cfg.defaultGateway.address != "")
-          (formatDefaultGateway "4" cfg.defaultGateway)}
-          ${optionalString
-          (cfg.defaultGateway6 != null && cfg.defaultGateway6.address != "")
-          (formatDefaultGateway "6" cfg.defaultGateway6)}
-        '';
-      };
+  #        # Set the default gateway.
+  #        ${optionalString
+  #        (cfg.defaultGateway != null && cfg.defaultGateway.address != "")
+  #        (formatDefaultGateway "4" cfg.defaultGateway)}
+  #        ${optionalString
+  #        (cfg.defaultGateway6 != null && cfg.defaultGateway6.address != "")
+  #        (formatDefaultGateway "6" cfg.defaultGateway6)}
+  #      '';
+  #    };
 
-      deviceDependency = dev:
-        if (dev == null || dev == "lo0") then
-          [ ]
-        else if (count (i: i.name == dev && i.virtual) interfaces > 0) then
-          [
-            "netdev_${dev}"
-          ]
-          # TODO: figure out devd here
-        else
-          [ ];
+  #    deviceDependency = dev:
+  #      if (dev == null || dev == "lo0") then
+  #        [ ]
+  #      else if (count (i: i.name == dev && i.virtual) interfaces > 0) then
+  #        [
+  #          "netdev_${dev}"
+  #        ]
+  #        # TODO: figure out devd here
+  #      else
+  #        [ ];
 
-      configureAddrs = i:
-        let
-          serviceName = "network_addresses_${i.name}";
-          ips = i.ipv4.addresses ++ i.ipv6.addresses;
-        in nameValuePair serviceName {
-          description = "Address and route configuration of ${i.name}";
-          provides = serviceName;
-          before = [ "network_defaults" "NETWORKING" ];
-          requires = [ "FILESYSTEMS" "tempfiles" ] ++ deviceDependency i.name;
-          binDeps = with pkgs; [
-            freebsd.route
-            freebsd.ifconfig
-            freebsd.bin
-            coreutils
-          ];
-          commands.start = ''
-            startmsg -n "Setting addresses for ${i.name}"
+  #    configureAddrs = i:
+  #      let
+  #        serviceName = "network_addresses_${i.name}";
+  #        ips = i.ipv4.addresses ++ i.ipv6.addresses;
+  #      in nameValuePair serviceName {
+  #        description = "Address and route configuration of ${i.name}";
+  #        provides = serviceName;
+  #        before = [ "network_defaults" "NETWORKING" ];
+  #        requires = [ "FILESYSTEMS" "tempfiles" ] ++ deviceDependency i.name;
+  #        binDeps = with pkgs; [
+  #          freebsd.route
+  #          freebsd.ifconfig
+  #          freebsd.bin
+  #          coreutils
+  #        ];
+  #        commands.start = ''
+  #          startmsg -n "Setting addresses for ${i.name}"
 
-            state="/run/nixos/network/addresses/${i.name}"
-            mkdir -p $(dirname "$state")
+  #          state="/run/nixos/network/addresses/${i.name}"
+  #          mkdir -p $(dirname "$state")
 
-            ifconfig "${i.name}" up
+  #          ifconfig "${i.name}" up
 
-            ${flip concatMapStrings ips (ip:
-              let cidr = "${ip.address}/${toString ip.prefixLength}";
-              in ''
-                echo "${cidr}" >> $state
-                echo -n "adding address ${cidr}... "
-                if out=$(ifconfig "${i.name}" "${cidr}" alias 2>&1); then
-                  echo "done"
-                else
-                  echo "'ifconfig "${i.name}""${cidr}" alias' failed: $out"
-                  exit 1
-                fi
-              '')}
+  #          ${flip concatMapStrings ips (ip:
+  #            let cidr = "${ip.address}/${toString ip.prefixLength}";
+  #            in ''
+  #              echo "${cidr}" >> $state
+  #              echo -n "adding address ${cidr}... "
+  #              if out=$(ifconfig "${i.name}" "${cidr}" alias 2>&1); then
+  #                echo "done"
+  #              else
+  #                echo "'ifconfig "${i.name}""${cidr}" alias' failed: $out"
+  #                exit 1
+  #              fi
+  #            '')}
 
-            ${flip concatMapStrings (i.ipv4.routes ++ i.ipv6.routes) (route:
-              let
-                cidr = escapeShellArg
-                  "${route.address}/${toString route.prefixLength}";
-                gateway = escapeShellArg
-                  (if route.via == null then i.name else route.via);
-                flags = map (f: "-${f}")
-                  (optional (route.via == null) "iface" ++ route.flags);
-                modifiers = concatLists (mapAttrsToList (k: v: [ "-${k}" v ])
-                  ({ ifp = i.name; } // route.modifiers));
-                lockedModifiers = concatLists
-                  (mapAttrsToList (k: v: [ "-${k}" v ]) route.lockedModifiers);
-                options = escapeShellArgs (flags ++ modifiers
-                  ++ optional (lockedModifiers != [ ]) "-lockrest"
-                  ++ lockedModifiers);
-              in ''
-                echo "${cidr}" >> $state
-                echo -n "adding route ${cidr}... "
-                if out=$(route add ${options} ${cidr} ${gateway} 2>&1); then
-                  echo "done"
-                elif ! echo "$out" | grep "File exists" >/dev/null 2>&1; then
-                  echo "'route add ${options} ${cidr} ${gateway}' failed: $out"
-                  exit 1
-                fi
-              '')}
-          '';
-        };
-    in {
-      inherit hostname;
-      network_defaults = networkDefaults;
-    } // listToAttrs (map configureAddrs interfaces);
+  #          ${flip concatMapStrings (i.ipv4.routes ++ i.ipv6.routes) (route:
+  #            let
+  #              cidr = escapeShellArg
+  #                "${route.address}/${toString route.prefixLength}";
+  #              gateway = escapeShellArg
+  #                (if route.via == null then i.name else route.via);
+  #              flags = map (f: "-${f}")
+  #                (optional (route.via == null) "iface" ++ route.flags);
+  #              modifiers = concatLists (mapAttrsToList (k: v: [ "-${k}" v ])
+  #                ({ ifp = i.name; } // route.modifiers));
+  #              lockedModifiers = concatLists
+  #                (mapAttrsToList (k: v: [ "-${k}" v ]) route.lockedModifiers);
+  #              options = escapeShellArgs (flags ++ modifiers
+  #                ++ optional (lockedModifiers != [ ]) "-lockrest"
+  #                ++ lockedModifiers);
+  #            in ''
+  #              echo "${cidr}" >> $state
+  #              echo -n "adding route ${cidr}... "
+  #              if out=$(route add ${options} ${cidr} ${gateway} 2>&1); then
+  #                echo "done"
+  #              elif ! echo "$out" | grep "File exists" >/dev/null 2>&1; then
+  #                echo "'route add ${options} ${cidr} ${gateway}' failed: $out"
+  #                exit 1
+  #              fi
+  #            '')}
+  #        '';
+  #      };
+  #  in {
+  #    inherit hostname;
+  #    network_defaults = networkDefaults;
+  #  } // listToAttrs (map configureAddrs interfaces);
 
-    boot.kernel.sysctl = {
-      "net.inet6.ip6.use_tempaddr" =
-        tempaddrValues.${cfg.tempAddresses}.use_tempaddr;
-      "net.inet6.ip6.prefer_tempaddr" =
-        tempaddrValues.${cfg.tempAddresses}.prefer_tempaddr;
-    };
-  };
+  #  #boot.kernel.sysctl = {
+  #  #  "net.inet6.ip6.use_tempaddr" =
+  #  #    tempaddrValues.${cfg.tempAddresses}.use_tempaddr;
+  #  #  "net.inet6.ip6.prefer_tempaddr" =
+  #  #    tempaddrValues.${cfg.tempAddresses}.prefer_tempaddr;
+  #  #};
+  #};
 }

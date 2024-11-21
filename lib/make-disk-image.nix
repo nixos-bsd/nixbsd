@@ -28,6 +28,7 @@ assert (lib.assertOneOf "partitionTableType" partitionTableType [
   "legacy+gpt"
   "efi"
   "hybrid"
+  "bsd"
 ]);
 with lib;
 
@@ -55,11 +56,14 @@ in let
         let aliasMap = {
           "efi" = "efi";
           "fat" = "fat16b";
-          "ufs" = "freebsd-ufs";
+          "ufs-freebsd" = "freebsd-ufs";
           "zfs" = "freebsd-zfs";
           "swap" = "freebsd-swap";
+          "bsd" = "openbsd-data";
         };
-        in "-p ${aliasMap.${part.filesystem}}/${part.label}:=${part}"
+        alias = part.filesystem or part.partitionTableType or (throw "This partition isn't labeled according to the make-partition-image.nix rules");
+        filename = if part ? filename then "${part}/${part.filename}" else "${part}";
+        in "-p ${aliasMap.${alias}}/${part.label}:=${filename}"
         ) partitions;
       sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
       in ''
@@ -68,12 +72,26 @@ in let
     hybrid = ''
       echo Unsupported >&2 && false
     '';
+    bsd = let
+      partitionFlags = lib.concatMapStringsSep " " (part:
+        let aliasMap = {
+          "ufs-openbsd" = "freebsd-ufs";
+        };
+        filename = if part ? filename then "${part}/${part.filename}" else "${part}";
+        in "-p ${aliasMap.${part.filesystem or part.partitionTableType}}:=${filename}"
+        ) partitions;
+      sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
+      # XXX -r 34 is an extremely load-bearing magic number
+      in ''
+      mkimg -y -o $out/${filename} -s bsd -r 34 -S 512 -H 255 -T 63 -f ${format} ${partitionFlags} ${sizeFlags}
+    '';
   }.${partitionTableType};
 
 in pkgs.runCommand name {
     nativeBuildInputs = [ pkgs.freebsd.mkimg ];
     passthru = {
-      inherit filename partitions;
+      inherit filename partitions partitionTableType;
+      label = name;
     };
   } ''
   mkdir $out

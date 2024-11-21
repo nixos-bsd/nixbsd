@@ -10,6 +10,8 @@ with lib;
 
 let
 
+  makedev-mtree = pkgs.openbsd.callPackage ../misc/makedev-mtree.nix {};
+
   qemu-common = import ../../lib/qemu-common.nix { inherit lib pkgs; };
 
   cfg = config.virtualisation;
@@ -207,34 +209,70 @@ let
   # the /dev/fstype/id scheme.
   rootDriveSerialAttr = "root";
 
+  efiPartition = pkgs.callPackage ../../lib/make-partition-image.nix {
+    inherit pkgs lib;
+    label = espFilesystemLabel;
+    filesystem = "efi";
+    contents = [{
+      target = "/";
+      source = if config.boot.loader.espDerivation == null then throw "The bootloader configuration did not provide an EFI system partition but the drive layout is asking for it!" else config.boot.loader.espDerivation;
+    }];
+    totalSize = "64m";
+  };
+
+  freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
+    filesystem = "ufs-freebsd";
+    totalSize = "10g";
+  });
+
+  openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
+    filesystem = "ufs-openbsd";
+    totalSize = "2g";
+    contents = commonRoot.contents ++ [{
+      target = "/dev/MAKEDEV";
+      source = getExe pkgs.openbsd.makedev;
+    }];
+    extraMtree = "${makedev-mtree}/mtree";
+    extraMtreeContents = "${makedev-mtree}/dev";
+    extraMtreeContentsDest = "/";
+  });
+
+  commonRoot = {
+    inherit pkgs lib;
+    label = rootFilesystemLabel;
+    makeRootDirs = true;
+    contents = [{
+      target = "/etc/reginfo";
+      source = "${regInfo}/registration";
+    }] ++ lib.optionals (config.boot.loader.bootDerivation != null) [{
+      target = "/boot";
+      source = config.boot.loader.bootDerivation;
+    }];
+    nixStorePath = "/nix/store";
+    nixStoreClosure = config.virtualisation.additionalPaths;
+  };
+
+  openbsdDataPartition = pkgs.callPackage ../../lib/make-disk-image.nix {
+    inherit pkgs lib;
+    partitions = [
+      openbsdRootPartition
+    ];
+    format = "raw";
+    partitionTableType = "bsd";
+  };
+
+  dataPartition = {
+    freebsd = freebsdRootPartition;
+    openbsd = openbsdDataPartition;
+  }.${config.boot.kernel.flavor};
+
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
   systemImage = pkgs.callPackage ../../lib/make-disk-image.nix {
     inherit pkgs lib;
     partitions = [
-      (pkgs.callPackage ../../lib/make-partition-image.nix {
-        inherit pkgs lib;
-        label = espFilesystemLabel;
-        filesystem = "efi";
-        contents = [{
-          target = "/";
-          source = config.boot.loader.stand.espDerivation;
-        }];
-        totalSize = "64m";
-      })
-      (pkgs.callPackage ../../lib/make-partition-image.nix {
-        inherit pkgs lib;
-        label = rootFilesystemLabel;
-        filesystem = "ufs";
-        totalSize = "10g";
-        makeRootDirs = true;
-        contents = [{
-          target = "/etc/reginfo";
-          source = "${regInfo}/registration";
-        }];
-        nixStorePath = "/nix/store";
-        nixStoreClosure = config.virtualisation.additionalPaths;
-      })
+      dataPartition
+      efiPartition
     ];
     format = "qcow2";
     partitionTableType = "efi";
@@ -763,17 +801,17 @@ in {
     # allow `system.build.toplevel' to be included.  (If we had a direct
     # reference to ${regInfo} here, then we would get a cyclic
     # dependency.)
-    rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
-      description = "Load nix regInfo";
-      provides = "loadNixRegInfo";
-      commands.start = ''
-        REGINFO=/etc/reginfo
-        if [[ -e "$REGINFO" ]]; then
-          echo "Got reginfo '$REGINFO'"
-          ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
-        fi
-      '';
-    };
+    #rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
+    #  description = "Load nix regInfo";
+    #  provides = "loadNixRegInfo";
+    #  commands.start = ''
+    #    REGINFO=/etc/reginfo
+    #    if [[ -e "$REGINFO" ]]; then
+    #      echo "Got reginfo '$REGINFO'"
+    #      ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
+    #    fi
+    #  '';
+    #};
 
     virtualisation.additionalPaths = [ config.system.build.toplevel ];
 
@@ -788,7 +826,7 @@ in {
       };
     };
 
-    security.pki.installCACerts = mkIf cfg.useHostCerts false;
+    #security.pki.installCACerts = mkIf cfg.useHostCerts false;
 
     virtualisation.qemu.networkingOptions = let
       forwardingOptions = flip concatMapStrings cfg.forwardPorts
@@ -873,17 +911,17 @@ in {
             device = cfg.rootDevice;
             fsType = "ufs";
           });
-        "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
-          device = "tmpfs";
-          fsType = "tmpfs";
-          #neededForBoot = true;
-          # Sync with systemd's tmp.mount;
-          options = [
-            "mode=1777"
-            "nosuid"
-            "size=${toString config.boot.tmp.tmpfsSize}"
-          ];
-        };
+        #"/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
+        #  device = "tmpfs";
+        #  fsType = "tmpfs";
+        #  #neededForBoot = true;
+        #  # Sync with systemd's tmp.mount;
+        #  options = [
+        #    "mode=1777"
+        #    "nosuid"
+        #    "size=${toString config.boot.tmp.tmpfsSize}"
+        #  ];
+        #};
         "/boot" = lib.mkIf (cfg.bootPartition != null) {
           device = cfg.bootPartition;
           fsType = "msdosfs";
@@ -914,7 +952,7 @@ in {
     # TODO: disable wireless when it exists
 
     # Speed up booting by not waiting for ARP.
-    networking.dhcpcd.extraConfig = "noarp";
+    #networking.dhcpcd.extraConfig = "noarp";
 
   };
 

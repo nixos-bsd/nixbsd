@@ -9,7 +9,7 @@ let
 
   # TODO: Figure out what we can actually put in requiredPackages
   requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg) [
-    config.programs.ssh.package
+    #config.programs.ssh.package
     pkgs.bashInteractive # bash with ncurses support
     pkgs.bzip2
     pkgs.coreutils-full
@@ -19,7 +19,7 @@ let
     pkgs.findutils
     pkgs.flock
     pkgs.gawk
-    pkgs.getent
+    #pkgs.getent
     pkgs.gnugrep
     pkgs.gnupatch
     pkgs.gnused
@@ -28,38 +28,38 @@ let
     pkgs.less
     pkgs.ncurses
     pkgs.netcat
-    pkgs.procps
+    #pkgs.procps
     pkgs.stdenv.cc.libc
     pkgs.which
     pkgs.xz
     pkgs.zstd
 
     # Most provided by glibc or util-linux on Linux
-    pkgs.freebsd.bin
-    pkgs.freebsd.bsdlabel
-    pkgs.freebsd.cap_mkdb
-    pkgs.freebsd.devfs
-    pkgs.freebsd.dmesg
-    pkgs.freebsd.fdisk
-    pkgs.freebsd.fsck
-    pkgs.freebsd.geom
-    pkgs.freebsd.ifconfig
-    pkgs.freebsd.kldconfig
-    pkgs.freebsd.kldload
-    pkgs.freebsd.kldstat
-    pkgs.freebsd.kldunload
-    pkgs.freebsd.locale
-    pkgs.freebsd.localedef
-    pkgs.freebsd.mdconfig
-    pkgs.freebsd.newfs
-    pkgs.freebsd.newfs_msdos
-    pkgs.freebsd.ping
-    pkgs.freebsd.pwd_mkdb
-    pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
-    pkgs.freebsd.services_mkdb
-    pkgs.freebsd.swapon
-    pkgs.freebsd.sysctl
-    pkgs.freebsd.zfs
+    #pkgs.freebsd.bin
+    #pkgs.freebsd.bsdlabel
+    #pkgs.freebsd.cap_mkdb
+    #pkgs.freebsd.devfs
+    #pkgs.freebsd.dmesg
+    #pkgs.freebsd.fdisk
+    #pkgs.freebsd.fsck
+    #pkgs.freebsd.geom
+    #pkgs.freebsd.ifconfig
+    #pkgs.freebsd.kldconfig
+    #pkgs.freebsd.kldload
+    #pkgs.freebsd.kldstat
+    #pkgs.freebsd.kldunload
+    #pkgs.freebsd.locale
+    #pkgs.freebsd.localedef
+    #pkgs.freebsd.mdconfig
+    #pkgs.freebsd.newfs
+    #pkgs.freebsd.newfs_msdos
+    #pkgs.freebsd.ping
+    #pkgs.freebsd.pwd_mkdb
+    #pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+    #pkgs.freebsd.services_mkdb
+    #pkgs.freebsd.swapon
+    #pkgs.freebsd.sysctl
+    #pkgs.freebsd.zfs
   ];
 
   defaultPackageNames = [ ];

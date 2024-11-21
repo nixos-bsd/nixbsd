@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging-test";
+    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev";
     utils.url = "github:numtide/flake-utils";
     nix = {
       url = "github:rhelmot/nix/freebsd-staging";
@@ -28,7 +28,7 @@
       configBase = ./configurations;
       makeSystem = name: module:
         self.lib.nixbsdSystem {
-          modules = [ module { networking.hostName = "nixbsd-${name}"; } ];
+          modules = [ module {  } ];
         };
     in {
       lib.nixbsdSystem = args:

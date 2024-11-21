@@ -8,7 +8,7 @@ let
 
     ln -s ${config.system.build.etc}/etc $out/etc
     ln -s ${config.system.path} $out/sw
-    ln -s ${config.system.init}/bin/init $out/init
+    ln -s ${lib.getExe config.system.init} $out/init
 
     echo -n "${pkgs.stdenv.hostPlatform.system}" > $out/system
 
@@ -30,7 +30,7 @@ let
   # kernel, systemd units, init scripts, etc.) as well as a script
   # `switch-to-configuration' that activates the configuration and
   # makes it bootable. See `activatable-system.nix`.
-  baseSystem = pkgs.stdenvNoCC.mkDerivation ({
+  baseSystem = pkgs.stdenv.mkDerivation ({
     name = "nixos-system-${config.system.name}";
     preferLocalBuild = true;
     allowSubstitutes = false;
@@ -127,7 +127,10 @@ in {
 
     system.init = mkOption {
       type = types.package;
-      default = pkgs.pkgsStatic.freebsd.init;
+      default = {
+        freebsd = pkgs.pkgsStatic.freebsd.init;
+        openbsd = pkgs.openbsd.init;
+      }.${config.boot.kernel.flavor};
       description = ''
         Package that contains the `init` executable. This is a binary that runs rc, not rc itself.
       '';
@@ -264,6 +267,19 @@ in {
     else
       system;
 
+    system.activatableSystemBuilderCommands = ''
+      mkdir -p $out/bin
+      $CC -x c - -o $out/bin/activate-init-native <<EOF
+      #include <unistd.h>
+      int main(int argc, char** argv, char **envp) {
+        setsid();
+        setlogin("root");
+        execve("${pkgs.runtimeShell}", (char *[]) { "bash", "$out/bin/activate-init", argv[1], NULL }, envp);
+        return 123;
+      }
+      EOF
+      substitute ${./activate-init.sh} $out/bin/activate-init --subst-var out --subst-var-by runtimeShell ${pkgs.runtimeShell}
+    '';
   };
 
 }
