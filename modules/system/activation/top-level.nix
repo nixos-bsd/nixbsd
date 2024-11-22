@@ -127,7 +127,10 @@ in {
 
     system.init = mkOption {
       type = types.package;
-      default = pkgs.pkgsStatic.freebsd.init;
+      default = {
+        freebsd = pkgs.pkgsStatic.freebsd.init;
+        openbsd = pkgs.openbsd.init;
+      }.${config.boot.kernel.flavor};
       description = ''
         Package that contains the `init` executable. This is a binary that runs rc, not rc itself.
       '';

@@ -27,6 +27,4 @@
     device = "/dev/msdosfs/ESP";
     fsType = "msdosfs";
   };
-
-  system.init = pkgs.bash;
 }
