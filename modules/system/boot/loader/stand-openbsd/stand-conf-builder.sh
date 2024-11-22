@@ -6,7 +6,7 @@ export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
 usage() {
-    echo "usage: $0 -t <timeout> -c <path-to-default-configuration> [-d <boot-dir>] [-g <num-generations>]" >&2
+    echo "usage: $0 -c <path-to-default-configuration> [-t <timeout>] [-d <boot-dir>] [-g <num-generations>]" >&2
     exit 1
 }
 
@@ -33,7 +33,7 @@ while getopts "t:c:d:g:n:r" opt; do
     esac
 done
 
-[ "$timeout" = "" -o "$default" = "" ] && usage
+[ "$default" = "" ] && usage
 
 # Copy a file from the Nix store to $target/nixos.
 declare -A filesCopied
@@ -43,9 +43,9 @@ addEntry() {
     local tag="$2"  # Generation number or 'default'
 
     local kernel=$(jq -r '."org.nixos.bootspec.v1".kernel' <$path)
-    local init=$(jq -r '."org.nixos.bootspec.v1".init | @json' <$path)
-    local label=$(jq -r '."org.nixos.bootspec.v1".label | @json' <$path)
-    local toplevel=$(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path)
+    local init=$(jq -r '."org.nixos.bootspec.v1".init' <$path)
+    local label=$(jq -r '."org.nixos.bootspec.v1".label' <$path)
+    local toplevel=$(jq -r '."org.nixos.bootspec.v1".toplevel' <$path)
 
     dstFile="$target/nixos/${tag}.conf"
     filesCopied[$dstFile]=1
@@ -72,9 +72,6 @@ if [ "$numGenerations" -gt 0 ]; then
         addEntry $link $generation
     done
 fi
-
-mkdir -p $target/efi/boot
-cp @stand@/bin/BOOTX64.EFI $target/efi/boot/BOOTX64.EFI
 
 for fn in $target/nixos/*; do
     if ! test "${filesCopied[$fn]}" = 1; then

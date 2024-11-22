@@ -23,13 +23,13 @@ let
   users = map (x: x.user or "''") contents;
   groups = map (x: x.group or "''") contents;
 
-  ufsSizeFlags = if additionalSize != null then (
+  freebsdUfsSizeFlags = if additionalSize != null then (
     if totalSize != null then throw "Cannot specify both totalSize and additionalSize" else
     "-b ${additionalSize}"
   ) else if totalSize != null then (
     "-m ${totalSize} -M ${totalSize}"
   ) else "";
-  ufsBuilder = ''
+  freebsdUfsBuilder = ''
     pushd $root
     echo '/set type=file uid=0 gid=0' >>../.mtree
     echo '/set type=dir uid=0 gid=0' >>../.mtree
@@ -38,15 +38,22 @@ let
     find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>../.mtree
     find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>../.mtree
     popd
-    makefs ${ufsSizeFlags} -o version=2 -o label=${label} -F $root/../.mtree $out $root
+    ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${freebsdUfsSizeFlags} -o version=2 -o label=${label} -F $root/../.mtree $out $root
+  '';
+  openbsdUfsBuilder = ''
+    ${pkgs.buildPackages.openbsd.makefs}/bin/makefs ${freebsdUfsSizeFlags} -o label=${label} -u 0 $out $root
   '';
   fatSizeFlags = if additionalSize != null then throw "Cannot specify additionalSize for FAT filesystem" else
     if totalSize != null then "-o create_size=${totalSize}" else throw "Must specify totalSize for FAT filesystem";
   fatBuilder = ''
-    makefs -t msdos -o fat_type=16 -o volume_label=${label} ${fatSizeFlags} $out $root
+    ${pkgs.buildPackages.freebsd.makefs}/bin/makefs -t msdos -o fat_type=16 -o volume_label=${label} ${fatSizeFlags} $out $root
   '';
-  builder = if filesystem == "ufs" then ufsBuilder else if filesystem == "fat" || filesystem == "efi" then fatBuilder
-    else throw "Unknown filesystem type ${filesystem}";
+  builder = {
+    ufs-freebsd = freebsdUfsBuilder;
+    ufs-openbsd = openbsdUfsBuilder;
+    fat = fatBuilder;
+    efi = fatBuilder;
+  }.${filesystem} or (throw "Unknown filesystem type ${filesystem}");
   contentsCopier = lib.optionalString (contents != []) ''
     set -f
     sources_=(${lib.concatStringsSep " " sources})
@@ -77,7 +84,7 @@ let
         done
       else
         mkdir -p $root/$(dirname $target)
-        if [ -e $root/$target -a ! "$target" = "/" ]; then
+        if [ -e $root/$target -a ! "$target" = "/" -a ! "$target" = "/boot" ]; then
           echo "duplicate entry $target -> $source"
           exit 1
         elif [ -d $source ]; then

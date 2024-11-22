@@ -19,7 +19,7 @@ let
     pkgs.findutils
     pkgs.flock
     pkgs.gawk
-    pkgs.getent
+    #pkgs.getent
     pkgs.gnugrep
     pkgs.gnupatch
     pkgs.gnused

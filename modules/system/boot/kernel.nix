@@ -68,6 +68,24 @@ in {
       '';
     };
 
+    boot.kernel.imagePath = mkOption {
+      type = types.path;
+      readOnly = true;
+      default = {
+        freebsd = "${config.system.moduleEnvironment}/kernel/kernel";
+        openbsd = "${cfg.package}/bsd";
+      }.${cfg.flavor};
+    };
+
+    boot.kernel.modulesPath = mkOption {
+      type = types.path;
+      readOnly = true;
+      default = {
+        freebsd = "${config.system.moduleEnvironment}/kernel";
+        openbsd = "/not-supported";
+      }.${cfg.flavor};
+    };
+
     boot.kernelEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -82,18 +100,7 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (let
-    inherit ({
-      freebsd = {
-        kernelPath = "${config.system.moduleEnvironment}/kernel/kernel";
-        modulePath = "${config.system.moduleEnvironment}/kernel";
-      };
-      openbsd = {
-        kernelPath = "${cfg.package}/bsd";
-        modulePath = "/not-supported";
-      };
-    }.${cfg.flavor}) kernelPath modulePath;
-  in {
+  config = mkIf cfg.enable {
     system.build = { inherit (config.boot) kernel; };
     system.moduleEnvironment = mkIf cfg.isFreeBSD (pkgs.buildEnv {
       name = "sys-with-modules";
@@ -106,19 +113,19 @@ in {
     });
 
     system.systemBuilderCommands = ''
-      if [ ! -f ${kernelPath} ]; then
+      if [ ! -f ${cfg.imagePath} ]; then
         echo "The bootloader cannot find the proper kernel image."
-        echo "(expecting ${kernelPath})"
+        echo "(expecting ${cfg.imagePath})"
         false
       fi
 
-      ln -s ${kernelPath} $out/kernel
-      test -e ${modulePath} && ln -s ${modulePath} $out/kernel-modules || true
+      ln -s ${cfg.imagePath} $out/kernel
+      test -e ${cfg.modulesPath} && ln -s ${cfg.modulesPath} $out/kernel-modules || true
     '';
 
     boot.kernelEnvironment = mkIf cfg.isFreeBSD {
-      module_path = modulePath;
+      module_path = cfg.modulesPath;
       init_shell = config.environment.binsh;
     };
-  });
+  };
 }
