@@ -1,4 +1,4 @@
-{ config, lib, nixFlake ? null, mini-tmpfiles-flake ? null, ... }:
+{ config, lib, lixFlake ? null, mini-tmpfiles-flake ? null, ... }:
 with lib; {
   # TODO: @artemist remove when support is upstream
   # Also remove specialArgs and input changes in flake
@@ -8,15 +8,13 @@ with lib; {
       default = true;
       example = false;
       description = ''
-        Overlay nix with the development version.
+        Overlay nix with a development version of lix.
 
         This only works when building with a flake and `nixpkgs.pkgs` is not set manually.
 
-        The nixbsd flake includes an input for the development version of nix
+        The nixbsd flake includes an input for a patched version of lix
         for FreeBSD. When this option is enabled then the overlay is enabled so that
         packages and options that require a working nix can build.
-
-        This option is temporary and will be removed once FreeBSD support is upstream.
       '';
     };
     # TODO: @sky1e remove once mini-tmpfiles is a proper package
@@ -40,8 +38,8 @@ with lib; {
 
   config = {
     nixpkgs.overlays =
-      lib.optional (nixFlake != null && config.nixpkgs.overrideNix)
-      nixFlake.overlays.default ++ lib.optional
+      lib.optional (lixFlake != null && config.nixpkgs.overrideNix)
+      lixFlake.overlays.default ++ lib.optional
       (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles)
       mini-tmpfiles-flake.overlays.default;
   };

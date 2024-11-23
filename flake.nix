@@ -1,8 +1,8 @@
 {
   inputs = {
     nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging-test";
-    nix = {
-      url = "github:rhelmot/nix/freebsd-staging";
+    lix = {
+      url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
       # We don't need another nixpkgs clone, it won't evaluate anyway
       inputs.nixpkgs-regression.follows = "nixpkgs";
@@ -19,7 +19,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, nix, mini-tmpfiles }:
+  outputs = { self, nixpkgs, lix, mini-tmpfiles }:
     let
       inherit (nixpkgs) lib;
 
@@ -56,7 +56,7 @@
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
           specialArgs = {
-            nixFlake = nix;
+            lixFlake = lix;
             mini-tmpfiles-flake = mini-tmpfiles;
           } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });

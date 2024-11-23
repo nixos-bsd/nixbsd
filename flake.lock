@@ -16,20 +16,31 @@
         "type": "github"
       }
     },
-    "libgit2": {
-      "flake": false,
+    "lix": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "nix2container": "nix2container",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-regression": [
+          "nixpkgs"
+        ],
+        "pre-commit-hooks": "pre-commit-hooks"
+      },
       "locked": {
-        "lastModified": 1715855647,
-        "narHash": "sha256-ySGS8jqR353Pumu62R/2yngCF+O4Dnt6KDyBPHsMQeI=",
-        "owner": "libgit2",
-        "repo": "libgit2",
-        "rev": "6c5520f334e5652d5f0476c00a3188d1d97754e7",
-        "type": "github"
+        "lastModified": 1732339771,
+        "narHash": "sha256-/ViH3RRdFm9R9WN4szwdwMSbnDnRzNqgkFNR5dBh+Og=",
+        "ref": "freebsd-build",
+        "rev": "a26c6228c31cc66b31a75f24a95f420952a6cbb2",
+        "revCount": 16516,
+        "type": "git",
+        "url": "https://git.lix.systems/artemist/lix.git"
       },
       "original": {
-        "owner": "libgit2",
-        "repo": "libgit2",
-        "type": "github"
+        "ref": "freebsd-build",
+        "type": "git",
+        "url": "https://git.lix.systems/artemist/lix.git"
       }
     },
     "mini-tmpfiles": {
@@ -52,39 +63,29 @@
         "type": "github"
       }
     },
-    "nix": {
-      "inputs": {
-        "flake-compat": "flake-compat",
-        "libgit2": "libgit2",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "nixpkgs-regression": [
-          "nixpkgs"
-        ]
-      },
+    "nix2container": {
+      "flake": false,
       "locked": {
-        "lastModified": 1732006145,
-        "narHash": "sha256-hhgIuccEHyMf9E9+W54rjqvdj6mDQoYpn2X0URlGdu8=",
-        "owner": "rhelmot",
-        "repo": "nix",
-        "rev": "b8d89f70ee7720f367a13928e2e5b45adb58bdc0",
+        "lastModified": 1724996935,
+        "narHash": "sha256-njRK9vvZ1JJsP8oV2OgkBrpJhgQezI03S7gzskCcHos=",
+        "owner": "nlewo",
+        "repo": "nix2container",
+        "rev": "fa6bb0a1159f55d071ba99331355955ae30b3401",
         "type": "github"
       },
       "original": {
-        "owner": "rhelmot",
-        "ref": "freebsd-staging",
-        "repo": "nix",
+        "owner": "nlewo",
+        "repo": "nix2container",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1732049814,
-        "narHash": "sha256-lwUhtyRxfLpUSGvINjaC2wZyrZvsZDFyuXzMg0c6eD0=",
+        "lastModified": 1732349233,
+        "narHash": "sha256-JdkJHcmTrWrgQ1TCss5zaLtfUbC0UjP0tniMyPV4tzI=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "bb527df6279c214cfc1e2d3f8ccc3d22b61ac36a",
+        "rev": "120c9699a645e2972a719fccf1ca105f40dc687b",
         "type": "github"
       },
       "original": {
@@ -94,10 +95,26 @@
         "type": "github"
       }
     },
+    "pre-commit-hooks": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1726745158,
+        "narHash": "sha256-D5AegvGoEjt4rkKedmxlSEmC+nNLMBPWFxvmYnVLhjk=",
+        "owner": "cachix",
+        "repo": "git-hooks.nix",
+        "rev": "4e743a6920eab45e8ba0fbe49dc459f1423a4b74",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cachix",
+        "repo": "git-hooks.nix",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
+        "lix": "lix",
         "mini-tmpfiles": "mini-tmpfiles",
-        "nix": "nix",
         "nixpkgs": "nixpkgs"
       }
     }
