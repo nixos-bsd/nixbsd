@@ -28,7 +28,7 @@ in [
   #"${extPath}/programs/zsh/zsh.nix"
   #"${extPath}/security/ca.nix"
   #"${extPath}/security/sudo.nix"
-  #"${extPath}/system/activation/activatable-system.nix"
+  "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/etc/etc.nix"
   #./config/i18n.nix
@@ -71,7 +71,7 @@ in [
   ./system/boot/loader/stand-openbsd
   #./system/boot/mini-tmpfiles.nix
   #./system/boot/tmp.nix
-  #./system/etc/etc-activation.nix
+  ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
   ./tasks/network-interfaces.nix
   #./tasks/tempfiles

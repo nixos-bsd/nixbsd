@@ -280,10 +280,15 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    #system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
+    system.fsPackages = {
+      freebsd = [ pkgs.freebsd.mount_msdosfs ];
+      openbsd = [ pkgs.openbsd.mount_ffs ];
+    }.${config.boot.kernel.flavor};
 
-    #environment.systemPackages = with pkgs;
-    #  [ freebsd.mount ] ++ config.system.fsPackages;
+    environment.systemPackages = config.system.fsPackages ++ {
+      freebsd = [ pkgs.freebsd.mount ];
+      openbsd = [ pkgs.openbsd.mount ];
+    }.${config.boot.kernel.flavor};
 
     environment.etc.fstab.text =
       let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);

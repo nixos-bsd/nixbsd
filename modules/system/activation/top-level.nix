@@ -30,7 +30,7 @@ let
   # kernel, systemd units, init scripts, etc.) as well as a script
   # `switch-to-configuration' that activates the configuration and
   # makes it bootable. See `activatable-system.nix`.
-  baseSystem = pkgs.stdenvNoCC.mkDerivation ({
+  baseSystem = pkgs.stdenv.mkDerivation ({
     name = "nixos-system-${config.system.name}";
     preferLocalBuild = true;
     allowSubstitutes = false;
@@ -267,6 +267,19 @@ in {
     else
       system;
 
+    system.activatableSystemBuilderCommands = ''
+      mkdir -p $out/bin
+      $CC -x c - -o $out/bin/activate-init-native <<EOF
+      #include <unistd.h>
+      int main(int argc, char** argv, char **envp) {
+        setsid();
+        setlogin("root");
+        execve("${pkgs.runtimeShell}", (char *[]) { "bash", "$out/bin/activate-init", argv[1], NULL }, envp);
+        return 123;
+      }
+      EOF
+      substitute ${./activate-init.sh} $out/bin/activate-init --subst-var out --subst-var-by runtimeShell ${pkgs.runtimeShell}
+    '';
   };
 
 }

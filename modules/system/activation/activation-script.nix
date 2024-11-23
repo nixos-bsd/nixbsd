@@ -42,7 +42,6 @@ let
           v) withHeadlines;
     in ''
       #!${pkgs.runtimeShell}
-
       systemConfig='@out@'
 
       export PATH=/empty
@@ -69,7 +68,15 @@ let
         mkdir -m 0755 -p "$DST"
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      mount -u -w /
+      type exit || exit 31
+      type mount || exit 32
+      type mount_tmpfs || exit 33
+      mount -t tmpfs tmpfs /tmp || exit 50
+      touch /tmp/blargh || exit 51
+      (cd /tmp; /dev/MAKEDEV all) || true
+      echo HELLO WORLD >/tmp/console
+      exit 44
+
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
@@ -90,15 +97,17 @@ let
     '';
 
   path = with pkgs;
-    map getBin [
+    (map getBin [
       coreutils
       findutils
-      freebsd.mount
-      freebsd.nscd
-      freebsd.pwd_mkdb
-      getent
+      #freebsd.nscd
+      #freebsd.pwd_mkdb
+      #getent
       gnugrep
-    ];
+    ] ++ {
+        freebsd = [freebsd.mount];
+        openbsd = [openbsd.mount openbsd.mount_ffs openbsd.mount_tmpfs];
+    }.${config.boot.kernel.flavor});
 
   scriptType = withDry:
     with types;

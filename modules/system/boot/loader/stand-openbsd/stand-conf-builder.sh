@@ -53,8 +53,9 @@ addEntry() {
     cat >$dstFile <<EOF
 # label: $label
 # toplevel: $toplevel
+# real init: $init
 set image $kernel
-set init $init
+set init $toplevel/bin/activate-init-native
 EOF
 }
 
