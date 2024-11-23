@@ -231,7 +231,10 @@ in {
     };
 
     boot.devShmSize = mkOption {
-      default = "50%";
+      default = {
+        freebsd = "50%";
+        openbsd = "512m";
+      }.${config.boot.kernel.flavor};
       example = "256m";
       type = types.str;
       description = ''
@@ -241,7 +244,10 @@ in {
     };
 
     boot.runSize = mkOption {
-      default = "25%";
+      default = {
+        freebsd = "25%";
+        openbsd = "256m";
+      }.${config.boot.kernel.flavor};
       example = "256m";
       type = types.str;
       description = ''
@@ -312,7 +318,17 @@ in {
     boot.specialFileSystems = {
       "/run" = {
         fsType = "tmpfs";
-        options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ];
+        options = [
+          "nosuid"
+          {
+            freebsd = "mode=755";
+            openbsd = "-m0755";
+          }.${config.boot.kernel.flavor}
+          {
+            freebsd = "size=${config.boot.runSize}";
+            openbsd = "-s${config.boot.runSize}";
+          }.${config.boot.kernel.flavor}
+        ];
       };
     } // (optionalAttrs (config.boot.mountProcfs) {
       "/proc" = {

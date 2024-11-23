@@ -4,6 +4,22 @@
 with lib;
 
 let
+  tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
+    mkdir -p $out/bin
+    $CC -x c - -o $out/bin/tosyslog <<EOF
+    #include <stdio.h>
+    #include <syslog.h>
+
+    int main(int argc, char **argv) {
+        openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), stdin)) {
+            syslog(LOG_ALERT, "%s", buffer);
+        }
+        return 0;
+    }
+    EOF
+  '');
 
   addAttributeName = mapAttrs (a: v:
     v // {
@@ -42,13 +58,15 @@ let
           v) withHeadlines;
     in ''
       #!${pkgs.runtimeShell}
-      exec >/dev/console 2>&1 <&1
       systemConfig='@out@'
 
       export PATH=/empty
       for i in ${toString path}; do
           PATH=$PATH:$i/bin:$i/sbin
       done
+
+      exec <>/dev/console 1>&0 2>&0
+      echo "## NixBSD system activation ##"
 
       _status=0
       trap "_status=1 _localstatus=\$?" ERR
@@ -71,7 +89,6 @@ let
       }
 
       mount -u -w /dev/sd0a /
-      exit 123
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
@@ -88,13 +105,24 @@ let
       # Likewise, the first system will be the booted-system
       [ -e /run/booted-system ] || ln -sfn "$(readlink -f "$systemConfig")" /run/booted-system
 
-      exit $_status
+      if [[ $_status != 0 ]]; then
+        echo '## NixBSD activation FAILED ##'
+        sleep 20
+        exit $_status
+      fi
     '';
 
   path = with pkgs;
     map getBin ({
-        freebsd = [freebsd.mount];
-        openbsd = [openbsd.mount openbsd.mount_ffs openbsd.mount_tmpfs openbsd.mknod];
+      freebsd = [
+        freebsd.mount
+      ];
+      openbsd = [
+        openbsd.mount
+        openbsd.mount_ffs  # these are not bundled with mount(8)
+        openbsd.mount_tmpfs
+        openbsd.mknod  # just in case we need to fix /dev
+      ];
     }.${config.boot.kernel.flavor} ++ [
       coreutils
       findutils
@@ -103,22 +131,7 @@ let
       #getent
       gnugrep
       bash  # need sh on path
-      (pkgs.runCommandCC "tosyslog" {} ''
-        mkdir -p $out/bin
-        $CC -x c - -o $out/bin/tosyslog <<EOF
-        #include <stdio.h>
-        #include <syslog.h>
-
-        int main(int argc, char **argv) {
-            openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
-            char buffer[1024];
-            while (fgets(buffer, sizeof(buffer), stdin)) {
-                syslog(LOG_ALERT, "%s", buffer);
-            }
-            return 0;
-        }
-        EOF
-      '')
+      tosyslog  # the most incredible debugging tool, my savior
     ]);
 
   scriptType = withDry:
