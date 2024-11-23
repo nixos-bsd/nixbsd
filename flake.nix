@@ -1,7 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging-test";
-    utils.url = "github:numtide/flake-utils";
     nix = {
       url = "github:rhelmot/nix/freebsd-staging";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -11,7 +10,6 @@
     mini-tmpfiles = {
       url = "github:nixos-bsd/mini-tmpfiles";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.utils.follows = "utils";
     };
   };
 
@@ -21,14 +19,36 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, utils, nix, mini-tmpfiles }:
+  outputs = { self, nixpkgs, nix, mini-tmpfiles }:
     let
       inherit (nixpkgs) lib;
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-freebsd" ];
+
+      makePkgs = system: import nixpkgs { inherit system; };
+      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
+
       configBase = ./configurations;
       makeSystem = name: module:
         self.lib.nixbsdSystem {
           modules = [ module { networking.hostName = "nixbsd-${name}"; } ];
+        };
+
+      makeImage = buildPlatform: conf:
+        let
+          extended = conf.extendModules {
+            modules = [{ config.nixpkgs.buildPlatform = buildPlatform; }];
+          };
+        in extended.config.system.build // {
+          # appease `nix flake show`
+          type = "derivation";
+          name = "system-build";
+
+          closureInfo = extended.pkgs.closureInfo {
+            rootPaths = [ extended.config.system.build.toplevel.drvPath ];
+          };
+          vmClosureInfo = extended.pkgs.closureInfo {
+            rootPaths = [ extended.config.system.build.vm.drvPath ];
+          };
+          inherit (extended) pkgs;
         };
     in {
       lib.nixbsdSystem = args:
@@ -44,32 +64,10 @@
       nixosConfigurations =
         lib.mapAttrs (name: _: makeSystem name (configBase + "/${name}"))
         (builtins.readDir configBase);
-    } // (utils.lib.eachSystem supportedSystems (system:
-      let
-        makeImage = conf:
-          let
-            extended = conf.extendModules {
-              modules = [{ config.nixpkgs.buildPlatform = system; }];
-            };
-          in extended.config.system.build // {
-            # appease `nix flake show`
-            type = "derivation";
-            name = "system-build";
 
-            closureInfo = extended.pkgs.closureInfo {
-              rootPaths = [ extended.config.system.build.toplevel.drvPath ];
-            };
-            vmClosureInfo = extended.pkgs.closureInfo {
-              rootPaths = [ extended.config.system.build.vm.drvPath ];
-            };
-            inherit (extended) pkgs;
-          };
-        pkgs = import nixpkgs { inherit system; };
-      in {
-        packages = lib.mapAttrs'
-          (name: value: lib.nameValuePair "${name}" (makeImage value))
-          self.nixosConfigurations;
+      packages = forAllSystems (system:
+        lib.mapAttrs (name: makeImage system) self.nixosConfigurations);
 
-        formatter = pkgs.nixfmt;
-      }));
+      formatter = forAllSystems (system: (makePkgs system).nixfmt-classic);
+    };
 }
