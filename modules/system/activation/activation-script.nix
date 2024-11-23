@@ -55,6 +55,34 @@ let
       # Ensure a consistent umask.
       umask 0022
 
+      echo flag 1 | tosyslog activate
+      if [[ ! -e /dev/sd0a ]]; then
+        (
+          mount -t tmpfs -o rw,dev tmpfs /tmp
+          cd /tmp
+          /dev/MAKEDEV all
+          mount -u -w /tmp/sd0a /
+          cd /
+          umount /tmp
+          mount
+          sleep 5
+          cd /dev
+          /dev/MAKEDEV all
+        ) |& tosyslog activate
+      else
+        echo flag 2 | tosyslog activate
+        mount -u -w /dev/sd0a /
+      fi
+
+      echo HELLO WORLD >/dev/console
+      exec >/dev/console 2>&1 <&1
+      echo HELLO WORLD 2
+      bash -i
+      sleep 20
+      exit 42
+
+        exit 44
+
       # Early mounts
       specialMount() {
         SRC="$1"
@@ -68,14 +96,6 @@ let
         mkdir -m 0755 -p "$DST"
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      type exit || exit 31
-      type mount || exit 32
-      type mount_tmpfs || exit 33
-      mount -t tmpfs tmpfs /tmp || exit 50
-      touch /tmp/blargh || exit 51
-      (cd /tmp; /dev/MAKEDEV all) || true
-      echo HELLO WORLD >/tmp/console
-      exit 44
 
       source ${config.system.build.earlyMountScript}
 
@@ -97,17 +117,34 @@ let
     '';
 
   path = with pkgs;
-    (map getBin [
+    map getBin ({
+        freebsd = [freebsd.mount];
+        openbsd = [openbsd.mount openbsd.mount_ffs openbsd.mount_tmpfs openbsd.mknod];
+    }.${config.boot.kernel.flavor} ++ [
       coreutils
       findutils
       #freebsd.nscd
       #freebsd.pwd_mkdb
       #getent
       gnugrep
-    ] ++ {
-        freebsd = [freebsd.mount];
-        openbsd = [openbsd.mount openbsd.mount_ffs openbsd.mount_tmpfs];
-    }.${config.boot.kernel.flavor});
+      bash  # need sh on path
+      (pkgs.runCommandCC "tosyslog" {} ''
+        mkdir -p $out/bin
+        $CC -x c - -o $out/bin/tosyslog <<EOF
+        #include <stdio.h>
+        #include <syslog.h>
+
+        int main(int argc, char **argv) {
+            openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+            char buffer[1024];
+            while (fgets(buffer, sizeof(buffer), stdin)) {
+                syslog(LOG_ALERT, "%s", buffer);
+            }
+            return 0;
+        }
+        EOF
+      '')
+    ]);
 
   scriptType = withDry:
     with types;
