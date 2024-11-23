@@ -225,11 +225,14 @@ let
 
   openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = "ufs-openbsd";
-    totalSize = "2G";
+    totalSize = "2g";
     contents = commonRoot.contents ++ [{
       target = "/dev/MAKEDEV";
       source = getExe pkgs.openbsd.makedev;
     }];
+    extraMtree = "${pkgs.openbsd.makedev-mtree}/mtree";
+    extraMtreeContents = "${pkgs.openbsd.makedev-mtree}/dev";
+    extraMtreeContentsDest = "/";
   });
 
   commonRoot = {

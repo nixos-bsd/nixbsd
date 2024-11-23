@@ -42,6 +42,7 @@ let
           v) withHeadlines;
     in ''
       #!${pkgs.runtimeShell}
+      exec >/dev/console 2>&1 <&1
       systemConfig='@out@'
 
       export PATH=/empty
@@ -54,34 +55,6 @@ let
 
       # Ensure a consistent umask.
       umask 0022
-
-      echo flag 1 | tosyslog activate
-      if [[ ! -e /dev/sd0a ]]; then
-        (
-          mount -t tmpfs -o rw,dev tmpfs /tmp
-          cd /tmp
-          /dev/MAKEDEV all
-          mount -u -w /tmp/sd0a /
-          cd /
-          umount /tmp
-          mount
-          sleep 5
-          cd /dev
-          /dev/MAKEDEV all
-        ) |& tosyslog activate
-      else
-        echo flag 2 | tosyslog activate
-        mount -u -w /dev/sd0a /
-      fi
-
-      echo HELLO WORLD >/dev/console
-      exec >/dev/console 2>&1 <&1
-      echo HELLO WORLD 2
-      bash -i
-      sleep 20
-      exit 42
-
-        exit 44
 
       # Early mounts
       specialMount() {
@@ -97,6 +70,8 @@ let
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
 
+      mount -u -w /dev/sd0a /
+      exit 123
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}

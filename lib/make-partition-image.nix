@@ -10,6 +10,9 @@
   nixStorePath ? null,
   nixStoreClosure ? [],
   makeRootDirs ? false,
+  extraMtree ? null,
+  extraMtreeContents ? null,
+  extraMtreeContentsDest ? "/",
 }:
 # Either both or none of {user,group} need to be set
 assert (lib.assertMsg (lib.all
@@ -31,17 +34,23 @@ let
   ) else "";
   freebsdUfsBuilder = ''
     pushd $root
-    echo '/set type=file uid=0 gid=0' >>../.mtree
-    echo '/set type=dir uid=0 gid=0' >>../.mtree
-    echo '/set type=link uid=0 gid=0' >>../.mtree
+    echo ' /set type=file uid=0 gid=0' >>../.mtree
+    echo ' /set type=dir uid=0 gid=0' >>../.mtree
+    echo ' /set type=link uid=0 gid=0' >>../.mtree
+    echo ' /set type=char uid=0 gid=0' >>../.mtree
+    echo ' /set type=block uid=0 gid=0' >>../.mtree
     find . -type d | awk '{ gsub(/ /, "\\s", $0); print $0, "type=dir" }' >>../.mtree
     find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>../.mtree
     find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>../.mtree
+    ${lib.optionalString (extraMtree != null) ''
+      cat ${extraMtree} >>../.mtree
+    ''}
+    ${lib.optionalString (extraMtreeContents != null) ''
+      rsync -a ${extraMtreeContents} ./${extraMtreeContentsDest}
+    ''}
+    sort -o ../.mtree ../.mtree
     popd
     ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${freebsdUfsSizeFlags} -o version=2 -o label=${label} -F $root/../.mtree $out $root
-  '';
-  openbsdUfsBuilder = ''
-    ${pkgs.buildPackages.openbsd.makefs}/bin/makefs ${freebsdUfsSizeFlags} -o label=${label} -u 0 $out $root
   '';
   fatSizeFlags = if additionalSize != null then throw "Cannot specify additionalSize for FAT filesystem" else
     if totalSize != null then "-o create_size=${totalSize}" else throw "Must specify totalSize for FAT filesystem";
@@ -50,7 +59,7 @@ let
   '';
   builder = {
     ufs-freebsd = freebsdUfsBuilder;
-    ufs-openbsd = openbsdUfsBuilder;
+    ufs-openbsd = freebsdUfsBuilder;
     fat = fatBuilder;
     efi = fatBuilder;
   }.${filesystem} or (throw "Unknown filesystem type ${filesystem}");
