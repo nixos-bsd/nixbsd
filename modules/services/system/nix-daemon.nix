@@ -98,8 +98,7 @@ in {
       requires = [ "FILESYSTEMS" "tempfiles" ];
 
       binDeps = with pkgs;
-        [ freebsd.ifconfig freebsd.pwd_mkdb nixPackage ]
-        ++ optionals cfg.distributedBuilds [ gzip ];
+        [ nixPackage ] ++ optionals cfg.distributedBuilds [ gzip ];
       environment = cfg.envVars // {
         CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
       };
