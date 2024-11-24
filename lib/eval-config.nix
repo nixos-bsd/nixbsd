@@ -90,10 +90,19 @@ let
   nixbsdWithUserModules =
     noUserModules.extendModules { modules = allUserModules; };
 
+  nixbsdWithUserModulesUnchecked = noUserModules.extendModules {
+    modules = allUserModules ++ [{ _module.check = false; }];
+  };
+
+  nixbsdWithGender = nixbsdWithUserModules.extendModules {
+    modules = import ../modules/module-list-gendered.nix nixpkgsPath
+      nixbsdWithUserModulesUnchecked._module.args.pkgs.stdenv.hostPlatform;
+  };
+
   withExtraAttrs = configuration:
     configuration // {
       inherit extraArgs;
       inherit (configuration._module.args) pkgs;
       extendModules = args: withExtraAttrs (configuration.extendModules args);
     };
-in withWarnings (withExtraAttrs nixbsdWithUserModules)
+in withWarnings (withExtraAttrs nixbsdWithGender)
