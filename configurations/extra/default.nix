@@ -12,7 +12,6 @@
     gitMinimal
     htop
     mini-tmpfiles
-    nix-top
     tmux
     unzip
     vim
