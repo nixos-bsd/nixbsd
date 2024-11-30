@@ -52,17 +52,17 @@ All outputs from `system.build` are available, plus a few more. When developing 
 * `closureInfo`: The closure-info of `toplevel.drvPath`.
 * `vmClosureInfo`: the closure-info of `vm.drvPath`.
 
-The `closureInfo` and `vmImageRunnerClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
+The `closureInfo` and `vmClosureInfo` outputs include metadata about the [build closure](https://zero-to-nix.com/concepts/closures), including a list of all packages. Keeping a copy of this around will prevent nix from garbage-collecting all of your builds.
 
 ### Subtituter
 There is a substituter (binary cache) in the flake.
-If Artemis remembers, this should contain everything in `.#base.vmImageRunnerClosureInfo` and
+If Artemis remembers, this should contain everything in `.#base.vmClosureInfo` and
 could save you a few hours.
 
 Note, however, that trusted substituters can maliciously modify outputs, so only use it if you trust Artemis.
 
 ### Tips
-* Building `vmImageRunner` for a minimal configuration can take over 8 hours on a fast machine, so keeping around `vmImageRunnerClosureInfo` is highly recommended. Just `base.vmImageRunnerClosureInfo` takes over 30GiB though, so you may want to delete it if you're low on space.
+* Building `vmImageRunner` for a minimal configuration can take over 8 hours on a fast machine, so keeping around `vmClosureInfo` is highly recommended. Just `base.vmClosureInfo` takes over 30GiB though, so you may want to delete it if you're low on space.
 * Some package checks may fail intermittently under heavy load. If that happens you may want to build with `--max-jobs 4` or lower so fewer packages are competing for the CPU at the same time.
 * To see what is happening, you might want to use [nix-output-monitor](https://github.com/maralorn/nix-output-monitor). For flake commands you can replace `nix` with `nom` to use it.
 
