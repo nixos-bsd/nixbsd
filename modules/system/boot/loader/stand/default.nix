@@ -2,12 +2,14 @@
 with lib;
 let
   cfg = config.boot.loader.stand;
+  initmd = if config.boot.initmd.enable then config.boot.initmd.image else null;
   builder = import ./stand-conf-builder.nix {
-    inherit pkgs;
+    inherit pkgs initmd;
     inherit (pkgs.freebsd) stand-efi;
   };
   populateBuilder = import ./stand-conf-builder.nix {
     pkgs = pkgs.buildPackages;
+    inherit initmd;
     inherit (pkgs.freebsd) stand-efi;
   };
   #timeoutStr = if config.boot.loader.timeout == null then "-1" else toString config.boot.loader.timeout;

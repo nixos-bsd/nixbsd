@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/freebsd-staging-test";
+    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev";
     lix = {
       url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -11,6 +11,7 @@
       url = "github:nixos-bsd/mini-tmpfiles";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
   };
 
   nixConfig = {
@@ -19,7 +20,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, lix, mini-tmpfiles }:
+  outputs = { self, nixpkgs, lix, mini-tmpfiles, ... }:
     let
       inherit (nixpkgs) lib;
 
