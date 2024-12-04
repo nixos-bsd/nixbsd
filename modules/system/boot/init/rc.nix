@@ -122,7 +122,7 @@ let
         ++ (mapAttrsToList (key: val: "${key}=${mkRcLiteral val}") options));
     };
 in {
-  options.rc.enabled = (mkEnableOption "rc") // { default = true; };
+  options.rc.enabled = (mkEnableOption "rc");
   options.rc.package = mkOption {
     type = types.package;
     default = pkgs.freebsd.rc;

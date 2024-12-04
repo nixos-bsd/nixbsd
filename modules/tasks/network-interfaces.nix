@@ -559,17 +559,17 @@ in {
     environment.etc.hostid = mkIf (cfg.hostId != null) { source = hostidFile; };
     environment.etc.hostname =
       mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
-    rc.services = let
-      hostname = {
-        provides = "hostname";
-        before = [ "NETWORKING" ];
-        # No need to handle no hostname, it can't be null
-        # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
-        commands.start = ''
-          hostname ${escapeShellArg cfg.fqdnOrHostName}
-        '';
-      };
 
+    freebsd.rc.services.hostname = {
+      rcorderSettings.BEFORE = [ "NETWORKING" ];
+      # No need to handle no hostname, it can't be null
+      # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
+      hooks.start_cmd = ''
+        hostname ${escapeShellArg cfg.fqdnOrHostName}
+      '';
+    };
+
+    rc.services = let
       networkDefaults = let
         formatDefaultGateway = proto: default:
           let
@@ -691,7 +691,6 @@ in {
           '';
         };
     in {
-      inherit hostname;
       network_defaults = networkDefaults;
     } // listToAttrs (map configureAddrs interfaces);
 

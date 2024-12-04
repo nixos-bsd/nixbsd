@@ -327,20 +327,25 @@ in {
       ${formatActions cfg.commandActions}
     '';
 
-    rc.services.syslogd = let
+    freebsd.rc.services.syslogd = let
       socketArgs = concatMap (sock: [ "-l" sock ])
         ([ "/var/run/log" ] ++ cfg.extraSockets);
     in {
       description = "System log daemon";
-      command = "${cfg.package}/bin/syslogd";
-      commandArgs = socketArgs ++ cfg.extraParams;
-      commands.reload = null;
-      #hasPidfile = true;
-      provides = "syslogd";
-      requires = [ "FILESYSTEMS" "newsyslog" ];
-      # requires = [ "FILESYSTEMS" "mountcritremote" "newsyslog" "netif" ];
-      before = [ "SERVERS" ];
+      shellVariables = {
+        command = "${cfg.package}/bin/syslogd";
+        command_args = socketArgs ++ cfg.extraParams;
+        reload_cmd = ":";
+      };
+      rcorderSettings = {
+        REQUIRE = [ "FILESYSTEMS" "newsyslog" ];
+        BEFORE = [ "SERVERS" ];
+      };
     };
+
+    # Defaults overrides syslogd path, set it back
+    freebsd.rc.conf.syslogd_program = "${cfg.package}/bin/syslogd";
+
     services.syslogd.fileActions = mkIf cfg.defaultRules {
       "/dev/console".selectors = [
         { level = "err"; }
