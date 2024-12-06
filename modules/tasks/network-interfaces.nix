@@ -560,13 +560,10 @@ in {
     environment.etc.hostname =
       mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
 
-    freebsd.rc.services.hostname = {
-      rcorderSettings.BEFORE = [ "NETWORKING" ];
-      # No need to handle no hostname, it can't be null
-      # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
-      hooks.start_cmd = ''
-        hostname ${escapeShellArg cfg.fqdnOrHostName}
-      '';
+    init.services.hostname = {
+        before = [ "NETWORKING" ];
+        startType = "oneshot";
+        startCommand = [ "${pkgs.freebsd.bin}/bin/hostname" cfg.fqdnOrHostName ];
     };
 
     rc.services = let

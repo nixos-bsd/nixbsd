@@ -27,7 +27,7 @@ let
 
   cfg = config.freebsd.rc;
 
-  escapeRcLiteral =
+  formatRcConfLiteral =
     val:
     if val == true then
       "YES"
@@ -37,9 +37,10 @@ let
       escapeShellArg val;
 
   formatRcConf =
-    opts: concatStringsSep "\n" (mapAttrsToList (name: value: "${name}=${escapeRcLiteral value}") opts);
+    opts:
+    concatStringsSep "\n" (mapAttrsToList (name: value: "${name}=${formatRcConfLiteral value}") opts);
 
-  escapeScriptLiteral = val: if builtins.isList val then escapeShellArgs val else escapeShellArg val;
+  formatScriptLiteral = val: if builtins.isList val then escapeShellArgs val else escapeShellArg val;
 
   makeRcScript =
     opts:
@@ -84,7 +85,7 @@ let
             . /etc/rc.subr
           ''
           + concatStringsSep "\n" (
-            mapAttrsToList (name: value: "${name}=${escapeScriptLiteral value}") (notNull opts.shellVariables)
+            mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") (notNull opts.shellVariables)
           )
           + "\n"
           + concatStrings (
@@ -292,7 +293,7 @@ in
                 '';
                 default = { };
                 type = types.submodule {
-                  freeformType = types.attrsOf types.lines;
+                  freeformType = with types; attrsOf (nullOr lines);
 
                   options = {
                     start_precmd = mkOption {
