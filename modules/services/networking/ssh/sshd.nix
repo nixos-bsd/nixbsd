@@ -636,18 +636,19 @@ in {
       "ssh/sshd_config".source = sshconf;
     };
 
-    rc.services.sshd = {
+    freebsd.rc.conf.sshd_program = "${cfgc.package}/bin/sshd";
+
+    init.services.sshd = {
       description = "Secure Shell Daemon";
-      provides = "sshd";
-      requires = [ "LOGIN" "FILESYSTEMS" ];
-      keywordShutdown = true;
+      dependencies = [ "LOGIN" "FILESYSTEMS" ];
 
       # TODO: @artemist: add NSS modules here
-      binDeps = [ cfgc.package pkgs.gawk ];
+      path = [ cfgc.package pkgs.gawk ];
 
-      #hasPidfile = true;
-      command = "${cfgc.package}/bin/sshd";
-      precmds.start = flip concatMapStrings cfg.hostKeys (k: ''
+      startType = "forking";
+
+      startCommand = [ "${cfgc.package}/bin/sshd" ];
+      preStart = flip concatMapStrings cfg.hostKeys (k: ''
         if ! [ -s "${k.path}" ]; then
             if ! [ -h "${k.path}" ]; then
                 rm -f "${k.path}"
