@@ -36,7 +36,7 @@ with lib;
               };
 
               startCommand = mkOption {
-                type = types.listOf types.str;
+                type = with types; listOf (either str package);
                 description = "Command to run to start the service.";
               };
 
@@ -125,18 +125,11 @@ with lib;
   };
 
   config = {
-    assertions =
-      (mapAttrsToList (name: cfg: {
-        assertion = (cfg.startType == "forking") -> (cfg.PIDFile != null);
-        message = ''
-          Forking service ${name} must set a PID file.
-        '';
-      }) config.init.services)
-      ++ (mapAttrsToList (name: cfg: {
-        assertion = (cfg.startType == "foreground") -> (cfg.PIDFile == null);
-        message = ''
-          Foreground service ${name} must not set a PID file.
-        '';
-      }) config.init.services);
+    assertions = mapAttrsToList (name: cfg: {
+      assertion = (cfg.startType == "foreground") -> (cfg.PIDFile == null);
+      message = ''
+        Foreground service ${name} must not set a PID file.
+      '';
+    }) config.init.services;
   };
 }

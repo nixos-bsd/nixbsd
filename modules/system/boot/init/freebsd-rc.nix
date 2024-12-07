@@ -85,7 +85,9 @@ let
             . /etc/rc.subr
           ''
           + concatStringsSep "\n" (
-            mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") (notNull opts.shellVariables)
+            mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}\"") (
+              notNull opts.shellVariables
+            )
           )
           + "\n"
           + concatStrings (

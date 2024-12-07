@@ -327,20 +327,16 @@ in {
       ${formatActions cfg.commandActions}
     '';
 
-    freebsd.rc.services.syslogd = let
+    init.services.syslogd = let
       socketArgs = concatMap (sock: [ "-l" sock ])
         ([ "/var/run/log" ] ++ cfg.extraSockets);
     in {
       description = "System log daemon";
-      shellVariables = {
-        command = "${cfg.package}/bin/syslogd";
-        command_args = socketArgs ++ cfg.extraParams;
-        reload_cmd = ":";
-      };
-      rcorderSettings = {
-        REQUIRE = [ "FILESYSTEMS" "newsyslog" ];
-        BEFORE = [ "SERVERS" ];
-      };
+      dependencies = [ "FILESYSTEMS" "newsyslog" ];
+      before = [ "SERVERS" ];
+      startType = "forking";
+      pidFile = "/var/run/syslog.pid";
+      startCommand = [ "${cfg.package}/bin/syslogd" ] ++ socketArgs ++ cfg.extraParams;
     };
 
     # Defaults overrides syslogd path, set it back

@@ -33,6 +33,9 @@ let
         command = head cfg.startCommand;
         command_args = tail cfg.startCommand;
       }
+      // optionalAttrs (cfg.startType == "oneshot") {
+        stop_cmd = ":";
+      }
       // optionalAttrs (cfg.pidFile != null) {
         pidfile = cfg.pidFile;
       }

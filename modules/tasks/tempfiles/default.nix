@@ -65,13 +65,16 @@ in {
   };
 
   config = {
-    rc.services.tempfiles = {
+    init.services.tempfiles = {
       description = "Setup tempfiles from specifications";
-      provides = "tempfiles";
-      commands.start = concatMapStringsSep "\n" (spec:
-        escapeShellArgs
-        ([ "${cfg.package}/bin/mtree" "-f" spec.file "-p" spec.root ]
-          ++ spec.extraFlags)) cfg.specs;
+      dependencies = [ "mountcritlocal" ];
+      before = [ "FILESYSTEMS" ];
+      startType = "oneshot";
+      startCommand = [(pkgs.writeScript "tempfiles-start"
+        (concatMapStringsSep "\n" (spec:
+          escapeShellArgs
+          ([ "${cfg.package}/bin/mtree" "-f" spec.file "-p" spec.root ]
+            ++ spec.extraFlags)) cfg.specs)).out];
     };
 
     services.tempfiles.specs = mkIf cfg.useDefaultSpecs [{
