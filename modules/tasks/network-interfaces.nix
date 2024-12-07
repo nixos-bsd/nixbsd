@@ -566,11 +566,11 @@ in {
         startCommand = [ "${pkgs.freebsd.bin}/bin/hostname" cfg.fqdnOrHostName ];
     };
 
-    rc.services = let
+    freebsd.rc.services = let
       networkDefaults = let
         formatDefaultGateway = proto: default:
           let
-            parts = [ "route" "-${proto}" "-n" "add" "default" default.address ]
+            parts = [ "${pkgs.freebsd.route}/bin/route" "-${proto}" "-n" "add" "default" default.address ]
               ++ optionals (default.interface != null) [
                 "-ifp"
                 default.interface
@@ -584,11 +584,8 @@ in {
           '';
       in {
         description = "Setup defualt routes and DNS settings";
-        provides = "network_defaults";
-        before = [ "NETWORKING" ];
-        keywordNojailvnet = true;
-        binDeps = with pkgs; [ freebsd.route freebsd.bin coreutils ];
-        commands.start = ''
+        rcorderSettings.BEFORE = [ "NETWORKING" ];
+        hooks.start_cmd = ''
           ${optionalString config.networking.resolvconf.enable ''
             # Set the static DNS configuration, if given.
             ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
@@ -630,16 +627,15 @@ in {
           ips = i.ipv4.addresses ++ i.ipv6.addresses;
         in nameValuePair serviceName {
           description = "Address and route configuration of ${i.name}";
-          provides = serviceName;
-          before = [ "network_defaults" "NETWORKING" ];
-          requires = [ "FILESYSTEMS" "tempfiles" ] ++ deviceDependency i.name;
-          binDeps = with pkgs; [
+          rcorderSettings = {
+            BEFORE = [ "network_defaults" "NETWORKING" ];
+            REQUIRE = [ "FILESYSTEMS" ] ++ deviceDependency i.name;
+          };
+          path = with pkgs; [
             freebsd.route
             freebsd.ifconfig
-            freebsd.bin
-            coreutils
           ];
-          commands.start = ''
+          hooks.start_cmd = ''
             startmsg -n "Setting addresses for ${i.name}"
 
             state="/run/nixos/network/addresses/${i.name}"

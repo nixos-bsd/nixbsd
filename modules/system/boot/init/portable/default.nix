@@ -102,6 +102,19 @@ with lib;
                 description = "Environment variables to set when running commands.";
               };
 
+              path = mkOption {
+                default = [ ];
+                type =
+                  with types;
+                  listOf (oneOf [
+                    package
+                    str
+                  ]);
+                description = ''
+                  Packages to add to the services {env}`PATH` environment variable.
+                '';
+              };
+
               dependencies = mkOption {
                 type = types.listOf types.str;
                 default = [ ];

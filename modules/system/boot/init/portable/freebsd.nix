@@ -15,6 +15,8 @@ let
       BEFORE = cfg.before;
     };
 
+    inherit (cfg) path;
+
     shellVariables =
       optionalAttrs (cfg.startType == "foreground") {
         command = "${pkgs.freebsd.daemon}/bin/daemon";
