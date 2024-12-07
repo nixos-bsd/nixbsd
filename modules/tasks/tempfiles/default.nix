@@ -71,10 +71,13 @@ in {
       before = [ "FILESYSTEMS" ];
       startType = "oneshot";
       startCommand = [(pkgs.writeScript "tempfiles-start"
+        (''
+          #!${pkgs.runtimeShell}
+        '' +
         (concatMapStringsSep "\n" (spec:
           escapeShellArgs
           ([ "${cfg.package}/bin/mtree" "-f" spec.file "-p" spec.root ]
-            ++ spec.extraFlags)) cfg.specs)).out];
+            ++ spec.extraFlags)) cfg.specs)))];
     };
 
     services.tempfiles.specs = mkIf cfg.useDefaultSpecs [{
