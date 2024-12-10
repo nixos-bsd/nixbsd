@@ -109,6 +109,7 @@ in {
         [ "-p" "/var/run/nix_daemon.pid" "${nixPackage}/bin/nix-daemon" ];
       procname = "${nixPackage}/bin/nix-daemon";
 
+      # THIS IS A HACK
       precmds.stop = ''
         kill -INT $(cat $pidfile) &>/dev/null || true
       '';
