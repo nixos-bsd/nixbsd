@@ -139,7 +139,7 @@ with lib;
 
   config = {
     assertions = mapAttrsToList (name: cfg: {
-      assertion = (cfg.startType == "foreground") -> (cfg.PIDFile == null);
+      assertion = (cfg.startType == "foreground") -> (cfg.pidFile == null);
       message = ''
         Foreground service ${name} must not set a PID file.
       '';

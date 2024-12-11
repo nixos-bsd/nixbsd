@@ -88,18 +88,15 @@ in
         config.system.path
       ];
 
-      rc.services.dbus = {
-        provides = "dbus";
-        command = "${pkgs.dbus}/bin/dbus-daemon";
-        #hasPidfile = true;
-        requires = ["DAEMON" "ldconfig"];
-        precmds = {
-          start = ''
-            mkdir -p /var/lib/dbus
-            ${pkgs.dbus}/bin/dbus-uuidgen --ensure
-            mkdir -p /var/run/dbus /run/dbus
-          '';
-        };
+      init.services.dbus = {
+        dependencies = ["DAEMON" "ldconfig"];
+        startType = "forking";
+        startCommand = [ "${pkgs.dbus}/bin/dbus-daemon" ];
+        preStart = ''
+          mkdir -p /var/lib/dbus
+          ${pkgs.dbus}/bin/dbus-uuidgen --ensure
+          mkdir -p /var/run/dbus /run/dbus
+        '';
         environment = {
           dbus_flags = "--system";
         };

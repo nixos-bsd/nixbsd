@@ -99,6 +99,8 @@ let
           )
           + ''
 
+            ${opts.extraConfig}
+
             load_rc_config ${opts.name}
             run_rc_command "$1"
           ''
@@ -213,6 +215,14 @@ in
                 description = ''
                   Whether to use BSD binaries.
                   The default (false) is to use GNU coreutils.
+                '';
+              };
+
+              extraConfig = mkOption {
+                default = "";
+                type = types.lines;
+                description = ''
+                  Extra functions added to the end of the configuration.
                 '';
               };
 
