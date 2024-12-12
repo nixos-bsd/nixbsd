@@ -5,7 +5,7 @@ let
   xcfg = config.services.xserver;
   dmcfg = xcfg.displayManager;
   cfg = dmcfg.sddm;
-  xEnv = config.rc.services.display-manager.environment;
+  xEnv = config.init.services.display-manager.environment;
 
   sddm = cfg.package;
 

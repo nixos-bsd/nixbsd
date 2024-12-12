@@ -59,12 +59,11 @@ in
 
     environment.systemPackages = [ pkgs.polkit.bin pkgs.polkit.out ];
 
-    rc.services.polkit = rec {
-      provides = "polkit";
-      requires = ["DAEMON"];
-      procname = "${pkgs.polkit.out}/lib/polkit-1/polkitd";
-      command = "${pkgs.freebsd.daemon}/bin/daemon";
-      commandArgs = [ "-p" "/var/run/polkit.pid" procname ] ++ optionals (!cfg.debug) ["--no-debug"];
+    init.services.polkit = {
+      dependencies = ["DAEMON"];
+      startType = "foreground";
+      startCommand = [ "${pkgs.polkit.out}/lib/polkit-1/polkitd" ]
+        ++ optionals (!cfg.debug) ["--no-debug"];
     };
 
     # The polkit daemon reads action/rule files

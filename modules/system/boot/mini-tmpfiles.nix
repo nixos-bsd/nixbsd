@@ -149,11 +149,10 @@ in
     #  "systemd-tmpfiles-clean.timer"
     #  "systemd-tmpfiles-setup.service"
     #];
-    rc.services.mini-tmpfiles = {
-      description = "";
-      provides = "MiniTmpfiles";
-      requires = [ "FILESYSTEMS" ];
-      commands.start = "${pkgs.mini-tmpfiles}/bin/mini-tmpfiles --create";
+    init.services.mini-tmpfiles = {
+      dependencies = [ "FILESYSTEMS" ];
+      startType = "oneshot";
+      startCommand = [ "${pkgs.mini-tmpfiles}/bin/mini-tmpfiles" "--create" ];
     };
 
     environment.etc = {

@@ -31,16 +31,12 @@ in
     environment.systemPackages = with pkgs; [ seatd sdnotify-wrapper ];
     users.groups.seat = lib.mkIf (cfg.group == "seat") {};
 
-    rc.services.seatd = rec {
-      provides = "seatd";
-      requires = [ "DAEMON" ];
+    init.services.seatd = {
       description = "Seat management daemon";
+      dependencies = [ "DAEMON" ];
 
-      hasPidfile = true;
-      command = "${pkgs.freebsd.daemon}/bin/daemon";
-      procname = "${pkgs.seatd.bin}/bin/seatd";
-      commandArgs =
-        [ "-s" "err" "-T" "seatd" "-p" "/var/run/seatd.pid" procname ];
+      startType = "foreground";
+      startCommand = [ "${pkgs.seatd.bin}/bin/seatd" ];
     };
   };
 }
