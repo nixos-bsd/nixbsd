@@ -43,6 +43,19 @@ in let
     raw = "img";
   }.${format} or format;
 
+  lateBuildPartition = i: part: if part.tooLargeIntermediate or false then ''
+    out=$TMP/latebuild/${builtins.toString i}
+    mkdir $TMP/latebuild-pwd/${builtins.toString i}
+    pushd $TMP/latebuild-pwd/${builtins.toString i}
+    ${part.buildCommand}
+    popd
+  '' else "";
+  lateBuildPartitions = lib.concatImapStrings lateBuildPartition partitions;
+  fixPartition = i: part: part // { filepath = if part.tooLargeIntermediate or false then "$TMP/latebuild/${builtins.toString i}" else part; };
+  partitionsFixed = lib.imap1 fixPartition partitions;
+
+  lateBuildNativeInputs = lib.flatten (builtins.map (part: if part.tooLargeIntermediate then part.nativeBuildInputs else []) partitions);
+
   partitionDiskScript = { # switch-case
     legacy = ''
       echo Unsupported >&2 && false
@@ -59,8 +72,8 @@ in let
           "zfs" = "freebsd-zfs";
           "swap" = "freebsd-swap";
         };
-        in "-p ${aliasMap.${part.filesystem}}/${part.label}:=${part}"
-        ) partitions;
+        in "-p ${aliasMap.${part.filesystem}}/${part.label}:=${part.filepath}"
+        ) partitionsFixed;
       sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
       in ''
       mkimg -y -o $out/${filename} -s gpt -f ${format} ${partitionFlags} ${sizeFlags}
@@ -70,13 +83,19 @@ in let
     '';
   }.${partitionTableType};
 
+
 in pkgs.runCommand name {
-    nativeBuildInputs = [ pkgs.freebsd.mkimg ];
+    nativeBuildInputs = [ pkgs.freebsd.mkimg ] ++ lateBuildNativeInputs;
     passthru = {
       inherit filename partitions;
     };
   } ''
   mkdir $out
+  mkdir $TMP/latebuild
+  mkdir $TMP/latebuild-pwd
+  realOut=$out
+  ${lateBuildPartitions}
+  out=$realOut
   ${partitionDiskScript}
   mkdir -p $out/nix-support
   echo "file ${format}-image $out/${filename}" >> $out/nix-support/hydra-build-products
