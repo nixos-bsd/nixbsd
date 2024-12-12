@@ -167,7 +167,7 @@ in {
       export PATH="${wrapperDir}:$PATH"
     '';
 
-    init.services.suid_sgid_wrappers = {
+    init.services.suid-sgid-wrappers = {
       description = "Create SUID/SGID Wrappers";
       dependencies = [ "FILESYSTEMS" ];
       before = [ "LOGIN" ];

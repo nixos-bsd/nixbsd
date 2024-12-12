@@ -8,7 +8,7 @@
 with lib;
 let
   convertService = name: cfg: {
-    name = cfg.name;
+    name = builtins.replaceStrings [ "-" ] [ "_" ] cfg.name;
     description = cfg.description;
     rcorderSettings = {
       REQUIRE = cfg.dependencies;

@@ -92,7 +92,7 @@ in {
       text = "daemon-socket type=dir uname=root gname=root mode=0755";
     }];
 
-    init.services.nix_daemon = {
+    init.services.nix-daemon = {
       description = "nix daemon for a multi-user store";
       dependencies = [ "FILESYSTEMS" "tempfiles" ];
 

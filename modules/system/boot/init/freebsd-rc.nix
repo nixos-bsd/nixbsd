@@ -268,7 +268,7 @@ in
                     };
                   };
                   config = {
-                    PROVIDE = [ name ];
+                    PROVIDE = [ config.name ];
                   };
                 };
               };
@@ -282,8 +282,8 @@ in
                 type = types.submodule {
                   freeformType = types.attrsOf maybeList;
                   config = {
-                    name = mkOptionDefault name;
-                    rcvar = mkOptionDefault "${name}_enable";
+                    name = mkOptionDefault config.name;
+                    rcvar = mkOptionDefault "${config.name}_enable";
                   };
                 };
               };
@@ -343,15 +343,17 @@ in
 
             config = mkMerge [
               {
-                name = mkOptionDefault name;
+                name = mkOptionDefault (builtins.replaceStrings [ "-" ] [ "_" ] name);
               }
               {
                 shellVariables = mapAttrs' (
-                  var: value: nameValuePair "${name}_${var}" value
+                  var: value: nameValuePair "${config.name}_${var}" value
                 ) config.namedShellVariables;
               }
               {
-                shellVariables = mapAttrs' (var: _: nameValuePair var "${name}_${var}") (notNull config.hooks);
+                shellVariables = mapAttrs' (var: _: nameValuePair var "${config.name}_${var}") (
+                  notNull config.hooks
+                );
               }
             ];
           }

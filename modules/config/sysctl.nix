@@ -50,7 +50,7 @@ in {
       startCommand = [ "${pkgs.freebsd.sysctl}/bin/sysctl" "-i" "-f" "/etc/sysctl.conf" ];
     };
 
-    init.services.sysctl_lastload = {
+    init.services.sysctl-lastload = {
       description = "Set sysctl variables after services are started";
       dependencies = [ "LOGIN" ];
       before = [ "jail" ];
