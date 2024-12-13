@@ -684,36 +684,18 @@ in
 
     #systemd.defaultUnit = mkIf cfg.autorun "graphical.target";
 
-    rc.services.display-manager = mkIf hasDm
+    init.services.display-manager = mkIf hasDm
       {
-        provides = "display_manager";
         description = "Display Manager";
-        requires = ["LOGIN" "cleanvar" "syscons" "dbus"];
-        keywordShutdown = true;
-        command = "${cfg.displayManager.job.execProg}";
-        commands = {
-          start = ''
-            	local iter
+        dependencies = ["LOGIN" "cleanvar" "syscons" "dbus"];
 
-                ( iter=0
-                while ! pgrep -f "/bin/getty " > /dev/null; do
-                        if [ ''${iter} -eq 60 ]; then
-                                break
-                        fi
-                        sleep 1
-                        iter=$((''${iter} + 1))
-                done
+        startType = "foreground";
+        startCommand = cfg.displayManager.job.execCmd ;
+        preStart = ''
+          ${cfg.displayManager.job.preStart}
 
-                ${cfg.displayManager.job.execProg} ${cfg.displayManager.job.execArgs} ) &
-          '';
-        };
-        precmds = {
-          start = ''
-            ${cfg.displayManager.job.preStart}
-
-            rm -f /tmp/.X0-lock
-          '';
-        };
+          rm -f /tmp/.X0-lock
+        '';
 
         #environment =
         #  optionalAttrs config.hardware.opengl.setLdLibraryPath

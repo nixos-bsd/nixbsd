@@ -323,17 +323,10 @@ in
           description = "Script executed before the display manager is started.";
         };
 
-        # used to be execCmd. had to switch to execProg + execArgs to make rc happy
-        execProg = mkOption {
-          type = types.str;
-          example = literalExpression ''"''${pkgs.lightdm}/bin/lightdm"'';
-          description = "Executable for the display manager.";
-        };
-
-        execArgs = mkOption {
-          type = types.str;
-          default = "";
-          description = "Shell args for the display manager";
+        execCmd = mkOption {
+          type = types.listOf types.str;
+          example = literalExpression ''[ "''${pkgs.lightdm}/bin/lightdm" ]'';
+          description = "Executable and arguments to run for the display manager.";
         };
 
         environment = mkOption {
