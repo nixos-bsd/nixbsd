@@ -64,7 +64,6 @@ in [
   ./system/activation/switchable-system.nix
   ./system/activation/top-level.nix
   ./system/boot/init/portable
-  ./system/boot/init/rc.nix
   ./system/boot/kernel.nix
   ./system/boot/linux.nix
   ./system/boot/mini-tmpfiles.nix
