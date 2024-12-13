@@ -105,6 +105,7 @@ in {
       startType = "foreground";
       startCommand = [ "${nixPackage}/bin/nix-daemon" ];
 
+      # THIS IS A HACK
       preStop = ''
         kill -INT $(cat $pidfile) &>/dev/null || true
       '';

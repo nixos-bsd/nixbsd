@@ -104,6 +104,7 @@ let
 in pkgs.runCommand "partition-image-${label}" {
     passthru = {
       inherit filesystem label contents;
+      tooLargeIntermediate = true;
     };
     nativeBuildInputs = [ pkgs.freebsd.makefs pkgs.rsync ];
   } ''
@@ -115,4 +116,5 @@ in pkgs.runCommand "partition-image-${label}" {
   ${contentsCopier}
   ${nixStoreCopier}
   ${builder}
+
 ''

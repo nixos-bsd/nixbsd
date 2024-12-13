@@ -65,6 +65,7 @@ in [
   ./system/activation/top-level.nix
   ./system/boot/init/portable
   ./system/boot/kernel.nix
+  ./system/boot/initmd.nix
   ./system/boot/linux.nix
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
@@ -73,6 +74,7 @@ in [
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
   ./virtualisation/build-vm.nix
+  ./tasks/nix-store.nix
 
   ./services/x11/xserver.nix
   #"${extPath}/services/x11/gdk-pixbuf.nix"
