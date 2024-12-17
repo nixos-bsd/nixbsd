@@ -248,13 +248,11 @@ in {
   };
 
   config = {
-    rc.services.newsyslog = {
+    init.services.newsyslog = {
       description = "Logfile rotation";
-      provides = "newsyslog";
-      requires = [ "FILESYSTEMS" /*"tempfiles"*/ ];
-      command = "${cfg.package}/bin/newsyslog";
-      commandArgs = [ "-C" "-f" (toString configFile) ] ++ cfg.extraArgs;
-      commands.stop = ":";
+      dependencies = [ "FILESYSTEMS" ];
+      startType = "oneshot";
+      startCommand = [ "${cfg.package}/bin/newsyslog" "-C" "-f" (toString configFile) ] ++ cfg.extraArgs;
     };
 
     services.newsyslog.logfiles = mkIf cfg.createDefault (mapAttrs (name: value:

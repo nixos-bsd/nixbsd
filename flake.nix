@@ -69,7 +69,7 @@
       packages = forAllSystems (system:
         lib.mapAttrs (name: makeImage system) self.nixosConfigurations);
 
-      formatter = forAllSystems (system: (makePkgs system).nixfmt-classic);
+      formatter = forAllSystems (system: (makePkgs system).nixfmt-rfc-style);
 
       hydraJobs = lib.mapAttrs (system: lib.mapAttrs (configuration: attrs: {inherit (attrs) vm systemImage;})) self.packages;
     };

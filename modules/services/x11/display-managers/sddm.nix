@@ -5,7 +5,7 @@ let
   xcfg = config.services.xserver;
   dmcfg = xcfg.displayManager;
   cfg = dmcfg.sddm;
-  xEnv = config.rc.services.display-manager.environment;
+  xEnv = config.init.services.display-manager.environment;
 
   sddm = cfg.package;
 
@@ -227,7 +227,7 @@ in
         QML2_IMPORT_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtQmlPrefix;
       };
 
-      execProg = "${pkgs.plasma5Packages.sddm}/bin/sddm";
+      execCmd = [ "${pkgs.plasma5Packages.sddm}/bin/sddm" ];
     };
 
     security.pam.services = {

@@ -44,19 +44,19 @@ in {
         ${n}=${if v == false then "0" else toString v}
       '') cfg);
 
-    rc.services.sysctl = {
+    init.services.sysctl = {
       description = "Set sysctl variables";
-      provides = "sysctl";
-      commands.start =
-        "${pkgs.freebsd.sysctl}/bin/sysctl -i -f /etc/sysctl.conf";
+      startType = "oneshot";
+      startCommand = [ "${pkgs.freebsd.sysctl}/bin/sysctl" "-i" "-f" "/etc/sysctl.conf" ];
     };
 
-    rc.services.sysctl-lastload = {
+    init.services.sysctl-lastload = {
       description = "Set sysctl variables after services are started";
-      provides = "sysctl_lastload";
-      requires = [ "LOGIN" ];
+      dependencies = [ "LOGIN" ];
       before = [ "jail" ];
-      commands.start = "${pkgs.freebsd.sysctl}/bin/sysctl -f /etc/sysctl.conf";
+
+      startType = "oneshot";
+      startCommand = [ "${pkgs.freebsd.sysctl}/bin/sysctl" "-i" "-f" "/etc/sysctl.conf" ];
     };
 
   };

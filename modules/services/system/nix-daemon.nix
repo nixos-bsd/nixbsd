@@ -92,25 +92,21 @@ in {
       text = "daemon-socket type=dir uname=root gname=root mode=0755";
     }];
 
-    rc.services.nix-daemon = {
+    init.services.nix-daemon = {
       description = "nix daemon for a multi-user store";
-      provides = "nix_daemon";
-      requires = [ "FILESYSTEMS" "tempfiles" ];
+      dependencies = [ "FILESYSTEMS" "tempfiles" ];
 
-      binDeps = with pkgs;
+      path = with pkgs;
         [ nixPackage ] ++ optionals cfg.distributedBuilds [ gzip ];
       environment = cfg.envVars // {
         CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
       };
 
-      hasPidfile = true;
-      command = "${pkgs.freebsd.daemon}/bin/daemon";
-      commandArgs =
-        [ "-p" "/var/run/nix_daemon.pid" "${nixPackage}/bin/nix-daemon" ];
-      procname = "${nixPackage}/bin/nix-daemon";
+      startType = "foreground";
+      startCommand = [ "${nixPackage}/bin/nix-daemon" ];
 
       # THIS IS A HACK
-      precmds.stop = ''
+      preStop = ''
         kill -INT $(cat $pidfile) &>/dev/null || true
       '';
     };

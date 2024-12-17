@@ -14,47 +14,43 @@ in {
   imports = [
     {
       config = (mkIf config.services.DAEMON.enable {
-        rc.services.DAEMON = {
-          provides = "DAEMON";
-          requires = [ "NETWORKING" "SERVERS" ];
+        freebsd.rc.services.DAEMON = {
+          rcorderSettings.REQUIRE = [ "NETWORKING" "SERVERS" ];
           dummy = true;
         };
       });
     }
     {
       config = (mkIf config.services.LOGIN.enable {
-        rc.services.LOGIN = {
-          provides = "LOGIN";
-          requires = [ "DAEMON" ];
+        freebsd.rc.services.LOGIN = {
+          rcorderSettings.REQUIRE = [ "DAEMON" ];
           dummy = true;
         };
       });
     }
     {
       config = (mkIf config.services.FILESYSTEMS.enable {
-        rc.services.FILESYSTEMS = {
-          provides = "FILESYSTEMS";
-          requires = [ "root" "mountcritlocal" "cleanvar" "tmp" ];
+        freebsd.rc.services.FILESYSTEMS = {
+          rcorderSettings.REQUIRE = [ "root" "mountcritlocal" "cleanvar" "tmp" ];
           dummy = true;
         };
       });
     }
     {
       config = (mkIf config.services.NETWORKING.enable {
-        rc.services.NETWORKING = {
-          provides = [ "NETWORKING" "NETWORK" ];
+        freebsd.rc.services.NETWORKING = {
+          rcorderSettings.PROVIDE = [ "NETWORK" ];
           # TODO
-          #requires = ["netif" "netwait" "netoptions" "routing" "ppp" "ipfw" "stf" "defaultroute" "route6d" "resolv" "bridge" "static_arp" "static_ndp"];
+          #rcorderSettings.REQUIRE = ["netif" "netwait" "netoptions" "routing" "ppp" "ipfw" "stf" "defaultroute" "route6d" "resolv" "bridge" "static_arp" "static_ndp"];
           dummy = true;
         };
       });
     }
     {
       config = (mkIf config.services.SERVERS.enable {
-        rc.services.SERVERS = {
-          provides = "SERVERS";
+        freebsd.rc.services.SERVERS = {
           # TODO
-          #requires = ["mountcritremote" "sysvipc" "linux" "ldconfig" "savecore" "watchdogd"];
+          #rcorderSettings.REQUIRE = ["mountcritremote" "sysvipc" "linux" "ldconfig" "savecore" "watchdogd"];
           dummy = true;
         };
       });

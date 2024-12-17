@@ -803,16 +803,16 @@ in {
       # allow `system.build.toplevel' to be included.  (If we had a direct
       # reference to ${regInfo} here, then we would get a cyclic
       # dependency.)
-      rc.services.loadNixRegInfo = lib.mkIf config.nix.enable {
+      init.services.loadNixRegInfo = lib.mkIf config.nix.enable {
         description = "Load nix regInfo";
-        provides = "loadNixRegInfo";
-        commands.start = ''
+        startType = "oneshot";
+        startCommand = [ (pkgs.writeScript "reginfo-start" ''
           REGINFO=/etc/reginfo
           if [[ -e "$REGINFO" ]]; then
             echo "Got reginfo '$REGINFO'"
             ${config.nix.package.out}/bin/nix-store --load-db < $REGINFO
           fi
-        '';
+        '') ];
       };
 
       virtualisation.additionalPaths = [ config.system.build.toplevel ];

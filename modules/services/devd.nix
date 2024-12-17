@@ -11,26 +11,30 @@ in {
     enable = mkEnableOption "devd service";
   };
 
-  config.rc.services.devd = mkIf cfg.enable {
-    provides = "devd";
-    description = "Device Daemon";
-    command = "${pkgs.freebsd.devd}/bin/devd";
+  config = mkIf cfg.enable {
+    init.services.devd = {
+      description = "Device Daemon";
+      before = [ "NETWORKING" ];
 
-    precmds.start = ''
-      if ! checkyesno devd_enable; then
-        sysctl hw.bus.devctl_queue=0
-      fi
-      mkdir -p /run/dbus
-    '';
-  };
-  config.environment.etc = mkIf cfg.enable {
-    devd.source = "${pkgs.freebsd.devd}/etc/devd";
-    "devd.conf".text = ''
-      options {
-        directory "/etc/devd";
-        pid-file "/var/run/devd.pid";
-      };
-    '';
+      startType = "forking";
+      pidFile = "/var/run/devd.pid";
+      startCommand = [ "${pkgs.freebsd.devd}/bin/devd" ];
+      preStart = ''
+        if ! checkyesno devd_enable; then
+          sysctl hw.bus.devctl_queue=0
+        fi
+        mkdir -p /run/dbus
+      '';
+    };
+    environment.etc = {
+      devd.source = "${pkgs.freebsd.devd}/etc/devd";
+      "devd.conf".text = ''
+        options {
+          directory "/etc/devd";
+          pid-file "/var/run/devd.pid";
+        };
+      '';
+    };
   };
 }
 

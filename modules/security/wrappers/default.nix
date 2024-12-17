@@ -167,12 +167,14 @@ in {
       export PATH="${wrapperDir}:$PATH"
     '';
 
-    rc.services.suid-sgid-wrappers = {
+    init.services.suid-sgid-wrappers = {
       description = "Create SUID/SGID Wrappers";
-      provides = "suid_sgid_wrappers";
-      requires = [ "FILESYSTEMS" ];
+      dependencies = [ "FILESYSTEMS" ];
       before = [ "LOGIN" ];
-      commands.start = ''
+      startType = "oneshot";
+      startCommand = [ (pkgs.writeScript "suid-sgid-wrappers-start"
+      ''
+        #!${pkgs.runtimeShell}
         chmod 755 "${parentWrapperDir}"
 
         # We want to place the tmpdirs for the wrappers to the parent dir.
@@ -195,7 +197,8 @@ in {
           # For initial setup
           ln --symbolic "$wrapperDir" "${wrapperDir}"
         fi
-      '';
+      ''
+      )];
     };
 
     ###### wrappers consistency checks

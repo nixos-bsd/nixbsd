@@ -316,42 +316,43 @@ in {
       };
     });
 
-    rc.services.mountcritlocal = {
+    freebsd.rc.services.mountcritlocal = {
       description = "Mount local filesystems";
-      provides = "mountcritlocal";
-      requires = [ "root" ];
-      before = [ "FILESYSTEMS" ];
-      keywordShutdown = true;
-      keywordNojail = true;
-      binDeps = with pkgs;
-        [ freebsd.mount freebsd.bin freebsd.limits coreutils findutils gnugrep ]
-        ++ config.system.fsPackages;
+      rcorderSettings = {
+        REQUIRE = [ "root" ];
+        BEFORE = [ "FILESYSTEMS" ];
+        KEYWORD = [ "shutdown" "nojail" ];
+      };
+      path = with pkgs; [ freebsd.mount findutils gnugrep ] ++ config.system.fsPackages;
+      bsdUtils = true;
 
-      commands.stop = "sync";
-      commands.start = ''
-        startmsg -n 'Mounting local filesystems:'
-        cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
-        err=$?
-        if [ $err -ne 0 ]; then
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'will retry after root mount hold release'
-          root_hold_wait
+      hooks = {
+        start_cmd = ''
+          startmsg -n 'Mounting local filesystems:'
           cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
           err=$?
-        fi
+          if [ $err -ne 0 ]; then
+            echo 'Mounting /etc/fstab filesystems failed,' \
+                'will retry after root mount hold release'
+            root_hold_wait
+            cat /etc/fstab | grep -v '^#' | grep . | cut -d' ' -f 2 | xargs mkdir -p && mount -a -t "nonfs,smbfs"
+            err=$?
+          fi
 
-        startmsg '.'
+          startmsg '.'
 
-        case $err in
-        0)
-          ;;
-        *)
-          echo 'Mounting /etc/fstab filesystems failed,' \
-              'startup aborted'
-          stop_boot true
-          ;;
-        esac
-      '';
+          case $err in
+          0)
+            ;;
+          *)
+            echo 'Mounting /etc/fstab filesystems failed,' \
+                'startup aborted'
+            stop_boot true
+            ;;
+          esac
+        '';
+        stop_cmd = "sync";
+      };
     };
   };
 }

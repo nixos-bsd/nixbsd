@@ -559,21 +559,18 @@ in {
     environment.etc.hostid = mkIf (cfg.hostId != null) { source = hostidFile; };
     environment.etc.hostname =
       mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
-    rc.services = let
-      hostname = {
-        provides = "hostname";
-        before = [ "NETWORKING" ];
-        # No need to handle no hostname, it can't be null
-        # TODO(@artemist): Handle set_hostname_allowed = 0 in jail
-        commands.start = ''
-          hostname ${escapeShellArg cfg.fqdnOrHostName}
-        '';
-      };
 
+    init.services.hostname = {
+        before = [ "NETWORKING" ];
+        startType = "oneshot";
+        startCommand = [ "${pkgs.freebsd.bin}/bin/hostname" cfg.fqdnOrHostName ];
+    };
+
+    freebsd.rc.services = let
       networkDefaults = let
         formatDefaultGateway = proto: default:
           let
-            parts = [ "route" "-${proto}" "-n" "add" "default" default.address ]
+            parts = [ "${pkgs.freebsd.route}/bin/route" "-${proto}" "-n" "add" "default" default.address ]
               ++ optionals (default.interface != null) [
                 "-ifp"
                 default.interface
@@ -587,11 +584,8 @@ in {
           '';
       in {
         description = "Setup defualt routes and DNS settings";
-        provides = "network_defaults";
-        before = [ "NETWORKING" ];
-        keywordNojailvnet = true;
-        binDeps = with pkgs; [ freebsd.route freebsd.bin coreutils ];
-        commands.start = ''
+        rcorderSettings.BEFORE = [ "NETWORKING" ];
+        hooks.start_cmd = ''
           ${optionalString config.networking.resolvconf.enable ''
             # Set the static DNS configuration, if given.
             ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
@@ -633,16 +627,15 @@ in {
           ips = i.ipv4.addresses ++ i.ipv6.addresses;
         in nameValuePair serviceName {
           description = "Address and route configuration of ${i.name}";
-          provides = serviceName;
-          before = [ "network_defaults" "NETWORKING" ];
-          requires = [ "FILESYSTEMS" "tempfiles" ] ++ deviceDependency i.name;
-          binDeps = with pkgs; [
+          rcorderSettings = {
+            BEFORE = [ "network_defaults" "NETWORKING" ];
+            REQUIRE = [ "FILESYSTEMS" ] ++ deviceDependency i.name;
+          };
+          path = with pkgs; [
             freebsd.route
             freebsd.ifconfig
-            freebsd.bin
-            coreutils
           ];
-          commands.start = ''
+          hooks.start_cmd = ''
             startmsg -n "Setting addresses for ${i.name}"
 
             state="/run/nixos/network/addresses/${i.name}"
@@ -691,7 +684,6 @@ in {
           '';
         };
     in {
-      inherit hostname;
       network_defaults = networkDefaults;
     } // listToAttrs (map configureAddrs interfaces);
 

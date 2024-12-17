@@ -63,7 +63,7 @@ in [
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
   ./system/activation/top-level.nix
-  ./system/boot/init/rc.nix
+  ./system/boot/init/portable
   ./system/boot/kernel.nix
   ./system/boot/initmd.nix
   ./system/boot/linux.nix

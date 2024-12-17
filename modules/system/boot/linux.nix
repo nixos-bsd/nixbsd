@@ -52,14 +52,11 @@ in {
     nix.settings.extra-platforms = [ system.compatSystem ]
       ++ lib.optional cfg.enable32Bit system.compatSystem32;
 
-    rc.services.linux = {
+    freebsd.rc.services.linux = {
       description = "Linux user-mode emulation";
-      provides = "linux";
-      requires = [ ];
-      keywordNojail = true;
-      binDeps = with pkgs.freebsd; [ kldload kldstat sysctl mount ];
-      commands.stop = ":";
-      commands.start = optionalString pkgs.hostPlatform.is64bit ''
+      path = with pkgs.freebsd; [ kldload kldstat sysctl mount ];
+      hooks.stop = ":";
+      hooks.start_cmd = optionalString pkgs.hostPlatform.is64bit ''
         load_kld -e linux64elf linux64
       '' + optionalString (cfg.enable32Bit || pkgs.hostPlatform.is32bit) ''
         load_kld -e linuxelf linux
@@ -103,7 +100,6 @@ in {
         }
       '';
 
-      # TODO: figure out LOCALE_ARCHIVE
     };
   };
 }

@@ -201,22 +201,19 @@ in {
   ###### implementation
 
   config = mkIf enableDHCP {
-    rc.services.dhcpcd = {
-      provides = [ "dhcpcd" "dhclient" ];
-      requires = [ "FILESYSTEMS" ];
-      before = [ "NETWORKING" ];
+    init.services.dhcpcd = {
       description = "DHCP Client";
-      #hasPidfile = true;
-      keywordNojailvnet = true;
-      binDeps = with pkgs; [
+      dependencies = [ "FILESYSTEMS" "network_defaults" ];
+      before = [ "NETWORKING" ];
+
+      path = [
         config.networking.resolvconf.package
-        coreutils
-        dhcpcd
-        freebsd.bin
-        freebsd.limits
+        pkgs.dhcpcd
       ];
-      command = "${pkgs.dhcpcd}/sbin/dhcpcd";
-      commandArgs = [ "--quiet" "--config" (toString dhcpcdConf) ]
+
+      startType = "forking";
+      pidFile = "/var/run/dhcpcd/pid";
+      startCommand = [ "${pkgs.dhcpcd}/sbin/dhcpcd" "--quiet" "--config" (toString dhcpcdConf) ]
         ++ optional cfg.persistent "--persistent";
     };
 

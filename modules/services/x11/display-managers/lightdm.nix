@@ -6,7 +6,7 @@ let
 
   xcfg = config.services.xserver;
   dmcfg = xcfg.displayManager;
-  xEnv = config.rc.services.display-manager.environment;
+  xEnv = config.init.services.display-manager.environment;
   cfg = dmcfg.lightdm;
   sessionData = dmcfg.sessionData;
 
@@ -216,7 +216,7 @@ in
     #  "accounts-daemon"
     #];
 
-    services.xserver.displayManager.job.execProg = "${lightdm}/sbin/lightdm";
+    services.xserver.displayManager.job.execCmd = [ "${lightdm}/sbin/lightdm" ];
 
     # lightdm stops plymouth so when it fails make sure plymouth stops.
     #systemd.services.display-manager.onFailure = [
