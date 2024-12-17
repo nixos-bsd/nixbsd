@@ -28,6 +28,7 @@ assert (lib.assertOneOf "partitionTableType" partitionTableType [
   "legacy+gpt"
   "efi"
   "hybrid"
+  "bsd"
 ]);
 with lib;
 
@@ -71,6 +72,7 @@ in let
           "ufs" = "freebsd-ufs";
           "zfs" = "freebsd-zfs";
           "swap" = "freebsd-swap";
+          "bsd" = "openbsd-data";
         };
         in "-p ${aliasMap.${part.filesystem}}/${part.label}:=${part.filepath}"
         ) partitionsFixed;
@@ -80,6 +82,19 @@ in let
     '';
     hybrid = ''
       echo Unsupported >&2 && false
+    '';
+    bsd = let
+      partitionFlags = lib.concatMapStringsSep " " (part:
+        let aliasMap = {
+          "ufs" = "freebsd-ufs";
+        };
+        filename = if part ? filename then "${part}/${part.filename}" else "${part}";
+        in "-p ${aliasMap.${part.filesystem or part.partitionTableType}}:=${filename}"
+        ) partitions;
+      sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
+      # XXX -r 34 is an extremely load-bearing magic number
+      in ''
+      mkimg -y -o $out/${filename} -s bsd -r 34 -S 512 -H 255 -T 63 -f ${format} ${partitionFlags} ${sizeFlags}
     '';
   }.${partitionTableType};
 
