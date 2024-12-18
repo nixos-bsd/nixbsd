@@ -31,35 +31,15 @@ in {
           Maximum number of configurations in the boot menu.
         '';
       };
-
-      populateCmd = mkOption {
-        type = types.str;
-        readOnly = true;
-        description = ''
-          Contains the builder command used to populate an image,
-          honoring all options except the `-c <path-to-default-configuration>`
-          argument.
-          Useful to have for sdImage.populateRootCommands
-        '';
-      };
-
-      espDerivation = mkOption {
-        type = types.pathInStore;
-        readOnly = true;
-        description = ''
-          The contents of the EFI System Partition.
-        '';
-      };
     };
   };
 
   config = mkIf cfg.enable {
     system.build.installBootLoader = "${builder} ${builderArgs}";
-    system.boot.loader.id = "stand";
-    boot.loader.stand-freebsd.populateCmd = "${populateBuilder} ${builderArgs}";
-    boot.loader.stand-freebsd.espDerivation = pkgs.runCommand "espDerivation" {} ''
+    system.boot.loader.id = "stand-freebsd";
+    boot.loader.espContents = pkgs.runCommand "espDerivation" {} ''
       mkdir -p $out
-      ${config.boot.loader.stand-freebsd.populateCmd} ${config.system.build.toplevel} -d $out -g 0
+      ${populateBuilder} ${builderArgs} ${config.system.build.toplevel} -d $out -g 0
     '';
 
     boot.kernelEnvironment = mkIf (config.fileSystems ? "/")

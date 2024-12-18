@@ -10,6 +10,8 @@ with lib;
 
 let
 
+  makedev-mtree = pkgs.openbsd.callPackage ../../lib/openbsd-makedev-mtree.nix { };
+
   qemu-common = import ../../lib/qemu-common.nix { inherit lib pkgs; };
 
   cfg = config.virtualisation;
@@ -74,7 +76,7 @@ let
   drivesCmdLine = drives:
     concatStringsSep "\\\n    " (imap1 driveCmdline drives);
 
-  espDerivation = hostPkgs.runCommand "ESP" {} ''
+  espContents = hostPkgs.runCommand "ESP" {} ''
     mkdir -p $out
     ${config.boot.loader.stand-freebsd.populateCmd} ${config.system.build.toplevel} -d $out -g 0
   '';
@@ -217,36 +219,71 @@ let
   # the /dev/fstype/id scheme.
   rootDriveSerialAttr = "root";
 
+  efiPartition = pkgs.callPackage ../../lib/make-partition-image.nix {
+    inherit pkgs lib;
+    label = espFilesystemLabel;
+    filesystem = "efi";
+    contents = [{
+      target = "/";
+      source = if config.boot.loader.espContents == null then throw "The bootloader configuration did not provide an EFI sys
+tem partition but the drive layout is asking for it!" else config.boot.loader.espContents;
+    }];
+    totalSize = "64m";
+  };
+
+  freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
+    filesystem = "ufs";
+    totalSize = "10g";
+  });
+
+  openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
+    filesystem = "ufs";
+    totalSize = "2g";
+    contents = commonRoot.contents ++ [{
+      target = "/dev/MAKEDEV";
+      source = getExe pkgs.openbsd.makedev;
+    }];
+    extraMtree = "${makedev-mtree}/mtree";
+    extraMtreeContents = "${makedev-mtree}/dev";
+    extraMtreeContentsDest = "/";
+  });
+
+  commonRoot = {
+    inherit pkgs lib;
+    label = rootFilesystemLabel;
+    makeRootDirs = true;
+    contents = [{
+      target = "/etc/reginfo";
+      source = "${regInfo}/registration";
+    }] ++ lib.optionals (config.boot.loader.bootContents != null) [{
+      target = "/boot";
+      source = config.boot.loader.bootContents;
+    }];
+    nixStorePath = "/nix/store";
+    nixStoreClosure = config.virtualisation.additionalPaths;
+  };
+
+  openbsdDataPartition = pkgs.callPackage ../../lib/make-disk-image.nix {
+    inherit pkgs lib;
+    partitions = [
+      openbsdRootPartition
+    ];
+    format = "raw";
+    partitionTableType = "bsd";
+  };
+
+  dataPartition = {
+    freebsd = freebsdRootPartition;
+    openbsd = openbsdDataPartition;
+  }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+
   # System image is akin to a complete NixOS install with
   # a boot partition and root partition.
   systemImage = pkgs.callPackage ../../lib/make-disk-image.nix {
     inherit pkgs lib;
-    partitions = lib.optionals (!cfg.netMountBoot) [
-      (pkgs.callPackage ../../lib/make-partition-image.nix {
-        inherit pkgs lib;
-        label = espFilesystemLabel;
-        filesystem = "efi";
-        contents = [{
-          target = "/";
-          source = config.boot.loader.stand-freebsd.espDerivation;
-        }];
-        totalSize = "64m";
-      })
-    ] ++ [
-      (pkgs.callPackage ../../lib/make-partition-image.nix {
-        inherit pkgs lib;
-        label = rootFilesystemLabel;
-        filesystem = "ufs";
-        totalSize = "3g";
-        makeRootDirs = true;
-        contents = [{
-          target = "/etc/reginfo";
-          source = "${regInfo}/registration";
-        }];
-        nixStorePath = "/nix/store";
-        nixStoreClosure = lib.optionals (!cfg.netMountNixStore) config.virtualisation.additionalPaths;
-      })
-    ];
+    partitions = [
+      dataPartition
+    ] ++ lib.optional (!cfg.netMountBoot) efiPartition;
     format = "qcow2";
     partitionTableType = "efi";
   };
@@ -943,7 +980,7 @@ in {
     }
     (lib.mkIf cfg.netMountBoot {  # MODULE 2 - net-mounted /boot
       virtualisation.sharedDirectories.boot = {
-        source = espDerivation;
+        source = espContents;
         target = "/boot";
         type = "fat";
         readOnly = true;
