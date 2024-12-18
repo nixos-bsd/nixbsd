@@ -1,8 +1,14 @@
 nixpkgsPath: hostPlatform:
 
-if hostPlatform.isFreeBSD then [
-  ./system/boot/loader/stand-freebsd
-  ./system/boot/init/portable/freebsd.nix
-  ./system/boot/init/freebsd-rc.nix
-] else
+if hostPlatform.isFreeBSD then
+  [
+    ./system/boot/init/freebsd-rc.nix
+    ./system/boot/init/portable/freebsd.nix
+    ./system/boot/loader/stand-freebsd
+  ]
+else if hostPlatform.isOpenBSD then
+  [
+    ./system/boot/loader/stand-openbsd
+  ]
+else
   throw "Unsupported target platform ${hostPlatform.system}"
