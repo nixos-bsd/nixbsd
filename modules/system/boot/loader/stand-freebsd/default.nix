@@ -1,7 +1,7 @@
 { config, lib, pkgs, ... }:
 with lib;
 let
-  cfg = config.boot.loader.stand;
+  cfg = config.boot.loader.stand-freebsd;
   initmd = if config.boot.initmd.enable then config.boot.initmd.image else null;
   builder = import ./stand-conf-builder.nix {
     inherit pkgs initmd;
@@ -18,7 +18,7 @@ let
     "-g ${builtins.toString cfg.configurationLimit} -t ${timeoutStr} -c";
 in {
   options = {
-    boot.loader.stand = {
+    boot.loader.stand-freebsd = {
       enable = mkEnableOption (''
         Use the FreeBSD boot loader.
       '');
@@ -56,10 +56,10 @@ in {
   config = mkIf cfg.enable {
     system.build.installBootLoader = "${builder} ${builderArgs}";
     system.boot.loader.id = "stand";
-    boot.loader.stand.populateCmd = "${populateBuilder} ${builderArgs}";
-    boot.loader.stand.espDerivation = pkgs.runCommand "espDerivation" {} ''
+    boot.loader.stand-freebsd.populateCmd = "${populateBuilder} ${builderArgs}";
+    boot.loader.stand-freebsd.espDerivation = pkgs.runCommand "espDerivation" {} ''
       mkdir -p $out
-      ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel} -d $out -g 0
+      ${config.boot.loader.stand-freebsd.populateCmd} ${config.system.build.toplevel} -d $out -g 0
     '';
 
     boot.kernelEnvironment = mkIf (config.fileSystems ? "/")

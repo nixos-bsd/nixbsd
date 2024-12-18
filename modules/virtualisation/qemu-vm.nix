@@ -76,7 +76,7 @@ let
 
   espDerivation = hostPkgs.runCommand "ESP" {} ''
     mkdir -p $out
-    ${config.boot.loader.stand.populateCmd} ${config.system.build.toplevel} -d $out -g 0
+    ${config.boot.loader.stand-freebsd.populateCmd} ${config.system.build.toplevel} -d $out -g 0
   '';
 
   # Shell script to start the VM.
@@ -228,7 +228,7 @@ let
         filesystem = "efi";
         contents = [{
           target = "/";
-          source = config.boot.loader.stand.espDerivation;
+          source = config.boot.loader.stand-freebsd.espDerivation;
         }];
         totalSize = "64m";
       })
