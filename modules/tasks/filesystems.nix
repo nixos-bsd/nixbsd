@@ -231,7 +231,10 @@ in {
     };
 
     boot.devShmSize = mkOption {
-      default = "50%";
+      default = {
+        freebsd = "50%";
+        openbsd = "512m";
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       example = "256m";
       type = types.str;
       description = ''
@@ -241,7 +244,10 @@ in {
     };
 
     boot.runSize = mkOption {
-      default = "25%";
+      default = {
+        freebsd = "25%";
+        openbsd = "256m";
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       example = "256m";
       type = types.str;
       description = ''
@@ -280,10 +286,15 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = [ pkgs.freebsd.mount_msdosfs ];
+    system.fsPackages = {
+      freebsd = [ pkgs.freebsd.mount_msdosfs ];
+      openbsd = [ pkgs.openbsd.mount_ffs ];
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
-    environment.systemPackages = with pkgs;
-      [ freebsd.mount ] ++ config.system.fsPackages;
+    environment.systemPackages = config.system.fsPackages ++ {
+      freebsd = [ pkgs.freebsd.mount ];
+      openbsd = [ pkgs.openbsd.mount ];
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.etc.fstab.text =
       let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
@@ -307,7 +318,10 @@ in {
     boot.specialFileSystems = {
       "/run" = {
         fsType = "tmpfs";
-        options = [ "nosuid" "mode=755" "size=${config.boot.runSize}" ];
+        options = [ "nosuid" ] ++ {
+          freebsd = [ "mode=0755" "size=${config.boot.runSize}" ];
+          openbsd = [ "-m0755" "-s${config.boot.runSize}" ];
+        }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       };
     } // (optionalAttrs (config.boot.mountProcfs) {
       "/proc" = {
