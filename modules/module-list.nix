@@ -58,12 +58,13 @@ in [
   ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/system/nix-daemon.nix
-  ./services/ttys/getty.nix
+  # ./services/ttys/getty.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
   ./system/activation/top-level.nix
   ./system/boot/init/portable
+  ./system/boot/init/freebsd-rc.nix
   ./system/boot/kernel.nix
   ./system/boot/initmd.nix
   ./system/boot/linux.nix

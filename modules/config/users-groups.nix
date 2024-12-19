@@ -829,7 +829,7 @@ in {
           set users.users.${user.name}.ignoreShellProgramCheck = true;
           instead.
         '';
-      }) [ "fish" "xonsh" "zsh" ])));
+      }) [ "zsh" ])));
 
     warnings = builtins.filter (x: x != null) (flip mapAttrsToList cfg.users
       (_: user:

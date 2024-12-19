@@ -90,15 +90,21 @@ let
     '';
 
   path = with pkgs;
-    map getBin [
+    map getBin ([
       coreutils
       findutils
-      freebsd.mount
-      freebsd.nscd
-      freebsd.pwd_mkdb
       getent
       gnugrep
-    ];
+    ] ++ {
+      freebsd = [
+        freebsd.mount
+        freebsd.nscd
+        freebsd.pwd_mkdb
+      ];
+      openbsd = [
+        openbsd.mount
+      ];
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
   scriptType = withDry:
     with types;

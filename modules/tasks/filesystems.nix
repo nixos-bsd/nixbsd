@@ -337,7 +337,10 @@ in {
         BEFORE = [ "FILESYSTEMS" ];
         KEYWORD = [ "shutdown" "nojail" ];
       };
-      path = with pkgs; [ freebsd.mount findutils gnugrep ] ++ config.system.fsPackages;
+      path = with pkgs; [ findutils gnugrep ] ++ config.system.fsPackages ++ {
+        freebsd = [ freebsd.mount ];
+        openbsd = [ openbsd.mount ];
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       bsdUtils = true;
 
       hooks = {

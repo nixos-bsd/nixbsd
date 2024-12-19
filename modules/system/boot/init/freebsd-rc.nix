@@ -282,8 +282,6 @@ in
                 type = types.submodule {
                   freeformType = types.attrsOf maybeList;
                   config = {
-                    name = mkOptionDefault config.name;
-                    rcvar = mkOptionDefault "${config.name}_enable";
                   };
                 };
               };
@@ -360,21 +358,5 @@ in
         )
       );
     };
-  };
-
-  config = {
-    freebsd.rc.conf = listToAttrs (
-      map (service: nameValuePair service.shellVariables.rcvar true) (
-        filter (service: !service.dummy) (attrValues cfg.services)
-      )
-    );
-
-    environment.etc."rc" = {
-      source = "${cfg.package}/etc/*";
-      target = ".";
-    };
-
-    environment.etc."rc.conf".text = formatRcConf cfg.conf;
-    environment.etc."rc.d".source = makeRcDir cfg.services;
   };
 }

@@ -7,7 +7,7 @@
         "rev": "0f9255e01c2351cc7d116c072cb317785dd33b33",
         "revCount": 57,
         "type": "tarball",
-        "url": "https://api.flakehub.com/f/pinned/edolstra/flake-compat/1.0.1/018afb31-abd1-7bff-a5e4-cff7e18efb7a/source.tar.gz"
+        "url": "https://api.flakehub.com/f/pinned/edolstra/flake-compat/1.0.1/018afb31-abd1-7bff-a5e4-cff7e18efb7a/source.tar.gz?rev=0f9255e01c2351cc7d116c072cb317785dd33b33&revCount=57"
       },
       "original": {
         "type": "tarball",
@@ -95,11 +95,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1733964277,
-        "narHash": "sha256-uE/P5V0btO1y2Hby1EI61jBRjtKE0yJL9oWi+XagY28=",
+        "lastModified": 1734644282,
+        "narHash": "sha256-oWWTqwpmIUCjwIf3MiWJjZd8SdP/0qz9j3D8eZyNhV4=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "c03176b3a87b2a22554bda134debf0456588da60",
+        "rev": "fb510eed12fe1dd3834ae2b71fc47b2cb6d74d70",
         "type": "github"
       },
       "original": {
