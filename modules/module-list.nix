@@ -45,7 +45,6 @@ in [
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
-  ./programs/shutdown.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
   ./security/pam.nix
