@@ -32,7 +32,6 @@ in [
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc.nix"
-  ./config/i18n.nix
   ./config/resolvconf.nix
   ./config/swap.nix
   ./config/sysctl.nix
@@ -46,7 +45,6 @@ in [
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
-  ./programs/services-mkdb.nix
   ./programs/shutdown.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix

@@ -2,6 +2,8 @@ nixpkgsPath: hostPlatform:
 
 if hostPlatform.isFreeBSD then
   [
+    ./config/i18n-freebsd.nix
+    ./progarms/services-mkdb.nix
     ./system/boot/init/portable/freebsd.nix
     ./system/boot/loader/stand-freebsd
   ]
