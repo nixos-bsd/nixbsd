@@ -36,7 +36,6 @@ in [
   ./config/swap.nix
   ./config/sysctl.nix
   ./config/system-path.nix
-  ./config/user-class.nix
   ./config/users-groups.nix
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
