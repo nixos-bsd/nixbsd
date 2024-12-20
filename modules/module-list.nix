@@ -44,13 +44,13 @@ in [
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
-  ./programs/ssh.nix
+  # ./programs/ssh.nix
   ./programs/wayland/sway.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
   ./services/networking/dhcpcd.nix
-  ./services/networking/ssh/sshd.nix
+  # ./services/networking/ssh/sshd.nix
   ./services/newsyslog.nix
   ./services/syslogd.nix
   ./services/system/nix-daemon.nix
