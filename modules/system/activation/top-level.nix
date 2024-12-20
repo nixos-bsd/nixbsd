@@ -8,7 +8,7 @@ let
 
     ln -s ${config.system.build.etc}/etc $out/etc
     ln -s ${config.system.path} $out/sw
-    ln -s ${config.system.init}/bin/init $out/init
+    ln -s ${lib.getExe config.system.init} $out/init
 
     echo -n "${pkgs.stdenv.hostPlatform.system}" > $out/system
 
@@ -127,7 +127,10 @@ in {
 
     system.init = mkOption {
       type = types.package;
-      default = pkgs.pkgsStatic.freebsd.init;
+      default = {
+        freebsd = pkgs.pkgsStatic.freebsd.init;
+        openbsd = pkgs.pkgsStatic.openbsd.init;
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       description = ''
         Package that contains the `init` executable. This is a binary that runs rc, not rc itself.
       '';
