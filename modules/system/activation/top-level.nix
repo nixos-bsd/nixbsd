@@ -30,7 +30,7 @@ let
   # kernel, systemd units, init scripts, etc.) as well as a script
   # `switch-to-configuration' that activates the configuration and
   # makes it bootable. See `activatable-system.nix`.
-  baseSystem = pkgs.stdenvNoCC.mkDerivation ({
+  baseSystem = (if pkgs.stdenv.hostPlatform.isOpenBSD then pkgs.stdenv else pkgs.stdenvNoCC).mkDerivation ({
     name = "nixos-system-${config.system.name}";
     preferLocalBuild = true;
     allowSubstitutes = false;
