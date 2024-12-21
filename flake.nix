@@ -49,7 +49,7 @@
           vmClosureInfo = extended.pkgs.closureInfo {
             rootPaths = [ extended.config.system.build.vm.drvPath ];
           };
-          inherit (extended) pkgs;
+          inherit (extended) pkgs config;
         };
     in {
       lib.nixbsdSystem = args:
