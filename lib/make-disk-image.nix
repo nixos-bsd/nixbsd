@@ -55,7 +55,7 @@ in let
   fixPartition = i: part: part // { filepath = if part.tooLargeIntermediate or false then "$TMP/latebuild/${builtins.toString i}" else part; };
   partitionsFixed = lib.imap1 fixPartition partitions;
 
-  lateBuildNativeInputs = lib.flatten (builtins.map (part: if part.tooLargeIntermediate then part.nativeBuildInputs else []) partitions);
+  lateBuildNativeInputs = lib.flatten (builtins.map (part: if part.tooLargeIntermediate or false then part.nativeBuildInputs else []) partitions);
 
   partitionDiskScript = { # switch-case
     legacy = ''
@@ -74,7 +74,8 @@ in let
           "swap" = "freebsd-swap";
           "bsd" = "openbsd-data";
         };
-        in "-p ${aliasMap.${part.filesystem}}/${part.label}:=${part.filepath}"
+        filename = if part ? filename then "${part}/${part.filename}" else "${part}";
+        in "-p ${aliasMap.${part.filesystem or part.partitionTableType}}/${part.label}:=${filename}"
         ) partitionsFixed;
       sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
       in ''
@@ -102,7 +103,8 @@ in let
 in pkgs.runCommand name {
     nativeBuildInputs = [ pkgs.freebsd.mkimg ] ++ lateBuildNativeInputs;
     passthru = {
-      inherit filename partitions;
+      inherit filename partitions partitionTableType;
+      label = name;
     };
   } ''
   mkdir $out
