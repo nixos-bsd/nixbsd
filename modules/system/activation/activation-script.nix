@@ -4,6 +4,22 @@
 with lib;
 
 let
+  tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
+    mkdir -p $out/bin
+    $CC -x c - -o $out/bin/tosyslog <<EOF
+    #include <stdio.h>
+    #include <syslog.h>
+
+    int main(int argc, char **argv) {
+        openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), stdin)) {
+            syslog(LOG_ALERT, "%s", buffer);
+        }
+        return 0;
+    }
+    EOF
+  '');
 
   addAttributeName = mapAttrs (a: v:
     v // {
@@ -49,6 +65,11 @@ let
       for i in ${toString path}; do
           PATH=$PATH:$i/bin:$i/sbin
       done
+
+      '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
+        exec <>/dev/console 1>&0 2>&0
+      '' +
+      ''
 
       _status=0
       trap "_status=1 _localstatus=\$?" ERR
@@ -103,6 +124,10 @@ let
       ];
       openbsd = [
         openbsd.mount
+        openbsd.mount_ffs
+        openbsd.mount_tmpfs
+        bash
+        tosyslog
       ];
     }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
