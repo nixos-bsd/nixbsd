@@ -90,7 +90,12 @@ let
         mkdir -m 0755 -p "$DST"
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      mount -u -w /
+      '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
+        # TODO: Support other root paths
+        mount -u -w /dev/sd0a /
+      '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        mount -u -w /
+      '' + ''
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
