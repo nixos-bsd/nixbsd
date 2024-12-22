@@ -3,7 +3,7 @@ with lib;
 let
   cfg = config.services.getty;
   gettyTab = "${cfg.package}/etc/gettytab";
-  gettyBin = "${cfg.package}/bin/getty";
+  gettyBin = lib.getExe cfg.package;
 in {
   options.services.getty = {
     enabled = (mkEnableOption "getty") // { default = true; };
@@ -52,7 +52,7 @@ in {
       # class.
       #
       default:\
-              :path=/usr/bin /bin /usr/sbin /sbin /usr/X11R6/bin /usr/local/bin /usr/local/sbin:\
+              :path=/run/current-system/sw/bin:\
               :umask=022:\
               :datasize-max=1536M:\
               :datasize-cur=1536M:\

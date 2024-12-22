@@ -3,6 +3,11 @@ with lib;
 let
   cfg = config.users.classes;
 
+  cap_mkdb = {
+    freebsd = lib.getExe pkgs.freebsd.cap_mkdb;
+    openbsd = lib.getExe pkgs.openbsd.cap_mkdb;
+  }.${pkgs.stdenv.hostPlatform.system.parsed.kernel.name};
+
   time = types.strMatching "inf(inity)?|unlimit(ed)?|([0-9]+[ywdhms])+";
   size = types.strMatching "inf(inity)?|unlimit(ed)?|([0-9]+[bBkKmMgGtT])+";
   number = types.either types.ints.positive
@@ -307,7 +312,7 @@ in {
     system.activationScripts.cap_mkdb = {
       deps = [ "etc" ];
       text = ''
-        ${pkgs.freebsd.cap_mkdb}/bin/cap_mkdb /etc/login.conf
+        ${cap_mkdb} /etc/login.conf
       '';
     };
   };
