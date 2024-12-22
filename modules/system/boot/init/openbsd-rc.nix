@@ -6,20 +6,23 @@
 }:
 with lib;
 let
+  variableName = types.strMatching "[a-zA-Z_][a-zA-Z0-9_]*";
+  formatScriptLiteral = val: if builtins.isList val then escapeShellArgs val else escapeShellArg val;
+  notNull = filterAttrs (_: value: value != null);
   cfg = config.openbsd.rc;
 
   makeRcOrder = services: let
     dummyServiceNames = [
-      [ "hostname" "fsck" "swap" "basic-mount" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
+      [ "FILESYSTEMS" "hostname" "fsck" "swap" "mount-basic" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
       [ "ifconfig" "netstart" ]
-      [ "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
-      [ "ipsec" ]
-      [ "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
-      [ "firsttime" ]
+      [ "NETWORKING" "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
+      [ "SERVERS" "ipsec" ]
+      [ "DAEMON" "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
+      [ "LOGIN" "firsttime" ]
       [ "carpdemote" "mixerctl-conf" ]
     ];
     dummyServices = mergeAttrsList (imap0 (i: svclist: let prio = i * 10 + 5; in { inherit prio; name = "__dummy_${builtins.toString prio}"; aliases = svclist; DUMMY = true; before = []; after = []; }) dummyServiceNames);
-    servicesLst = dummyServices ++ mapAttrsToList (name: opts: opts // { inherit name; aliases = []; }) services;
+    servicesLst = dummyServices ++ mapAttrsToList (name: opts: opts // { aliases = []; }) services;
     sorter = a: b: let
       bAfterA = builtins.elem b.name a.after || any (alias: builtins.elem alias a.after) b.aliases;
       aBeforeB = builtins.elem a.name b.before || any (alias: builtins.elem alias b.before) a.aliases;
@@ -30,7 +33,7 @@ let
     initialState = { current = 0; phases = {}; };
     folder = state: svc: if svc.DUMMY or false then { inherit (state) phases; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ svc; }; };
     phases = (foldl folder initialState sorted).phases;
-  in pkgs.runCommand "rc.daemon" { } (
+  in pkgs.runCommand "rc.order" { } (
     ''
       mkdir -p $out
     '' + concatStrings (
@@ -71,7 +74,7 @@ let
     makeRcScript = opts:
     let
       defaultPath = [ pkgs.coreutils ];
-      fullPath = opts.path + defaultPath;
+      fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
     in pkgs.writeTextFile {
       inherit (opts) name;
@@ -204,63 +207,67 @@ in {
                 default = { };
                 type = types.submodule {
                   freeformType = types.attrsOf maybeList;
-                };
-
-                options = {
-                  daemon_execdir = mkOption {
-                    default = "/";
-                    type = types.str;
-                    description = "Directory to use as cwd during service execution.";
-                  };
-                  daemon_flags = mkOption {
-                    default = "";
-                    type = types.str;
-                    description = "Command line flags to use for launching the service.";
-                  };
-                  daemon_logger = mkOption {
-                    default = "";
-                    type = types.str;
-                    description = "Redirect standard output and error to logger(1) using the configured priority (e.g. \"daemon.info\").";
-                  };
-                  daemon_rtable = mkOption {
-                    default = "0";
-                    type = types.str;
-                    description = "Routing table to run the service under, using route(8).";
-                  };
-                  daemon_timeout = mkOption {
-                    default = "30";
-                    type = types.str;
-                    description = "Maximum time in seconds to wait for the start, stop and reload actions to return.";
-                  };
-                  daemon_user = mkOption {
-                    default = "root";
-                    type = types.str;
-                    description = "User to run the daemon as, using su(1).";
-                  };
-                  pexp = mkOption {
-                    default = null;
-                    type = types.nullOr types.str;
-                    description = "A regular expression to be passed to pgrep(1) in order to find the desired process or to be passed to pkill(1) to stop it.";
-                  };
-                  rc_reload = mkOption {
-                    default = "YES";
-                    type = types.str;
-                    description = "Can be set to “NO” in an rc.d script to disable the reload action if the respective daemon does not support reloading its configuration.";
-                  };
-                  rc_reload_signal = mkOption {
-                    default = "HUP";
-                    type = types.str;
-                    description = "Signal sent to the daemon process (pexp) by the default rc_reload() function.";
-                  };
-                  rc_stop_signal = mkOption {
-                    default = "HUP";
-                    type = types.str;
-                    description = "Signal sent to the daemon process (pexp) by the default rc_stop() function.";
-                  };
-                  rc_usercheck = mkOption {
-                    default = "YES";
-                    type = types.str;
-                    description = "Can be set to “NO” in an rc.d script, if the check action needs root privileges.";
+                  options = {
+                    daemon_execdir = mkOption {
+                      default = "/";
+                      type = types.nullOr types.str;
+                      description = "Directory to use as cwd during service execution.";
+                    };
+                    daemon_flags = mkOption {
+                      default = "";
+                      type = types.oneOf [ types.str (types.listOf types.str) ];
+                      description = "Command line flags to use for launching the service.";
+                    };
+                    daemon_logger = mkOption {
+                      default = "";
+                      type = types.str;
+                      description = "Redirect standard output and error to logger(1) using the configured priority (e.g. \"daemon.info\").";
+                    };
+                    daemon_rtable = mkOption {
+                      default = "0";
+                      type = types.str;
+                      description = "Routing table to run the service under, using route(8).";
+                    };
+                    daemon_timeout = mkOption {
+                      default = "30";
+                      type = types.str;
+                      description = "Maximum time in seconds to wait for the start, stop and reload actions to return.";
+                    };
+                    daemon_user = mkOption {
+                      default = "root";
+                      type = types.str;
+                      description = "User to run the daemon as, using su(1).";
+                    };
+                    pexp = mkOption {
+                      default = null;
+                      type = types.nullOr types.str;
+                      description = "A regular expression to be passed to pgrep(1) in order to find the desired process or to be passed to pkill(1) to stop it.";
+                    };
+                    rc_bg = mkOption {
+                      default = false;
+                      type = types.bool;
+                      description = "Can be set to YES in an rc.d script to force starting the daemon in background when using the default rc_start.";
+                    };
+                    rc_reload = mkOption {
+                      default = true;
+                      type = types.bool;
+                      description = "Can be set to “NO” in an rc.d script to disable the reload action if the respective daemon does not support reloading its configuration.";
+                    };
+                    rc_reload_signal = mkOption {
+                      default = "HUP";
+                      type = types.str;
+                      description = "Signal sent to the daemon process (pexp) by the default rc_reload() function.";
+                    };
+                    rc_stop_signal = mkOption {
+                      default = "HUP";
+                      type = types.str;
+                      description = "Signal sent to the daemon process (pexp) by the default rc_stop() function.";
+                    };
+                    rc_usercheck = mkOption {
+                      default = true;
+                      type = types.bool;
+                      description = "Can be set to “NO” in an rc.d script, if the check action needs root privileges.";
+                    };
                   };
                 };
               };
@@ -343,20 +350,46 @@ in {
               {
                 name = mkOptionDefault (builtins.replaceStrings [ "-" ] [ "_" ] name);
               }
-              {
-                shellVariables = mapAttrs' (
-                  var: value: nameValuePair "${config.name}_${var}" value
-                ) config.namedShellVariables;
-              }
-              {
-                shellVariables = mapAttrs' (var: _: nameValuePair var "${config.name}_${var}") (
-                  notNull config.hooks
-                );
-              }
             ];
           }
         )
       );
+    };
+
+    conf = mkOption {
+      default = { };
+      description = "Option set set in /etc/rc.conf";
+      type = types.submodule {
+        freeformType =
+          with types;
+          attrsOf (
+            nullOr (oneOf [
+              str
+              bool
+            ])
+          );
+        options = {
+          root_rw_mount = mkOption {
+            default = true;
+            type = types.bool;
+            description = "Whether to mount the root filesystem read/write.";
+          };
+
+          rc_info = mkOption {
+            default = false;
+            type = types.bool;
+            description = "Whether to display informational messages at boot.";
+          };
+
+          rc_startmsgs = mkOption {
+            default = true;
+            type = types.bool;
+            description = ''
+              Whether to show "Starting service:" messages at boot.
+            '';
+          };
+        };
+      };
     };
 
   };

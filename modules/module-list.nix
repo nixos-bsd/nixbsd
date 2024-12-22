@@ -61,6 +61,7 @@ in [
   ./system/activation/top-level.nix
   ./system/boot/init/portable
   ./system/boot/init/freebsd-rc.nix
+  ./system/boot/init/openbsd-rc.nix
   ./system/boot/kernel.nix
   ./system/boot/initmd.nix
   ./system/boot/linux.nix
