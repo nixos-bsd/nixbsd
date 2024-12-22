@@ -51,8 +51,8 @@ in [
   ./services/base-system.nix
   ./services/networking/dhcpcd.nix
   # ./services/networking/ssh/sshd.nix
-  ./services/newsyslog.nix
-  ./services/syslogd.nix
+  #./services/newsyslog.nix
+  #./services/syslogd.nix
   ./services/system/nix-daemon.nix
   # ./services/ttys/getty.nix
   ./system/activation/activation-script.nix

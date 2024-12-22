@@ -42,7 +42,7 @@ in {
     services.tempfiles = {
       package = mkOption {
         type = types.package;
-        default = pkgs.freebsd.mtree;
+        default = if pkgs.stdenv.hostPlatform.isFreeBSD then pkgs.freebsd.mtree else if pkgs.stdenv.hostPlatform.isOpenBSD then pkgs.openbsd.mtree else (throw "???");
         description = ''
           `mtree` package to use when setting up tempfiles.
         '';

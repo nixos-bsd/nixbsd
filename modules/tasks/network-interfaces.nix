@@ -560,7 +560,7 @@ in {
     environment.etc.hostname =
       mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
 
-    init.services.hostname = {
+    init.services.hostname = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
         before = [ "NETWORKING" ];
         startType = "oneshot";
         startCommand = [ "${pkgs.freebsd.bin}/bin/hostname" cfg.fqdnOrHostName ];
@@ -683,7 +683,7 @@ in {
               '')}
           '';
         };
-    in {
+    in mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
       network_defaults = networkDefaults;
     } // listToAttrs (map configureAddrs interfaces);
 

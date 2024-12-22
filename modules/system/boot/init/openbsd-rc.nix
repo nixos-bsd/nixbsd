@@ -13,32 +13,32 @@ let
 
   makeRcOrder = services: let
     dummyServiceNames = [
-      [ "FILESYSTEMS" "hostname" "fsck" "swap" "mount-basic" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
-      [ "ifconfig" "netstart" ]
-      [ "NETWORKING" "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
-      [ "SERVERS" "ipsec" ]
-      [ "DAEMON" "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
-      [ "LOGIN" "firsttime" ]
-      [ "carpdemote" "mixerctl-conf" ]
+      /* 05 */ [ "FILESYSTEMS" "hostname" "fsck" "swap" "mount-basic" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
+      /* 15 */ [ "ifconfig" "netstart" ]
+      /* 25 */ [ "NETWORKING" "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
+      /* 35 */ [ "SERVERS" "ipsec" ]
+      /* 45 */ [ "DAEMON" "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
+      /* 55 */ [ "LOGIN" "firsttime" ]
+      /* 65 */ [ "carpdemote" "mixerctl-conf" ]
     ];
-    dummyServices = mergeAttrsList (imap0 (i: svclist: let prio = i * 10 + 5; in { inherit prio; name = "__dummy_${builtins.toString prio}"; aliases = svclist; DUMMY = true; before = []; after = []; }) dummyServiceNames);
+    dummyServices = imap0 (i: svclist: let prio = i * 10 + 5; in { inherit prio; name = "__dummy_${builtins.toString prio}"; aliases = svclist; DUMMY = true; before = []; after = []; }) dummyServiceNames;
     servicesLst = dummyServices ++ mapAttrsToList (name: opts: opts // { aliases = []; }) services;
     sorter = a: b: let
-      bAfterA = builtins.elem b.name a.after || any (alias: builtins.elem alias a.after) b.aliases;
-      aBeforeB = builtins.elem a.name b.before || any (alias: builtins.elem alias b.before) a.aliases;
-      dummyBefore = (a.DUMMY or false) && (b.DUMMY or false) -> a.prio < b.prio;
-    in bAfterA || aBeforeB || dummyBefore;
+      aBeforeB = builtins.elem a.name b.after || any (alias: builtins.elem alias b.after) a.aliases;
+      bAfterA = builtins.elem b.name a.before || any (alias: builtins.elem alias a.before) b.aliases;
+      dummyBefore = if (a.DUMMY or false) && (b.DUMMY or false) then a.prio < b.prio else false;
+    in /* builtins.trace "${a.name} -> ${b.name}: ${formatRcConfLiteral aBeforeB} ${formatRcConfLiteral bAfterA} ${formatRcConfLiteral dummyBefore}" */ (bAfterA || aBeforeB || dummyBefore);
     sortedRaw = toposort sorter servicesLst;
-    sorted = sortedRaw.result or (throw "Service dependency loop: cycle = ${builtins.toString sorted.cycle}; loops = ${builtins.toString sorted.loops};");
+    sorted = sortedRaw.result or (throw "Service dependency loop: cycle = ${concatMapStringsSep " " (svc: svc.name) sortedRaw.cycle}; loops = ${concatMapStringsSep " " (svc: svc.name) sortedRaw.loops};");
     initialState = { current = 0; phases = {}; };
-    folder = state: svc: if svc.DUMMY or false then { inherit (state) phases; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ svc; }; };
+    folder = state: svc: if svc.DUMMY or false then { inherit (state) phases; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ [ svc ]; }; };
     phases = (foldl folder initialState sorted).phases;
   in pkgs.runCommand "rc.order" { } (
     ''
       mkdir -p $out
     '' + concatStrings (
       mapAttrsToList (phase: services: let
-        text = concatMapStringsSep "\n" (service: "daemon_start ${service}") (builtins.attrNames services);
+        text = concatMapStringsSep "\n" (service: "daemon_start ${service}") (builtins.map (svc: svc.name) services);
         drv = pkgs.writeTextFile { name = "phase_${phase}"; inherit text; };
       in ''
         ln -s ${drv} $out/${phase}
@@ -403,7 +403,7 @@ in {
       target = ".";
     };
 
-    environment.etc."rc.order".text = makeRcOrder cfg.services;
+    environment.etc."rc.order".source = makeRcOrder cfg.services;
     environment.etc."rc.conf".text = formatRcConf cfg.conf;
     environment.etc."rc.d".source = makeRcDir cfg.services;
   };
