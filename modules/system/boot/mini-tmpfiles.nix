@@ -149,7 +149,7 @@ in
     #  "systemd-tmpfiles-clean.timer"
     #  "systemd-tmpfiles-setup.service"
     #];
-    init.services.mini-tmpfiles = {
+    init.services.mini-tmpfiles = lib.mkIf pkgs.hostPlatform.isFreeBSD {
       dependencies = [ "FILESYSTEMS" ];
       startType = "oneshot";
       startCommand = [ "${pkgs.mini-tmpfiles}/bin/mini-tmpfiles" "--create" ];
