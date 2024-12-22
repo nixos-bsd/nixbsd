@@ -92,6 +92,7 @@ let
       }
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
         # TODO: Support other root paths
+        fsck /dev/sd0a
         mount -u -w /dev/sd0a /
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
         mount -u -w /
@@ -132,6 +133,8 @@ let
         openbsd.mount_ffs
         openbsd.mount_tmpfs
         openbsd.pwd_mkdb
+        openbsd.fsck
+        openbsd.fsck_ffs
         bash
         tosyslog
       ];
