@@ -30,10 +30,6 @@ sub dateToSeconds {
     return $time->epoch;
 }
 
-sub nscdInvalidate {
-    system("nscd", "-I", $_[0]) unless $is_dry;
-}
-
 sub hashPassword {
     my ($password) = @_;
     my $salt = "";
@@ -197,7 +193,6 @@ my @lines = map { join(":", $_->{name}, $_->{password}, $_->{gid}, $_->{members}
     (sort { $a->{gid} <=> $b->{gid} } values(%groupsOut));
 updateFile($gidMapFile, to_json($gidMap, {canonical => 1}));
 updateFile("/etc/group", \@lines);
-nscdInvalidate("group");
 
 # Generate a new /etc/master.passwd containing the declared users and passwords
 my %usersOut;
@@ -298,7 +293,6 @@ foreach my $name (keys %usersCur) {
     (sort { $a->{uid} <=> $b->{uid} } (values %usersOut));
 updateFile($uidMapFile, to_json($uidMap, {canonical => 1}));
 updateFile("/etc/master.passwd", \@lines);
-nscdInvalidate("passwd");
 
 # Regenerate /etc/passwd
 system("pwd_mkdb", "-p", "/etc/master.passwd") unless $is_dry;

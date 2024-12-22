@@ -131,6 +131,7 @@ let
         openbsd.mount
         openbsd.mount_ffs
         openbsd.mount_tmpfs
+        openbsd.pwd_mkdb
         bash
         tosyslog
       ];
