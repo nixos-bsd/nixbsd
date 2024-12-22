@@ -6,8 +6,6 @@
 }:
 with lib;
 let
-  cfg = config.users.classes;
-
   cap_mkdb =
     {
       freebsd = lib.getExe pkgs.freebsd.cap_mkdb;
@@ -45,276 +43,277 @@ let
       };
     });
 
+  # More characters are representable, but
+
+  escapeString =
+    builtins.replaceStrings
+      [ "\\" ":" "^" "\t" "\n" ]
+      [ "\\\\" "\\c" "\\^" "\\t" "\\n" ];
+
+  formatField =
+    name: value:
+    if
+      elem value [
+        null
+        false
+      ]
+    then
+      [ ]
+    else if value == true then
+      [ name ]
+    else if
+      elem (builtins.typeOf value) [
+        "int"
+        "path"
+        "string"
+      ]
+    then
+      [ "${name}=${escapeString (toString value)}" ]
+    else if builtins.typeOf value == "set" && value ? cur && value ? max then
+      [
+        "${name}-cur=${value.cur}"
+        "${name}-max=${value.max}"
+      ]
+    else
+      throw "Invalid value for users.classes.<name>.${name}";
+
+  formatLine =
+    _: cfg:
+    let
+      nameField = (concatStringsSep "|" cfg.names);
+      filtered = removeAttrs cfg.settings [ "_module" ];
+    in
+    concatStringsSep ":" ([ nameField ] ++ concatLists (mapAttrsToList formatField filtered));
+
   classOpts =
     { name, config, ... }:
     {
       options = {
         names = mkOption {
           type = types.listOf types.str;
-          default = [ name ];
           description = ''
             Names of this user class
           '';
         };
-        text = mkOption {
-          type = types.str;
-          internal = true;
-          description = ''
-            Text of the line in login.conf
-          '';
-        };
 
-        # Resource Limits
-        coredumpsize = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum coredump size limit
-          '';
-        };
-        cputime = mkOption {
-          type = limit time;
-          default = "unlimited";
-          description = ''
-            CPU usage limit
-          '';
-        };
-        datasize = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum data size limit
-          '';
-        };
-        filesize = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum file size limit
-          '';
-        };
-        maxproc = mkOption {
-          type = limit number;
-          default = "unlimited";
-          description = ''
-            Maximum number of processes
-          '';
-        };
-        memorylocked = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum locked in core memory size limit
-          '';
-        };
-        memoryuse = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum of core memory use size limit
-          '';
-        };
-        openfiles = mkOption {
-          type = limit number;
-          default = "unlimited";
-          description = ''
-            Maximum number of open files per process
-          '';
-        };
-        sbsize = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum permitted socketbuffer size
-          '';
-        };
-        vmemoryuse = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum permitted total VM usage per process
-          '';
-        };
-        stacksize = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum stack size limit
-          '';
-        };
-        pseudoterminals = mkOption {
-          type = limit number;
-          default = "unlimited";
-          description = ''
-            Maximum number of pseudoterminals
-          '';
-        };
-        swapuse = mkOption {
-          type = limit size;
-          default = "unlimited";
-          description = ''
-            Maximum swap space size limit
-          '';
-        };
-        umtxp = mkOption {
-          type = limit number;
-          default = "unlimited";
-          description = ''
-            Maximum number of process-shared pthread locks
-          '';
-        };
+        settings = types.submodule {
+          freeformType =
+            with types;
+            attrsOf (
+              nullOr (oneOf [
+                int
+                path
+                string
+                bool
+              ])
+            );
+          options = {
+            # Resource Limits
+            coredumpsize = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum coredump size limit
+              '';
+            };
+            cputime = mkOption {
+              type = limit time;
+              default = "unlimited";
+              description = ''
+                CPU usage limit
+              '';
+            };
+            datasize = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum data size limit
+              '';
+            };
+            filesize = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum file size limit
+              '';
+            };
+            maxproc = mkOption {
+              type = limit number;
+              default = "unlimited";
+              description = ''
+                Maximum number of processes
+              '';
+            };
+            memorylocked = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum locked in core memory size limit
+              '';
+            };
+            memoryuse = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum of core memory use size limit
+              '';
+            };
+            openfiles = mkOption {
+              type = limit number;
+              default = "unlimited";
+              description = ''
+                Maximum number of open files per process
+              '';
+            };
+            sbsize = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum permitted socketbuffer size
+              '';
+            };
+            vmemoryuse = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum permitted total VM usage per process
+              '';
+            };
+            stacksize = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum stack size limit
+              '';
+            };
+            pseudoterminals = mkOption {
+              type = limit number;
+              default = "unlimited";
+              description = ''
+                Maximum number of pseudoterminals
+              '';
+            };
+            swapuse = mkOption {
+              type = limit size;
+              default = "unlimited";
+              description = ''
+                Maximum swap space size limit
+              '';
+            };
+            umtxp = mkOption {
+              type = limit number;
+              default = "unlimited";
+              description = ''
+                Maximum number of process-shared pthread locks
+              '';
+            };
 
-        # Environment
-        charset = mkOption {
-          type = types.nullOr types.str;
-          description = ''
-            MIME character set used by applications
-          '';
+            # Environment
+            charset = mkOption {
+              type = types.nullOr types.str;
+              description = ''
+                MIME character set used by applications
+              '';
+            };
+            cpumask = mkOption {
+              type = types.strMatching "default|all|[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*";
+              default = "default";
+              description = ''
+                List of cpus to bind the user to
+              '';
+            };
+            hushlogin = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Disable the login banner
+              '';
+            };
+            ignorenologin = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Login not prevented by nologin
+              '';
+            };
+            ftp-chroot = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Limit FTP access with chroot to the user home directory
+              '';
+            };
+            label = mkOption {
+              # TODO: validate this more, see `man 7 maclabel`
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Default MAC (Manditory Access Control) policy
+              '';
+            };
+            lang = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Language, sets LANG environment variable
+              '';
+            };
+            mail = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Sets MAIL environment variable
+              '';
+            };
+            manpath = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Default search path for manpages
+              '';
+            };
+            nocheckmail = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Don't display mail status at login
+              '';
+            };
+            nologin = mkOption {
+              type = types.nullOr types.path;
+              default = null;
+              description = ''
+                If the file exists it will be displayed and the login session will
+                be terminated
+              '';
+            };
+            path = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                Default search path
+              '';
+            };
+            priority = mkOption {
+              type = types.nullOr (types.ints.between (-20) 20);
+              default = null;
+              description = ''
+                Initial nice level
+              '';
+            };
+            requirehome = mkOption {
+              type = types.bool;
+              default = false;
+              description = ''
+                Require a valid home directory to login
+              '';
+            };
+          };
         };
-        cpumask = mkOption {
-          type = types.strMatching "default|all|[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*";
-          default = "default";
-          description = ''
-            List of cpus to bind the user to
-          '';
-        };
-        hushlogin = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            Disable the login banner
-          '';
-        };
-        ignorenologin = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            Login not prevented by nologin
-          '';
-        };
-        ftp-chroot = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            Limit FTP access with chroot to the user home directory
-          '';
-        };
-        label = mkOption {
-          # TODO: validate this more, see `man 7 maclabel`
-          type = types.nullOr types.str;
-          default = null;
-          description = ''
-            Default MAC (Manditory Access Control) policy
-          '';
-        };
-        lang = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = ''
-            Language, sets LANG environment variable
-          '';
-        };
-        mail = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = ''
-            Sets MAIL environment variable
-          '';
-        };
-        manpath = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = ''
-            Default search path for manpages
-          '';
-        };
-        nocheckmail = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            Don't display mail status at login
-          '';
-        };
-        nologin = mkOption {
-          type = types.nullOr types.path;
-          default = null;
-          description = ''
-            If the file exists it will be displayed and the login session will
-            be terminated
-          '';
-        };
-        path = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = ''
-            Default search path
-          '';
-        };
-        priority = mkOption {
-          type = types.nullOr (types.ints.between (-20) 20);
-          default = null;
-          description = ''
-            Initial nice level
-          '';
-        };
-        requirehome = mkOption {
-          type = types.bool;
-          default = false;
-          description = ''
-            Require a valid home directory to login
-          '';
-        };
-        # TODO: add setenv, shell, term, timezone, umask, welcome
-        # Authentication
-        # TODO: Add fields
       };
 
       config = {
-        charset =
-          if config.lang == null then
-            lib.mkDefault null
-          else
-            let
-              parts = splitString "." config.lang;
-            in
-            lib.mkDefault (elemAt parts 1);
-
-        text =
-          let
-            nameField = (concatStringsSep "|" config.names);
-            filtered = config // {
-              names = null;
-              text = null;
-              _module = null;
-            };
-            formatField =
-              name: value:
-              if
-                elem value [
-                  null
-                  false
-                ]
-              then
-                [ ]
-              else if value == true then
-                [ name ]
-              else if
-                elem (builtins.typeOf value) [
-                  "int"
-                  "path"
-                  "string"
-                ]
-              then
-                [ "${name}=${toString value}" ]
-              else if builtins.typeOf value == "set" && value ? cur && value ? max then
-                [
-                  "${name}-cur=${value.cur}"
-                  "${name}-max=${value.max}"
-                ]
-              else
-                throw "Invalid value for users.classes.<name>.${name}";
-          in
-          concatStringsSep ":" ([ nameField ] ++ concatLists (mapAttrsToList formatField filtered));
+        name = config.mkDefault name;
       };
     };
 in
@@ -338,7 +337,7 @@ in
       mode = "0644";
       uid = 0;
       gid = 0;
-      text = concatMapStringsSep "\n" (class: class.text) (builtins.attrValues cfg);
+      text = concatMapStringsSep "\n" (lib.mapAttrsToList formatLine config.users.classes);
     };
 
     system.activationScripts.cap_mkdb = {
