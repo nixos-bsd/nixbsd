@@ -54,7 +54,6 @@ in [
   #./services/newsyslog.nix
   #./services/syslogd.nix
   ./services/system/nix-daemon.nix
-  # ./services/ttys/getty.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
