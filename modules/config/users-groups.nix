@@ -680,6 +680,7 @@ in {
       root.gid = ids.gids.root;
       users.gid = ids.gids.users;
       wheel.gid = ids.gids.wheel;
+      _shadow.gid = ids.gids._shadow;
     };
 
     system.activationScripts.users = {

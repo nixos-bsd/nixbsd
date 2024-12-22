@@ -238,6 +238,7 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
 
   openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = "ufs";
+    ufsVersion = "1";
     totalSize = "2g";
     contents = commonRoot.contents ++ [{
       target = "/dev/MAKEDEV";

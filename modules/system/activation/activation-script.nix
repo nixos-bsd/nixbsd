@@ -113,7 +113,11 @@ let
       # Likewise, the first system will be the booted-system
       [ -e /run/booted-system ] || ln -sfn "$(readlink -f "$systemConfig")" /run/booted-system
 
-      exit $_status
+      if [[ $_status != 0 ]]; then
+        echo "NixBSD system activation FAILED. Dropping into rescue shell."
+        bash -i
+        exit $_status
+      fi
     '';
 
   path = with pkgs;

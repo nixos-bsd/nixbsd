@@ -4,6 +4,7 @@
   lib,
   label,
   filesystem,
+  ufsVersion ? "2",
   contents ? [],
   additionalSize ? null,
   totalSize ? null,
@@ -50,7 +51,7 @@ let
     ''}
     sort -o ../.mtree ../.mtree
     popd
-    ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${ufsSizeFlags} -o version=2 -o label=${label} -F $root/../.mtree $out $root
+    ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${ufsSizeFlags} -o version=${ufsVersion} -o label=${label} -F $root/../.mtree $out $root
   '';
   fatSizeFlags = if additionalSize != null then throw "Cannot specify additionalSize for FAT filesystem" else
     if totalSize != null then "-o create_size=${totalSize}" else throw "Must specify totalSize for FAT filesystem";
