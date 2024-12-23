@@ -338,12 +338,7 @@ in
   };
 
   config = {
-    environment.etc."login.conf" = {
-      mode = "0644";
-      uid = 0;
-      gid = 0;
-      text = concatStringsSep "\n" (lib.mapAttrsToList formatLine config.users.classes);
-    };
+    environment.etc."login.conf".text = concatStringsSep "\n" (lib.mapAttrsToList formatLine config.users.classes);
 
     system.activationScripts.cap_mkdb = {
       deps = [ "etc" ];

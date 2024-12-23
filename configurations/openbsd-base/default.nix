@@ -5,6 +5,17 @@
 
   boot.loader.stand-openbsd.enable = true;
 
+  users.users.root.initialPassword = "toor";
+
+  users.users.bestie = {
+    isNormalUser = true;
+    description = "your bestie";
+    extraGroups = [ "wheel" ];
+    inherit (config.users.users.root) initialPassword;
+  };
+
+  environment.systemPackages = [ pkgs.neofetch ];
+
   virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
 
   programs.less.enable = lib.mkForce false;

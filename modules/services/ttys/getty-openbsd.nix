@@ -38,13 +38,67 @@ in {
     environment.etc.gettytab.source = gettyTab;
 
     users.classes.default.settings.auth = lib.mkDefault "passwd";
+    environment.etc."login.conf".text = lib.mkForce ''
+      # Default allowed authentication styles
+      auth-defaults:auth=passwd,skey:
 
-    security.wrappers.login_passwd = {
-      setuid = true;
-      owner = "root";
-      group = "auth";
-      permissions = "u+rx,g+rx,o+rx";
-      source = "${pkgs.openbsd.login_passwd}/bin/login_passwd";
-    };
+      # Default allowed authentication styles for authentication type ftp
+      auth-ftp-defaults:auth-ftp=passwd:
+
+      #
+      # The default values
+      # To alter the default authentication types change the line:
+      #        :tc=auth-defaults:\
+      # to read something like: (enables passwd, "myauth", and activ)
+      #        :auth=passwd,myauth,activ:\
+      # Any value changed in the daemon class should be reset in default
+      # class.
+      #
+      default:\
+              :path=/run/current-system/sw/bin:\
+              :umask=022:\
+              :datasize-max=1536M:\
+              :datasize-cur=1536M:\
+              :maxproc-max=256:\
+              :maxproc-cur=128:\
+              :openfiles-max=1024:\
+              :openfiles-cur=512:\
+              :stacksize-cur=4M:\
+              :localcipher=blowfish,a:\
+              :tc=auth-defaults:\
+              :tc=auth-ftp-defaults:
+
+      #
+      # Settings used by /etc/rc and root
+      # This must be set properly for daemons started as root by inetd as well.
+      # Be sure to reset these values to system defaults in the default class!
+      #
+      daemon:\
+              :ignorenologin:\
+              :datasize=4096M:\
+              :maxproc=infinity:\
+              :openfiles-max=1024:\
+              :openfiles-cur=128:\
+              :stacksize-cur=8M:\
+              :tc=default:
+
+      #
+      # Staff have fewer restrictions and can login even when nologins are set.
+      #
+      staff:\
+              :datasize-cur=1536M:\
+              :datasize-max=infinity:\
+              :maxproc-max=512:\
+              :maxproc-cur=256:\
+              :ignorenologin:\
+              :requirehome@:\
+              :tc=default:
+    '';
+
+    system.activationScripts.login.text = ''
+        mkdir -p /run/wrappers/bin
+        cp ${pkgs.openbsd.login_passwd}/bin/login_passwd /run/wrappers/bin/login_passwd
+        chmod 4555 /run/wrappers/bin/login_passwd
+      '';
   };
 }
