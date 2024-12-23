@@ -80,7 +80,7 @@ let
       inherit (opts) name;
       executable = true;
       text = ''
-        #!${pkgs.runtimeShell}
+        #!${pkgs.oksh}/bin/oksh
       '' + lib.optionalString (opts.description != null) ''
         #  ${opts.description}
       '' + ''
@@ -398,11 +398,10 @@ in {
       mapAttrsToList (name: service: nameValuePair "${service.name}_flags" "") cfg.services
     );
 
-    environment.etc."rc" = {
-      source = "${cfg.package}/etc/*";
-      target = ".";
-    };
-
+    environment.etc."rc".text = ''
+      exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
+    '';
+    environment.etc."rc.subr".source = "${cfg.package}/etc/rc.subr";
     environment.etc."rc.order".source = makeRcOrder cfg.services;
     environment.etc."rc.conf".text = formatRcConf cfg.conf;
     environment.etc."rc.d".source = makeRcDir cfg.services;
