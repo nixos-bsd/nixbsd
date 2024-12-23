@@ -73,7 +73,7 @@ let
     );
     makeRcScript = opts:
     let
-      defaultPath = [ pkgs.coreutils ];
+      defaultPath = [ pkgs.coreutils pkgs.gnugrep pkgs.gnused pkgs.openbsd.sysctl ];
       fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
     in pkgs.writeTextFile {
