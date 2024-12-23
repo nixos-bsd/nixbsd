@@ -3,7 +3,6 @@ nixpkgsPath: hostPlatform:
 if hostPlatform.isFreeBSD then
   [
     ./config/i18n-freebsd.nix
-    ./config/user-class.nix
     ./programs/services-mkdb.nix
     ./programs/shutdown-freebsd.nix
     ./services/ttys/getty-freebsd.nix
