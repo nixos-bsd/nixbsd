@@ -31,14 +31,14 @@ let
     sortedRaw = toposort sorter servicesLst;
     sorted = sortedRaw.result or (throw "Service dependency loop: cycle = ${concatMapStringsSep " " (svc: svc.name) sortedRaw.cycle}; loops = ${concatMapStringsSep " " (svc: svc.name) sortedRaw.loops};");
     initialState = { current = 0; phases = {}; };
-    folder = state: svc: if svc.DUMMY or false then { inherit (state) phases; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ [ svc ]; }; };
+    folder = state: svc: if svc.DUMMY or false then { phases = state.phases // { ${builtins.toString (state.current + 10)} = []; }; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ [ svc ]; }; };
     phases = (foldl folder initialState sorted).phases;
   in pkgs.runCommand "rc.order" { } (
     ''
       mkdir -p $out
     '' + concatStrings (
       mapAttrsToList (phase: services: let
-        text = concatMapStringsSep "\n" (service: "daemon_start ${service}") (builtins.map (svc: svc.name) services);
+        text = concatMapStringsSep "\n" (service: "start_daemon ${service}") (builtins.map (svc: svc.name) services);
         drv = pkgs.writeTextFile { name = "phase_${phase}"; inherit text; };
       in ''
         ln -s ${drv} $out/${phase}
@@ -395,7 +395,7 @@ in {
   };
   config = {
     openbsd.rc.conf = listToAttrs (
-      mapAttrsToList (name: service: nameValuePair "${name}_flags" "") cfg.services
+      mapAttrsToList (name: service: nameValuePair "${service.name}_flags" "") cfg.services
     );
 
     environment.etc."rc" = {

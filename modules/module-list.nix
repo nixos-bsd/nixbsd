@@ -38,7 +38,7 @@ in [
   ./config/system-path.nix
   ./config/user-class.nix
   ./config/users-groups.nix
-  ./hardware/opengl.nix
+  #./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
@@ -46,7 +46,7 @@ in [
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
   # ./programs/ssh.nix
-  ./programs/wayland/sway.nix
+  #./programs/wayland/sway.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
@@ -66,7 +66,7 @@ in [
   ./system/boot/initmd.nix
   ./system/boot/linux.nix
   ./system/boot/loader/efi.nix
-  ./system/boot/mini-tmpfiles.nix
+  #./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix

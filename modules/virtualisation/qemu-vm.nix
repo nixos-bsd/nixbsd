@@ -362,7 +362,7 @@ in {
 
     virtualisation.rootDevice = mkOption {
       type = types.nullOr types.path;
-      default = "/dev/ufs/${rootFilesystemLabel}";
+      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "/dev/sd0a" else "/dev/ufs/${rootFilesystemLabel}";
       defaultText = literalExpression "/dev/ufs/${rootFilesystemLabel}";
       example = "/dev/ufs/nixos";
       description = ''
@@ -934,7 +934,7 @@ in {
               fsType = "tmpfs";
             } else {
               device = cfg.rootDevice;
-              fsType = "ufs";
+              fsType = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
             });
           "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
             device = "tmpfs";

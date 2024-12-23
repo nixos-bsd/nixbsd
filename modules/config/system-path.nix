@@ -63,6 +63,7 @@ let
       pkgs.freebsd.zfs
     ];
     openbsd = [
+      pkgs.openbsd.ttyflags
     ];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
