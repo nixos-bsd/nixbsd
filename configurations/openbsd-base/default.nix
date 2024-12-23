@@ -5,13 +5,14 @@
 
   boot.loader.stand-openbsd.enable = true;
 
-  users.users.root.initialPassword = "toor";
+  # users.users.root.initialPassword = "toor";
+  users.users.root.initialHashedPassword = "$2b$09$CexHNp84.dJLZv5oBcSBuO7zLdbAIBxyxiukAPwY3yKiH162s.GGW";
 
   users.users.bestie = {
     isNormalUser = true;
     description = "your bestie";
     extraGroups = [ "wheel" ];
-    inherit (config.users.users.root) initialPassword;
+    inherit (config.users.users.root) initialHashedPassword;
   };
 
   environment.systemPackages = [ pkgs.neofetch ];
