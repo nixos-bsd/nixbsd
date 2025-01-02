@@ -398,9 +398,26 @@ in {
       mapAttrsToList (name: service: nameValuePair "${service.name}_flags" "") cfg.services
     );
 
-    environment.etc."rc".text = ''
-      exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
-    '';
+    environment.etc."rc".text = let
+      path = with pkgs; [
+        coreutils
+        gnugrep
+        openssl
+        openbsd.cmp
+        openbsd.dev_mkdb
+        openbsd.ifconfig
+        openbsd.kvm_mkdb
+        openbsd.pfctl
+        openbsd.sed
+        openbsd.swapctl
+        openbsd.sysctl
+        openbsd.ttyflags
+      ];
+    in
+      ''
+        export PATH="${lib.makeBinPath path}:$PATH"
+        exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
+      '';
     environment.etc."rc.subr".source = "${cfg.package}/etc/rc.subr";
     environment.etc."rc.order".source = makeRcOrder cfg.services;
     environment.etc."rc.conf".text = formatRcConf cfg.conf;
