@@ -22,13 +22,14 @@ let
 
   makeRcOrder = services: let
     dummyServiceNames = [
-      /* 05 */ [ "FILESYSTEMS" "hostname" "fsck" "swap" "mount-basic" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
-      /* 15 */ [ "ifconfig" "netstart" ]
-      /* 25 */ [ "NETWORKING" "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
-      /* 35 */ [ "SERVERS" "ipsec" ]
-      /* 45 */ [ "DAEMON" "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
-      /* 55 */ [ "LOGIN" "firsttime" ]
-      /* 65 */ [ "carpdemote" "mixerctl-conf" ]
+      /* 05 */ [ "mount-basic" "mountcritlocal" ]
+      /* 15 */ [ "FILESYSTEMS" "hostname" "fsck" "swap" "ttyflags" "kbd" "wsconctl_conf" "temp-pf" "baddynamic" "sysctl" ]
+      /* 25 */ [ "ifconfig" "netstart" ]
+      /* 35 */ [ "NETWORKING" "random_seed" "pf" "early-cleanup" "dmesg-boot" "make-keys" ]
+      /* 45 */ [ "SERVERS" "ipsec" ]
+      /* 55 */ [ "DAEMON" "mount-final" "swap-noblk" "fsck-N" "mount-N" "kvm-mkdb" "dev-mkdb" "savecore" "acpidump" "quotacheck" "wuotaon" "chown-chmod-tty" "ptmp" "clean-tmp" "socket-tmpdirs" "securelevel" "motd" "accounting" "ldconfig" "vi-recover" "sysmerge" ]
+      /* 65 */ [ "LOGIN" "firsttime" ]
+      /* 75 */ [ "carpdemote" "mixerctl-conf" ]
     ];
     dummyServices = imap0 (i: svclist: let prio = i * 10 + 5; in { inherit prio; name = "__dummy_${builtins.toString prio}"; aliases = svclist; DUMMY = true; before = []; after = []; }) dummyServiceNames;
     servicesLst = dummyServices ++ mapAttrsToList (name: opts: opts // { aliases = []; }) services;
@@ -60,19 +61,7 @@ let
     opts:
     concatStringsSep "\n" (mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") opts);
 
-  makeRcDir =
-    scripts:
-    pkgs.runCommand "rc.d" { } (
-      ''
-        mkdir -p $out
-      ''
-      + concatStrings (
-        mapAttrsToList (name: script: ''
-          ln -s ${makeRcScript script} $out/${script.name} 
-        '') scripts
-      )
-    );
-    makeRcScript = opts:
+  makeRcScript = opts:
     let
       # include su unwrapped here since su is necessary to run rc which sets up the wrapped su
       defaultPath = [
@@ -97,7 +86,7 @@ let
         export PATH=${escapeShellArg pathStr}
         daemon=${escapeShellArg opts.daemon}
   
-        . /etc/rc.subr
+        . /etc/rc.d/rc.subr
       '' + lib.concatStringsSep "\n" (
         mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") (
           notNull opts.shellVariables
@@ -119,13 +108,19 @@ let
         rc_cmd "$1"
       '';
     };
+
+  makeRcFiles =
+    mapAttrs' (_: script: {
+      name = "rc.d/${script.name}";
+      value.source = makeRcScript script;
+    });
 in {
   options.openbsd.rc = {
     package = mkOption {
       type = types.package;
       default = pkgs.openbsd.rc;
       description = ''
-        The OpenBSD rc package to use. Should contain `/etc/rc`, `/etc/rc.subr`, etc.
+        The OpenBSD rc package to use. Should contain `/etc/rc`, `/etc/rc.d/rc.subr`, etc.
         See {manpage}`rc(8)`.
       '';
     };
@@ -211,7 +206,7 @@ in {
 
               shellVariables = mkOption {
                 description = ''
-                  Shell variables to set after sourcing {path}`/etc/rc.subr`.
+                  Shell variables to set after sourcing {path}`/etc/rc.d/rc.subr`.
                   For a full list see {manpage}`rc.subr(8)`.
                 '';
                 default = { };
@@ -408,33 +403,34 @@ in {
       mapAttrsToList (name: service: nameValuePair "${service.name}_flags" "") cfg.services
     );
 
-    environment.etc."rc".text = let
-      path = with pkgs; [
-        coreutils
-        gnugrep
-        openssl
-        openbsd.cmp
-        openbsd.dev_mkdb
-        openbsd.dmesg
-        openbsd.ifconfig
-        openbsd.kvm_mkdb
-        openbsd.pfctl
-        openbsd.sed
-        openbsd.swapctl
-        openbsd.sysctl
-        openbsd.ttyflags
-        # For ssh-keygen
-        config.programs.ssh.package
-      ];
-    in
-      ''
-        export PATH="${lib.makeBinPath path}:$PATH"
-        mkdir -p /var/run/dev.db   # make su work
-        exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
-      '';
-    environment.etc."rc.subr".source = "${cfg.package}/etc/rc.subr";
-    environment.etc."rc.order".source = makeRcOrder cfg.services;
-    environment.etc."rc.conf".text = formatRcConf cfg.conf;
-    environment.etc."rc.d".source = makeRcDir cfg.services;
+    environment.etc = {
+      "rc".text = let
+        path = with pkgs; [
+          coreutils
+          gnugrep
+          openssl
+          openbsd.cmp
+          openbsd.dev_mkdb
+          openbsd.dmesg
+          openbsd.ifconfig
+          openbsd.kvm_mkdb
+          openbsd.pfctl
+          openbsd.sed
+          openbsd.swapctl
+          openbsd.sysctl
+          openbsd.ttyflags
+          # For ssh-keygen
+          config.programs.ssh.package
+        ];
+      in
+        ''
+          export PATH="${lib.makeBinPath path}:$PATH"
+          mkdir -p /var/run/dev.db   # make su work
+          exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
+        '';
+      "rc.d/rc.subr".source = "${cfg.package}/etc/rc.d/rc.subr";
+      "rc.order".source = makeRcOrder cfg.services;
+      "rc.conf".text = formatRcConf cfg.conf;
+    } // (makeRcFiles cfg.services);
   };
 }
