@@ -415,6 +415,7 @@ in {
         openssl
         openbsd.cmp
         openbsd.dev_mkdb
+        openbsd.dmesg
         openbsd.ifconfig
         openbsd.kvm_mkdb
         openbsd.pfctl
@@ -422,6 +423,8 @@ in {
         openbsd.swapctl
         openbsd.sysctl
         openbsd.ttyflags
+        # For ssh-keygen
+        config.programs.ssh.package
       ];
     in
       ''
