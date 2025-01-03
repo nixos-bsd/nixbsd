@@ -66,7 +66,7 @@ in [
   ./system/boot/initmd.nix
   ./system/boot/linux.nix
   ./system/boot/loader/efi.nix
-  #./system/boot/mini-tmpfiles.nix
+  ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems.nix
