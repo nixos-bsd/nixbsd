@@ -95,10 +95,12 @@ in {
               :tc=default:
     '';
 
-    system.activationScripts.login.text = ''
-        mkdir -p /run/wrappers/bin
-        cp ${pkgs.openbsd.login_passwd}/bin/login_passwd /run/wrappers/bin/login_passwd
-        chmod 4555 /run/wrappers/bin/login_passwd
-      '';
+    security.wrappers.login_passwd = {
+      setuid = true;
+      owner = "root";
+      group = "wheel";
+      permissions = "u+rx,g+rx,o+rx";
+      source = "${pkgs.openbsd.login_passwd}/bin/login_passwd";
+    };
   };
 }

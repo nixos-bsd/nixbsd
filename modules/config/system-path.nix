@@ -77,32 +77,15 @@ let
       pkgs.openbsd.sysctl
       pkgs.openbsd.ttyflags
 
-      # Equivalant of freebsd.bin
-      pkgs.openbsd.cat
-      pkgs.openbsd.cp
-      pkgs.openbsd.date
-      pkgs.openbsd.dd
-      pkgs.openbsd.df
+      # Tools equivalant to freebsd.bin
+      # Many packages removed due to conflicts with coreutils
+      pkgs.openbsd.chmod
       pkgs.openbsd.domainname
-      pkgs.openbsd.echo
       pkgs.openbsd.ed
-      pkgs.openbsd.expr
       pkgs.openbsd.hostname
-      pkgs.openbsd.kill
-      pkgs.openbsd.ln
-      pkgs.openbsd.ls
       pkgs.openbsd.md5
-      pkgs.openbsd.mkdir
       pkgs.openbsd.mt
-      pkgs.openbsd.mv
       pkgs.openbsd.ps
-      pkgs.openbsd.pwd
-      pkgs.openbsd.rm
-      pkgs.openbsd.rmdir
-      pkgs.openbsd.sleep
-      pkgs.openbsd.stty
-      pkgs.openbsd.sync
-      pkgs.openbsd.test
     ];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
