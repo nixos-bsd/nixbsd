@@ -7,7 +7,16 @@
 with lib;
 let
   variableName = types.strMatching "[a-zA-Z_][a-zA-Z0-9_]*";
-  formatScriptLiteral = val: if builtins.isList val then escapeShellArgs val else escapeShellArg val;
+  formatScriptLiteral = val: "'${formatScriptLiteral' val}'";
+  formatScriptLiteral' = val: if builtins.isList val then lib.concatMapStringsSep " " formatScriptLiteral'' val else formatScriptLiteral'' val;
+  formatScriptLiteral'' =
+    val:
+    if val == true then
+      "YES"
+    else if val == false then
+      "NO"
+    else
+      builtins.replaceStrings ["'" "\n"] ["'\\''" "'\\n'"] val;
   notNull = filterAttrs (_: value: value != null);
   cfg = config.openbsd.rc;
 
@@ -46,18 +55,10 @@ let
       ) phases
     )
   );
-  formatRcConfLiteral =
-    val:
-    if val == true then
-      "YES"
-    else if val == false then
-      "NO"
-    else
-      escapeShellArg val;
 
   formatRcConf =
     opts:
-    concatStringsSep "\n" (mapAttrsToList (name: value: "${name}=${formatRcConfLiteral value}") opts);
+    concatStringsSep "\n" (mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") opts);
 
   makeRcDir =
     scripts:
@@ -73,7 +74,16 @@ let
     );
     makeRcScript = opts:
     let
-      defaultPath = [ pkgs.coreutils pkgs.gnugrep pkgs.gnused pkgs.openbsd.sysctl ];
+      # include su unwrapped here since su is necessary to run rc which sets up the wrapped su
+      defaultPath = [
+        pkgs.openbsd.id
+        pkgs.coreutils
+        pkgs.gnugrep
+        pkgs.gnused
+        pkgs.openbsd.sysctl
+        pkgs.openbsd.pkill
+        pkgs.openbsd.su
+      ];
       fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
     in pkgs.writeTextFile {
@@ -89,11 +99,11 @@ let
   
         . /etc/rc.subr
       '' + lib.concatStringsSep "\n" (
-        mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}\"") (
+        mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") (
           notNull opts.shellVariables
         )
       ) + lib.concatStringsSep "\n" (
-        mapAttrsToList (name: value: "export ${name}=\"${formatScriptLiteral value}\"") (
+        mapAttrsToList (name: value: "export ${name}=${formatScriptLiteral value}") (
           notNull opts.environment
         )
       ) + "\n" + lib.concatStrings (
@@ -416,6 +426,7 @@ in {
     in
       ''
         export PATH="${lib.makeBinPath path}:$PATH"
+        mkdir -p /var/run/dev.db   # make su work
         exec ${pkgs.oksh}/bin/oksh ${cfg.package}/etc/rc "$*"
       '';
     environment.etc."rc.subr".source = "${cfg.package}/etc/rc.subr";
