@@ -77,6 +77,7 @@ let
       pkgs.openbsd.sysctl
       pkgs.openbsd.top
       pkgs.openbsd.ttyflags
+      pkgs.openbsd.vmstat
 
       # Tools equivalant to freebsd.bin
       # Many packages removed due to conflicts with coreutils
