@@ -19,6 +19,8 @@
 
   virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
 
+  services.sshd.enable = true;
+
   programs.less.enable = lib.mkForce false;
   xdg.mime.enable = false;
   documentation.enable = false;
