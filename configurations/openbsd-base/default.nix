@@ -20,7 +20,6 @@
   virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
 
   programs.less.enable = lib.mkForce false;
-  security.sudo.enable = lib.mkForce false;
   xdg.mime.enable = false;
   documentation.enable = false;
   documentation.man.man-db.enable = false;

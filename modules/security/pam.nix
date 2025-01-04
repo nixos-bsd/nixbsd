@@ -1251,7 +1251,7 @@ in {
 
   ###### implementation
 
-  config = {
+  config = lib.mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
     assertions = [
       {
         assertion = config.users.motd == null || config.users.motdFile == null;
