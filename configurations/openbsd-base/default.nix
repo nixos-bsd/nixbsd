@@ -21,7 +21,6 @@
 
   services.sshd.enable = true;
 
-  programs.less.enable = lib.mkForce false;
   xdg.mime.enable = false;
   documentation.enable = false;
   documentation.man.man-db.enable = false;

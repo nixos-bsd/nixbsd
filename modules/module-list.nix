@@ -5,6 +5,7 @@ in [
   "${extPath}/config/nix.nix"
   "${extPath}/config/shells-environment.nix"
   "${extPath}/config/system-environment.nix"
+  "${extPath}/config/terminfo.nix"
   "${extPath}/misc/ids.nix"
   "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"

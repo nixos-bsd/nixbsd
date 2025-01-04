@@ -75,6 +75,7 @@ let
       pkgs.openbsd.slaacctl
       pkgs.openbsd.swapctl
       pkgs.openbsd.sysctl
+      pkgs.openbsd.top
       pkgs.openbsd.ttyflags
 
       # Tools equivalant to freebsd.bin
