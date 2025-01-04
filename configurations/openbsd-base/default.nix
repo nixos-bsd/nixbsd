@@ -15,7 +15,11 @@
     inherit (config.users.users.root) initialHashedPassword;
   };
 
-  environment.systemPackages = [ pkgs.neofetch pkgs.nano ];
+  environment.systemPackages = [
+    pkgs.openbsd.kdump
+    pkgs.openbsd.ktrace
+    pkgs.neofetch
+  ];
 
   virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
 
