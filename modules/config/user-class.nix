@@ -8,8 +8,8 @@ with lib;
 let
   cap_mkdb =
     {
-      freebsd = lib.getExe pkgs.freebsd.cap_mkdb;
-      openbsd = lib.getExe pkgs.openbsd.cap_mkdb;
+      freebsd = "${pkgs.freebsd.cap_mkdb}/bin/cap_mkdb";
+      openbsd = "${pkgs.openbsd.cap_mkdb}/bin/cap_mkdb";
     }
     .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 

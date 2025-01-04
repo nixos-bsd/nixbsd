@@ -14,6 +14,12 @@ in {
         freebsd = pkgs.freebsd.sys;
         openbsd = pkgs.openbsd.sys;
       }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = pkgs.freebsd.sys;
+          openbsd = pkgs.openbsd.sys;
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
       type = types.package;
       description = ''
         The package used for the kernel. This is just the derivation
@@ -46,6 +52,13 @@ in {
         freebsd = "${config.system.moduleEnvironment}/kernel/kernel";
         openbsd = "${cfg.package}/bsd";
       }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = "''${config.system.moduleEnvironment}/kernel/kernel";
+          openbsd = "''${cfg.package}/bsd";
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
+      description = "Path to the BSD kernel, called `bsd` or `kernel`";
     };
 
     boot.kernel.modulesPath = mkOption {
@@ -55,6 +68,13 @@ in {
         freebsd = "${config.system.moduleEnvironment}/kernel";
         openbsd = "/not-supported";
       }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = "''${config.system.moduleEnvironment}/kernel";
+          openbsd = "/not-supported";
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
+      description = "Path to the modules directory, only applies on FreeBSD";
     };
 
     boot.kernelEnvironment = mkOption {
@@ -95,7 +115,7 @@ in {
     '';
 
     boot.kernelEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
-      module_path = cfg.modulePath;
+      module_path = cfg.modulesPath;
       init_shell = config.environment.binsh;
     };
   };

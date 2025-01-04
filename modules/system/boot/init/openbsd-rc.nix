@@ -7,6 +7,19 @@
 with lib;
 let
   variableName = types.strMatching "[a-zA-Z_][a-zA-Z0-9_]*";
+  maybeList = mkOptionType {
+    name = "value or list of values";
+    merge =
+      loc: defs:
+      let
+        defs' = filterOverrides defs;
+      in
+      if any (def: isList def.value) defs' then
+        concatMap (def: toList def.value) defs'
+      else
+        mergeEqualOption loc defs';
+  };
+
   formatScriptLiteral = val: "'${formatScriptLiteral' val}'";
   formatScriptLiteral' = val: if builtins.isList val then lib.concatMapStringsSep " " formatScriptLiteral'' val else formatScriptLiteral'' val;
   formatScriptLiteral'' =
@@ -206,7 +219,7 @@ in {
 
               shellVariables = mkOption {
                 description = ''
-                  Shell variables to set after sourcing {path}`/etc/rc.d/rc.subr`.
+                  Shell variables to set after sourcing {file}`/etc/rc.d/rc.subr`.
                   For a full list see {manpage}`rc.subr(8)`.
                 '';
                 default = { };
@@ -398,7 +411,7 @@ in {
     };
 
   };
-  config = {
+  config = mkIf (config.init.backend == "openbsd") {
     openbsd.rc.conf = listToAttrs (
       mapAttrsToList (name: service: nameValuePair "${service.name}_flags" "") cfg.services
     );

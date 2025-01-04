@@ -37,7 +37,12 @@ in {
 
   };
 
-  config = let sysctlBin = if pkgs.stdenv.hostPlatform.isOpenBSD then lib.getExe pkgs.openbsd.sysctl else if pkgs.stdenv.hostPlatform.isFreeBSD then lib.getExe pkgs.freebsd.sysctl else (throw "???"); in mkIf (cfg != { }) {
+  config = let
+    sysctlBin = {
+      freebsd = "${pkgs.freebsd.sysctl}/bin/sysctl";
+      openbsd = "${pkgs.openbsd.sysctl}/bin/sysctl";
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+  in mkIf (cfg != { }) {
 
     environment.etc."sysctl.conf".text = concatStrings (mapAttrsToList (n: v:
       optionalString (v != null) ''
