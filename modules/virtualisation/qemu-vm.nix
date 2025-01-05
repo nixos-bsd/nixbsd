@@ -964,7 +964,7 @@ in {
         } $out/bin/run-${config.system.name}-vm
       '';
 
-      system.build.systemImage = if config.virtualisation.diskImage == null then "" else systemImage;
+      system.build.systemImage = if config.virtualisation.diskImage == null then null else systemImage;
 
       # TODO: enable guest agent when it exists
       # TODO: disable ntpd when it exists

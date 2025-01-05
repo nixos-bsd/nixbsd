@@ -71,6 +71,11 @@
 
       formatter = forAllSystems (system: (makePkgs system).nixfmt-rfc-style);
 
-      hydraJobs = lib.mapAttrs (name: attrs: {inherit (attrs) vm systemImage;}) self.packages.x86_64-linux;
+      hydraJobs = lib.mapAttrs 
+        (name: attrs: {
+          inherit (attrs) vm; 
+        } // lib.optionalAttrs (attrs.systemImage != null) {
+          inherit (attrs) systemImage;
+        }) self.packages.x86_64-linux;
     };
 }
