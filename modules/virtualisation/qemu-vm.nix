@@ -76,11 +76,6 @@ let
   drivesCmdLine = drives:
     concatStringsSep "\\\n    " (imap1 driveCmdline drives);
 
-  espContents = hostPkgs.runCommand "ESP" {} ''
-    mkdir -p $out
-    ${config.boot.loader.stand-freebsd.populateCmd} ${config.system.build.toplevel} -d $out -g 0
-  '';
-
   # Shell script to start the VM.
   startVM = ''
     #! ${hostPkgs.runtimeShell}
@@ -981,7 +976,7 @@ in {
     }
     (lib.mkIf cfg.netMountBoot {  # MODULE 2 - net-mounted /boot
       virtualisation.sharedDirectories.boot = {
-        source = espContents;
+        source = config.boot.loader.espContents;
         target = "/boot";
         type = "fat";
         readOnly = true;
