@@ -1,4 +1,4 @@
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 with lib;
 
@@ -25,7 +25,7 @@ in {
 
       useTmpfs = mkOption {
         type = types.bool;
-        default = true;
+        default = pkgs.stdenv.hostPlatform.isFreeBSD;
         description = ''
           Whether to mount a tmpfs on {file}`/tmp` during boot.
 

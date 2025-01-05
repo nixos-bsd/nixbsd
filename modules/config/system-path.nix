@@ -8,8 +8,8 @@ with lib;
 let
 
   # TODO: Figure out what we can actually put in requiredPackages
-  requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg) [
-    config.programs.ssh.package
+  requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg) ([
+    # config.programs.ssh.package
     pkgs.bashInteractive # bash with ncurses support
     pkgs.bzip2
     pkgs.coreutils-full
@@ -28,39 +28,68 @@ let
     pkgs.less
     pkgs.ncurses
     pkgs.netcat
-    pkgs.procps
+    # pkgs.procps
     pkgs.stdenv.cc.libc
     pkgs.which
     pkgs.xz
     pkgs.zstd
+  ] ++ {
+    freebsd = [
+      # Most provided by glibc or util-linux on Linux
+      pkgs.freebsd.bin
+      pkgs.freebsd.bsdlabel
+      pkgs.freebsd.cap_mkdb
+      pkgs.freebsd.devfs
+      pkgs.freebsd.dmesg
+      pkgs.freebsd.fdisk
+      pkgs.freebsd.fsck
+      pkgs.freebsd.geom
+      pkgs.freebsd.ifconfig
+      pkgs.freebsd.kldconfig
+      pkgs.freebsd.kldload
+      pkgs.freebsd.kldstat
+      pkgs.freebsd.kldunload
+      pkgs.freebsd.locale
+      pkgs.freebsd.localedef
+      pkgs.freebsd.mdconfig
+      pkgs.freebsd.newfs
+      pkgs.freebsd.newfs_msdos
+      pkgs.freebsd.ping
+      pkgs.freebsd.pwd_mkdb
+      pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+      pkgs.freebsd.services_mkdb
+      pkgs.freebsd.swapon
+      pkgs.freebsd.sysctl
+      pkgs.freebsd.zfs
+    ];
+    openbsd = [
+      # System utilities
+      pkgs.openbsd.cmp
+      pkgs.openbsd.dev_mkdb
+      pkgs.openbsd.dhcpleasectl
+      pkgs.openbsd.dmesg
+      pkgs.openbsd.ifconfig
+      pkgs.openbsd.kvm_mkdb
+      pkgs.openbsd.pfctl
+      pkgs.openbsd.sed
+      pkgs.openbsd.slaacctl
+      pkgs.openbsd.swapctl
+      pkgs.openbsd.sysctl
+      pkgs.openbsd.top
+      pkgs.openbsd.ttyflags
+      pkgs.openbsd.vmstat
 
-    # Most provided by glibc or util-linux on Linux
-    pkgs.freebsd.bin
-    pkgs.freebsd.bsdlabel
-    pkgs.freebsd.cap_mkdb
-    pkgs.freebsd.devfs
-    pkgs.freebsd.dmesg
-    pkgs.freebsd.fdisk
-    pkgs.freebsd.fsck
-    pkgs.freebsd.geom
-    pkgs.freebsd.ifconfig
-    pkgs.freebsd.kldconfig
-    pkgs.freebsd.kldload
-    pkgs.freebsd.kldstat
-    pkgs.freebsd.kldunload
-    pkgs.freebsd.locale
-    pkgs.freebsd.localedef
-    pkgs.freebsd.mdconfig
-    pkgs.freebsd.newfs
-    pkgs.freebsd.newfs_msdos
-    pkgs.freebsd.ping
-    pkgs.freebsd.pwd_mkdb
-    pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
-    pkgs.freebsd.services_mkdb
-    pkgs.freebsd.swapon
-    pkgs.freebsd.sysctl
-    pkgs.freebsd.zfs
-  ];
+      # Tools equivalant to freebsd.bin
+      # Many packages removed due to conflicts with coreutils
+      pkgs.openbsd.chmod
+      pkgs.openbsd.domainname
+      pkgs.openbsd.ed
+      pkgs.openbsd.hostname
+      pkgs.openbsd.md5
+      pkgs.openbsd.mt
+      pkgs.openbsd.ps
+    ];
+  }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
   defaultPackageNames = [ ];
   defaultPackages =

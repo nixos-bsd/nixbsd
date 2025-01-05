@@ -37,7 +37,12 @@ in {
 
   };
 
-  config = mkIf (cfg != { }) {
+  config = let
+    sysctlBin = {
+      freebsd = "${pkgs.freebsd.sysctl}/bin/sysctl";
+      openbsd = "${pkgs.openbsd.sysctl}/bin/sysctl";
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+  in mkIf (cfg != { }) {
 
     environment.etc."sysctl.conf".text = concatStrings (mapAttrsToList (n: v:
       optionalString (v != null) ''
@@ -47,7 +52,7 @@ in {
     init.services.sysctl = {
       description = "Set sysctl variables";
       startType = "oneshot";
-      startCommand = [ "${pkgs.freebsd.sysctl}/bin/sysctl" "-i" "-f" "/etc/sysctl.conf" ];
+      startCommand = [ "${sysctlBin}" "-i" "-f" "/etc/sysctl.conf" ];
     };
 
     init.services.sysctl-lastload = {
@@ -56,7 +61,7 @@ in {
       before = [ "jail" ];
 
       startType = "oneshot";
-      startCommand = [ "${pkgs.freebsd.sysctl}/bin/sysctl" "-i" "-f" "/etc/sysctl.conf" ];
+      startCommand = [ "${sysctlBin}" "-i" "-f" "/etc/sysctl.conf" ];
     };
 
   };

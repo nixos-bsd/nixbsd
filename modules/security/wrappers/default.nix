@@ -157,7 +157,7 @@ in {
 
     boot.specialFileSystems.${parentWrapperDir} = {
       fsType = "tmpfs";
-      options = [ "mode=755" "size=${config.security.wrapperDirSize}" ];
+      options = lib.optionals pkgs.stdenv.hostPlatform.isFreeBSD [ "mode=755" "size=${config.security.wrapperDirSize}" ];
     };
 
     # Make sure our wrapperDir exports to the PATH env variable when

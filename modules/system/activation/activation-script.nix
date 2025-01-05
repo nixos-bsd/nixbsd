@@ -4,6 +4,22 @@
 with lib;
 
 let
+  tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
+    mkdir -p $out/bin
+    $CC -x c - -o $out/bin/tosyslog <<EOF
+    #include <stdio.h>
+    #include <syslog.h>
+
+    int main(int argc, char **argv) {
+        openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), stdin)) {
+            syslog(LOG_ALERT, "%s", buffer);
+        }
+        return 0;
+    }
+    EOF
+  '');
 
   addAttributeName = mapAttrs (a: v:
     v // {
@@ -50,6 +66,11 @@ let
           PATH=$PATH:$i/bin:$i/sbin
       done
 
+      '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
+        exec <>/dev/console 1>&0 2>&0
+      '' +
+      ''
+
       _status=0
       trap "_status=1 _localstatus=\$?" ERR
 
@@ -69,7 +90,13 @@ let
         mkdir -m 0755 -p "$DST"
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      mount -u -w /
+      '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
+        # TODO: Support other root paths
+        fsck /dev/sd0a
+        mount -u -w /dev/sd0a /
+      '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        mount -u -w /
+      '' + ''
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
@@ -86,19 +113,36 @@ let
       # Likewise, the first system will be the booted-system
       [ -e /run/booted-system ] || ln -sfn "$(readlink -f "$systemConfig")" /run/booted-system
 
-      exit $_status
+      if [[ $_status != 0 ]]; then
+        echo "NixBSD system activation FAILED. Dropping into rescue shell."
+        bash -i
+        exit $_status
+      fi
     '';
 
   path = with pkgs;
-    map getBin [
+    map getBin ([
       coreutils
       findutils
-      freebsd.mount
-      freebsd.nscd
-      freebsd.pwd_mkdb
       getent
       gnugrep
-    ];
+    ] ++ {
+      freebsd = [
+        freebsd.mount
+        freebsd.nscd
+        freebsd.pwd_mkdb
+      ];
+      openbsd = [
+        openbsd.mount
+        openbsd.mount_ffs
+        openbsd.mount_tmpfs
+        openbsd.pwd_mkdb
+        openbsd.fsck
+        openbsd.fsck_ffs
+        bash
+        tosyslog
+      ];
+    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
   scriptType = withDry:
     with types;
@@ -229,11 +273,11 @@ in {
         rmdir --ignore-fail-on-non-empty /usr/bin /usr
       '';
 
-    systemd.tmpfiles.rules = [
-      #"d /nix/var/nix/gcroots -"
-      "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
-      #"D /var/empty 0555 root root -"
-      #"h /var/empty - - - - +i"
-    ];
+    #systemd.tmpfiles.rules = [
+    #  #"d /nix/var/nix/gcroots -"
+    #  "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
+    #  #"D /var/empty 0555 root root -"
+    #  #"h /var/empty - - - - +i"
+    #];
   };
 }

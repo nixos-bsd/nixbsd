@@ -177,7 +177,8 @@ in
           {
             options = {
               name = mkOption {
-                type = variableName;
+                # Should be a variableName, that breaks evaluating documentation
+                type = types.str;
                 description = "Name of the service, also used for rc variables.";
               };
 
@@ -275,14 +276,14 @@ in
 
               shellVariables = mkOption {
                 description = ''
-                  Shell variables to set after sourcing {path}`/etc/rc.subr`.
+                  Shell variables to set after sourcing {file}`/etc/rc.subr`.
                   For a full list see `run_rc_command` under {manpage}`rc.subr(8)`.
                 '';
                 default = { };
                 type = types.submodule {
                   freeformType = types.attrsOf maybeList;
                   config = {
-                    name = mkOptionDefault config.name;
+                    name = mkOptionDefault (builtins.replaceStrings [ "-" ] [ "_" ] name);
                     rcvar = mkOptionDefault "${config.name}_enable";
                   };
                 };
@@ -362,7 +363,7 @@ in
     };
   };
 
-  config = {
+  config = mkIf (config.init.backend == "freebsd") {
     freebsd.rc.conf = listToAttrs (
       map (service: nameValuePair service.shellVariables.rcvar true) (
         filter (service: !service.dummy) (attrValues cfg.services)

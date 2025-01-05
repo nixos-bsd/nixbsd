@@ -14,7 +14,7 @@
   };
 
   services.sshd.enable = true;
-  boot.loader.stand.enable = true;
+  boot.loader.stand-freebsd.enable = true;
 
   fileSystems."/" = {
     device = "/dev/ufs/nixos";

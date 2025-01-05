@@ -680,6 +680,7 @@ in {
       root.gid = ids.gids.root;
       users.gid = ids.gids.users;
       wheel.gid = ids.gids.wheel;
+      _shadow.gid = ids.gids._shadow;
     };
 
     system.activationScripts.users = {
@@ -829,7 +830,7 @@ in {
           set users.users.${user.name}.ignoreShellProgramCheck = true;
           instead.
         '';
-      }) [ "fish" "xonsh" "zsh" ])));
+      }) [ "zsh" ])));
 
     warnings = builtins.filter (x: x != null) (flip mapAttrsToList cfg.users
       (_: user:

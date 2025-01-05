@@ -10,7 +10,16 @@ in {
       };
 
     boot.kernel.package = mkOption {
-      default = pkgs.freebsd.sys;
+      default = {
+        freebsd = pkgs.freebsd.sys;
+        openbsd = pkgs.openbsd.sys;
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = pkgs.freebsd.sys;
+          openbsd = pkgs.openbsd.sys;
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
       type = types.package;
       description = ''
         The package used for the kernel. This is just the derivation
@@ -36,6 +45,38 @@ in {
       '';
     };
 
+    boot.kernel.imagePath = mkOption {
+      type = types.path;
+      readOnly = true;
+      default = {
+        freebsd = "${config.system.moduleEnvironment}/kernel/kernel";
+        openbsd = "${cfg.package}/bsd";
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = "''${config.system.moduleEnvironment}/kernel/kernel";
+          openbsd = "''${cfg.package}/bsd";
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
+      description = "Path to the BSD kernel, called `bsd` or `kernel`";
+    };
+
+    boot.kernel.modulesPath = mkOption {
+      type = types.path;
+      readOnly = true;
+      default = {
+        freebsd = "${config.system.moduleEnvironment}/kernel";
+        openbsd = "/not-supported";
+      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      defaultText = literalExpression ''
+        {
+          freebsd = "''${config.system.moduleEnvironment}/kernel";
+          openbsd = "/not-supported";
+        }.''${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      '';
+      description = "Path to the modules directory, only applies on FreeBSD";
+    };
+
     boot.kernelEnvironment = mkOption {
       type = types.attrsOf types.str;
       default = { };
@@ -50,12 +91,9 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (let
-    kernelPath = "${config.system.moduleEnvironment}/kernel/kernel";
-    modulePath = "${config.system.moduleEnvironment}/kernel";
-  in {
+  config = mkIf cfg.enable {
     system.build = { inherit (config.boot) kernel; };
-    system.moduleEnvironment = pkgs.buildEnv {
+    system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (pkgs.buildEnv {
       name = "sys-with-modules";
       paths = [ cfg.package ] ++ config.boot.extraModulePackages;
       pathsToLink = [ "/kernel" ];
@@ -63,22 +101,22 @@ in {
       postBuild = ''
         ${pkgs.buildPackages.freebsd.kldxref}/bin/kldxref $out/kernel
       '';
-    };
+    });
 
     system.systemBuilderCommands = ''
-      if [ ! -f ${kernelPath} ]; then
+      if [ ! -f ${cfg.imagePath} ]; then
         echo "The bootloader cannot find the proper kernel image."
-        echo "(expecting ${kernelPath})"
+        echo "(expecting ${cfg.imagePath})"
         false
       fi
 
-      ln -s ${kernelPath} $out/kernel
-      ln -s ${modulePath} $out/kernel-modules
+      ln -s ${cfg.imagePath} $out/kernel
+      test -e ${cfg.modulesPath} && ln -s ${cfg.modulesPath} $out/kernel-modules || true
     '';
 
-    boot.kernelEnvironment = {
-      module_path = modulePath;
+    boot.kernelEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
+      module_path = cfg.modulesPath;
       init_shell = config.environment.binsh;
     };
-  });
+  };
 }
