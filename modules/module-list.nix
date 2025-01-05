@@ -39,7 +39,7 @@ in [
   ./config/system-path.nix
   ./config/user-class.nix
   ./config/users-groups.nix
-  #./hardware/opengl.nix
+  ./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
@@ -47,14 +47,12 @@ in [
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
   ./programs/ssh.nix
-  #./programs/wayland/sway.nix
+  ./programs/wayland/sway.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
   ./services/networking/dhcpcd.nix
   ./services/networking/ssh/sshd.nix
-  #./services/newsyslog.nix
-  #./services/syslogd.nix
   ./services/system/nix-daemon.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
@@ -77,7 +75,6 @@ in [
   ./tasks/nix-store.nix
 
   ./services/x11/xserver.nix
-  #"${extPath}/services/x11/gdk-pixbuf.nix"
   ./services/x11/desktop-managers/default.nix
   ./services/x11/desktop-managers/xfce.nix
   ./services/x11/display-managers/default.nix

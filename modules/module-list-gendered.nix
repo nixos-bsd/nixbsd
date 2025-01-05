@@ -5,6 +5,8 @@ if hostPlatform.isFreeBSD then
     ./config/i18n-freebsd.nix
     ./programs/services-mkdb.nix
     ./programs/shutdown-freebsd.nix
+    ./services/newsyslog.nix
+    ./services/syslogd.nix
     ./services/ttys/getty-freebsd.nix
     ./system/boot/init/portable/freebsd.nix
     ./system/boot/loader/stand-freebsd
