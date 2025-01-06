@@ -71,6 +71,7 @@ let
       pkgs.openbsd.ifconfig
       pkgs.openbsd.kvm_mkdb
       pkgs.openbsd.pfctl
+      pkgs.openbsd.reboot
       pkgs.openbsd.sed
       pkgs.openbsd.slaacctl
       pkgs.openbsd.swapctl
@@ -78,6 +79,7 @@ let
       pkgs.openbsd.top
       pkgs.openbsd.ttyflags
       pkgs.openbsd.vmstat
+      pkgs.openbsd.wall
 
       # Tools equivalant to freebsd.bin
       # Many packages removed due to conflicts with coreutils
