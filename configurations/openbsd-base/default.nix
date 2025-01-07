@@ -11,9 +11,9 @@
   # users.users.root.initialPassword = "toor";
   users.users.root.initialHashedPassword = "$2b$09$CexHNp84.dJLZv5oBcSBuO7zLdbAIBxyxiukAPwY3yKiH162s.GGW";
 
-  users.users.bestie = {
+  users.users.demo = {
     isNormalUser = true;
-    description = "your bestie";
+    description = "Demo User";
     extraGroups = [ "wheel" ];
     inherit (config.users.users.root) initialHashedPassword;
   };
@@ -25,13 +25,11 @@
   ];
 
   virtualisation.vmVariant.virtualisation.diskImage = "./${config.system.name}.qcow2";
-
+  
   services.sshd.enable = true;
 
   xdg.mime.enable = false;
   documentation.enable = false;
   documentation.man.man-db.enable = false;
-  #nix.enable = false;
   programs.bash.completion.enable = false;
-  #system.switch.enable = false;
 }
