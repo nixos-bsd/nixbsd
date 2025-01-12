@@ -95,16 +95,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1736122881,
-        "narHash": "sha256-EHErc5SYwchENhL7E12lKHCx+T5yubpfCCqJ3XGSKKE=",
+        "lastModified": 1736295839,
+        "narHash": "sha256-57XSAN9RCVg5dE6rYkIwRLZDYb9ez0NcrUix3xqFBjM=",
         "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "8dee1ed6cf89a18f7d6ad1a22554ee75edcb66ca",
+        "rev": "5da7699e4aa8a08f3279a1381a81f701ae4ebe63",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "nixbsd-dev",
+        "ref": "nixbsd-dev-old",
         "repo": "nixpkgs",
         "type": "github"
       }

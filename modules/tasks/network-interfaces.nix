@@ -414,6 +414,14 @@ in {
       '';
     };
 
+    networking.enableIPv6 = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Whether to enable support for IPv6.
+      '';
+    };
+
     networking.defaultGateway = mkOption {
       default = null;
       example = {

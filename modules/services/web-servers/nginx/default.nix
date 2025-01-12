@@ -1242,13 +1242,20 @@ in
       description = "Nginx Web Server";
       dependencies = [ "NETWORKING" ];
       before = [ "SERVERS" ];
+      startType = "foreground";
       preStart = ''
         ${cfg.preStart}
         ${execCommand} -t
       '';
 
-      startCommand = [ "${cfg.package}/bin/nginx" "-c" configPath ];
+      startCommand = [ "${cfg.package}/bin/nginx" "-c" (toString configPath) ];
     };
+
+    # systemd.tmpfiles.rules = [
+    #   "d /var/log/nginx 0750 ${cfg.user} ${cfg.group} -"
+    #   "D /run/nginx 0750 ${cfg.user} ${cfg.group} -"
+    #   "d /var/cache/nginx 0750 ${cfg.user} ${cfg.group} -"
+    # ];
 
     environment.etc."nginx/nginx.conf" = mkIf cfg.enableReload {
       source = configFile;
