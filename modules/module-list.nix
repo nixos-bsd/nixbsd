@@ -48,12 +48,14 @@ in [
   ./misc/substituter.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
+  ./security/acme/default.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
   ./services/networking/dhcpcd.nix
   ./services/networking/ssh/sshd.nix
   ./services/system/nix-daemon.nix
+  ./services/web-servers/nginx/default.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
