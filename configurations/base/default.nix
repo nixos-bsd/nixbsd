@@ -1,5 +1,6 @@
 { config, lib, ... }: {
   nixpkgs.hostPlatform = "x86_64-freebsd";
+  nixpkgs.overrideNix = true;
 
   users.users.root.initialPassword = "toor";
 

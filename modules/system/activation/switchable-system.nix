@@ -21,7 +21,7 @@
   config = lib.mkIf config.system.switch.enable {
     # TODO localeArchive
     system.activatableSystemBuilderCommands = ''
-      mkdir $out/bin
+      mkdir -p $out/bin
       substitute ${
         ./switch-to-configuration.sh
       } $out/bin/switch-to-configuration \
@@ -29,7 +29,10 @@
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
         --subst-var-by diffutils "${pkgs.diffutils}" \
+      '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
         --subst-var-by rcorder "${pkgs.freebsd.rcorder}" \
+        --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
+      '' + ''
         --subst-var-by distroId ${
           lib.escapeShellArg config.system.nixos.distroId
         } \
@@ -38,7 +41,6 @@
         } \
         --subst-var-by bash "${pkgs.bash}" \
         --subst-var-by shell "${pkgs.bash}/bin/sh" \
-        --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
         ;
 
       chmod +x $out/bin/switch-to-configuration

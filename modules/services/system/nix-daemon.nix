@@ -82,7 +82,7 @@ in {
   ###### implementation
 
   config = mkIf cfg.enable (mkMerge [{
-    environment.systemPackages = [ nixPackage pkgs.nix-info ]
+    environment.systemPackages = [ nixPackage pkgs.nix-info pkgs.gitMinimal ]
       ++ optional (config.programs.bash.completion.enable)
       pkgs.nix-bash-completions;
 
@@ -114,7 +114,7 @@ in {
 
       # THIS IS A HACK
       preStop = ''
-        kill -INT $(cat $pidfile) &>/dev/null || true
+        kill -INT $(cat ''${pidfile-/dev/null}) &>/dev/null || true
       '';
 
     };

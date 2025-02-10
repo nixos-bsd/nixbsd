@@ -20,9 +20,21 @@ let
     name = "nixos-install";
     src = ./nixos-install.sh;
     inherit (pkgs) runtimeShell;
+    hostPlatform = pkgs.stdenv.hostPlatform.system;
     nix = config.nix.package.out;
-    path = makeBinPath [ pkgs.jq nixos-enter pkgs.freebsd.bin ];
+    path = makeBinPath (
+      [
+        pkgs.jq
+        nixos-enter
+      ] ++ optionals pkgs.stdenv.hostPlatform.isFreeBSD [
+        pkgs.freebsd.bin
+      ] ++ optionals (!pkgs.stdenv.hostPlatform.isFreeBSD) [
+        pkgs.socat
+      ] ++ optionals pkgs.stdenv.hostPlatform.isOpenBSD [
+        pkgs.openbsd.mknod
+      ]);
     manPage = ./manpages/nixos-install.8;
+    makedev = if pkgs.stdenv.hostPlatform.isOpenBSD then lib.getExe pkgs.openbsd.makedev else "MAKEDEV";
   };
 
   nixos-rebuild = makeProg {
@@ -30,13 +42,14 @@ let
     src = ./nixos-rebuild.sh;
     inherit (pkgs) runtimeShell;
     nix = config.nix.package.out;
-    path = makeBinPath [
+    path = makeBinPath ([
       pkgs.coreutils
       pkgs.gnused
       pkgs.gnugrep
       pkgs.jq
+    ] ++ optionals pkgs.stdenv.hostPlatform.isFreeBSD [
       pkgs.freebsd.bin
-    ];
+    ]);
     manPage = ./manpages/nixos-rebuild.8;
   };
 
@@ -60,7 +73,8 @@ let
     name = "nixos-enter";
     src = ./nixos-enter.sh;
     inherit (pkgs) runtimeShell;
-    path = makeBinPath [ pkgs.freebsd.bin ];
+    hostPlatform = pkgs.stdenv.hostPlatform.system;
+    path = makeBinPath (optionals pkgs.stdenv.hostPlatform.isFreeBSD [ pkgs.freebsd.bin ]);
     manPage = ./manpages/nixos-enter.8;
   };
 
@@ -85,7 +99,10 @@ in {
     })
 
     # These may be used in auxiliary scripts (ie not part of toplevel), so they are defined unconditionally.
-    ({ system.build = { inherit nixos-install nixos-rebuild nixos-enter; }; })
+    ({
+      system.build = { inherit nixos-install nixos-rebuild nixos-enter; };
+      system.installerDependencies = [ pkgs.installShellFiles ];
+    })
   ];
 
 }

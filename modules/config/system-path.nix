@@ -69,9 +69,13 @@ let
       pkgs.openbsd.cmp
       pkgs.openbsd.dev_mkdb
       pkgs.openbsd.dhcpleasectl
+      pkgs.openbsd.disklabel
       pkgs.openbsd.dmesg
+      pkgs.openbsd.fdisk
       pkgs.openbsd.ifconfig
       pkgs.openbsd.kvm_mkdb
+      pkgs.openbsd.newfs
+      pkgs.openbsd.newfs_msdos
       pkgs.openbsd.pfctl
       pkgs.openbsd.reboot
       pkgs.openbsd.sed

@@ -36,7 +36,9 @@
       makeImage = buildPlatform: conf:
         let
           extended = conf.extendModules {
-            modules = [{ config.nixpkgs.buildPlatform = buildPlatform; }];
+            modules = [{
+              config.nixpkgs.buildPlatform = buildPlatform;
+            }];
           };
         in extended.config.system.build // {
           # appease `nix flake show`

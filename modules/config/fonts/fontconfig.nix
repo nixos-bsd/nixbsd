@@ -488,6 +488,7 @@ in
     })
     (mkIf cfg.enable {
       fonts.fontconfig.confPackages = [ confPkg ];
+      system.installerDependencies = [ pkgs.fontconfig ];
     })
   ];
 
