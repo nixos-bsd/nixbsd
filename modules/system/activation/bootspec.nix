@@ -12,7 +12,7 @@ let
   schemas = {
     v1 = rec {
       filename = "boot.json";
-      json = pkgs.writeText filename (builtins.toJSON
+      json = config.buildTrivial.writeText filename (builtins.toJSON
         # Merge extensions first to not let them shadow NixOS bootspec data.
         (cfg.extensions // {
           "org.nixos.bootspec.v1" = {

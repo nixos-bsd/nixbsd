@@ -72,7 +72,7 @@ chroot_add_resolv_conf() {
       install -Dm644 /dev/null "$resolvConf" || return 1
     fi
 
-    mount --bind /etc/resolv.conf "$resolvConf"
+    mount -t nullfs /etc/resolv.conf "$resolvConf"
 }
 
 chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" >&2

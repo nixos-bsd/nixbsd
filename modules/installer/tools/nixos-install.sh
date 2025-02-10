@@ -25,7 +25,7 @@ while [ "$#" -gt 0 ]; do
             j="$1"; shift 1
             extraBuildFlags+=("$i" "$j")
             ;;
-        --option)
+        --option|--arg|--argstr)
             j="$1"; shift 1
             k="$1"; shift 1
             extraBuildFlags+=("$i" "$j" "$k")
@@ -167,7 +167,7 @@ if [[ -z $system ]]; then
         echo "building the configuration in $NIXOS_CONFIG..."
         nix-build --out-link "$outLink" --store "$mountPoint" "${extraBuildFlags[@]}" \
             --extra-substituters "$sub" \
-            '<nixpkgs/nixos>' -A system -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+            '<nixbsd>' -A system -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
     else
         echo "building the flake in $flake..."
         nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.system.build.toplevel" \

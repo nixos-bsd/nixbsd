@@ -4,7 +4,7 @@ let
   cfg = config.programs.dconf;
 
   # Compile keyfiles to dconf DB
-  compileDconfDb = dir: pkgs.runCommand "dconf-db"
+  compileDconfDb = dir: config.buildTrivial.runCommand "dconf-db"
     {
       nativeBuildInputs = [ (lib.getBin pkgs.dconf) ];
     } "dconf compile $out ${dir}";
@@ -33,8 +33,8 @@ let
   mkDconfDb = val: compileDconfDb (pkgs.symlinkJoin {
     name = "nixos-generated-dconf-keyfiles";
     paths = [
-      (pkgs.writeTextDir "nixos-generated-dconf-keyfiles" (lib.generators.toDconfINI val.settings))
-      (pkgs.writeTextDir "locks/nixos-generated-dconf-locks" (lib.concatStringsSep "\n"
+      (config.buildTrivial.writeTextDir "nixos-generated-dconf-keyfiles" (lib.generators.toDconfINI val.settings))
+      (config.buildTrivial.writeTextDir "locks/nixos-generated-dconf-locks" (lib.concatStringsSep "\n"
         (if val.lockAll then mkAllLocks val.settings else val.locks)
       ))
     ] ++ (map checkDconfKeyfiles val.keyfiles);
@@ -42,7 +42,7 @@ let
 
   # Check if a dconf DB file is valid. The dconf cli doesn't return 1 when it can't
   # open the database file so we have to check if the output is empty.
-  checkDconfDb = file: pkgs.runCommand "check-dconf-db"
+  checkDconfDb = file: config.buildTrivial.runCommand "check-dconf-db"
     {
       nativeBuildInputs = [ (lib.getBin pkgs.dconf) ];
     } ''
@@ -65,7 +65,7 @@ let
   # Generate dconf profile
   mkDconfProfile = name: value:
     if lib.isDerivation value || lib.isPath value then
-      pkgs.runCommand "dconf-profile" { } ''
+      config.buildTrivial.runCommand "dconf-profile" { } ''
         if [[ -d ${value} ]]; then
           echo "Dconf profile should be a file but a directory is provided."
           exit 1
@@ -74,7 +74,7 @@ let
         cp ${value} $out/etc/dconf/profile/${name}
       ''
     else
-      pkgs.writeTextDir "etc/dconf/profile/${name}" (
+      config.buildTrivial.writeTextDir "etc/dconf/profile/${name}" (
         lib.concatMapStrings (x: "${x}\n") ((
           lib.optional value.enableUserDb "user-db:user"
         ) ++ (

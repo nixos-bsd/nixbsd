@@ -175,7 +175,7 @@ in
 
     systemd.tmpfiles.packages = [
       # Default tmpfiles rules provided by systemd
-      (pkgs.runCommand "systemd-default-tmpfiles" {} ''
+      (config.buildTrivial.runCommand "systemd-default-tmpfiles" {} ''
         mkdir -p $out/lib/tmpfiles.d
         cd $out/lib/tmpfiles.d
 
@@ -193,7 +193,7 @@ in
       #  ln -s "${systemd}/example/tmpfiles.d/x11.conf"
       #'')
       # User-specified tmpfiles rules
-      (pkgs.writeTextFile {
+      (config.buildTrivial.writeTextFile {
         name = "nixos-tmpfiles.d";
         destination = "/lib/tmpfiles.d/00-nixos.conf";
         text = ''
@@ -204,7 +204,7 @@ in
         '';
       })
     ] ++ (mapAttrsToList (name: paths:
-      pkgs.writeTextDir "lib/tmpfiles.d/${name}.conf" (concatStrings (mapAttrsToList (path: types:
+      config.buildTrivial.writeTextDir "lib/tmpfiles.d/${name}.conf" (concatStrings (mapAttrsToList (path: types:
         concatStrings (mapAttrsToList (_type: entry: ''
           '${entry.type}' '${path}' '${entry.mode}' '${entry.user}' '${entry.group}' '${entry.age}' ${entry.argument}
         '') types)

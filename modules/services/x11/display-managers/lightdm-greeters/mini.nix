@@ -8,7 +8,7 @@ let
   ldmcfg = dmcfg.lightdm;
   cfg = ldmcfg.greeters.mini;
 
-  miniGreeterConf = pkgs.writeText "lightdm-mini-greeter.conf"
+  miniGreeterConf = config.buildTrivial.writeText "lightdm-mini-greeter.conf"
     ''
     [greeter]
     user = ${cfg.user}

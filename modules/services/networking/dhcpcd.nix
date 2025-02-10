@@ -42,7 +42,7 @@ let
   '') staticIPv6Addresses);
 
   # Config file adapted from the one that ships with dhcpcd.
-  dhcpcdConf = pkgs.writeText "dhcpcd.conf" ''
+  dhcpcdConf = config.buildTrivial.writeText "dhcpcd.conf" ''
     # Inform the DHCP server of our hostname for DDNS.
     hostname
 
@@ -87,7 +87,7 @@ let
     ${cfg.extraConfig}
   '';
 
-  exitHook = pkgs.writeText "dhcpcd.exit-hook" ''
+  exitHook = config.buildTrivial.writeText "dhcpcd.exit-hook" ''
     if [ "$reason" = BOUND -o "$reason" = REBOOT ]; then
         # Restart ntpd.  We need to restart it to make sure that it
         # will actually do something: if ntpd cannot resolve the

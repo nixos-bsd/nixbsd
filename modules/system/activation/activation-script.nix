@@ -4,6 +4,7 @@
 with lib;
 
 let
+  # NOT buildTrivial
   tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
     mkdir -p $out/bin
     $CC -x c - -o $out/bin/tosyslog <<EOF

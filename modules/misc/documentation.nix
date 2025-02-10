@@ -62,7 +62,7 @@ let
       filter = builtins.filterSource (n: t:
         cleanSourceFilter n t && (t == "directory" -> baseNameOf n != "tests")
         && (t == "file" -> hasSuffix ".nix" n));
-    in pkgs.runCommand "lazy-options.json" {
+    in config.buildTrivial.runCommand "lazy-options.json" {
       libPath = filter (pkgs.path + "/lib");
       pkgsLibPath = filter (pkgs.path + "/pkgs/pkgs-lib");
       nixosPath = filter (pkgs.path + "/nixos");
@@ -103,7 +103,7 @@ let
   };
 
   #nixos-help = let
-  #  helpScript = pkgs.writeShellScriptBin "nixos-help" ''
+  #  helpScript = config.buildTrivial.writeShellScriptBin "nixos-help" ''
   #    # Finds first executable browser in a colon-separated list.
   #    # (see how xdg-open defines BROWSER)
   #    browser="$(

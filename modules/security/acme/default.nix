@@ -159,7 +159,7 @@ let
       WorkingDirectory = "/var/lib/acme";
 
       # Run the start script as root
-      ExecStart = "+" + (pkgs.writeShellScript "acme-fixperms" script);
+      ExecStart = "+" + (config.buildTrivial.writeShellScript "acme-fixperms" script);
     };
   };
   lockfilePrepareService = {
@@ -375,7 +375,7 @@ let
         LoadCredential = lib.mapAttrsToList (k: v: "${k}:${v}") data.credentialFiles;
 
         # Run as root (Prefixed with +)
-        ExecStartPost = "+" + (pkgs.writeShellScript "acme-postrun" ''
+        ExecStartPost = "+" + (config.buildTrivial.writeShellScript "acme-postrun" ''
           cd /var/lib/acme/${lib.escapeShellArg cert}
           if [ -e renewed ]; then
             rm renewed

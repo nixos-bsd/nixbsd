@@ -46,7 +46,7 @@ let
       cache     = makeCache pkgs.fontconfig;
       cache32   = makeCache pkgs.pkgsi686Linux.fontconfig;
     in
-    pkgs.writeText "fc-00-nixos-cache.conf" ''
+    config.buildTrivial.writeText "fc-00-nixos-cache.conf" ''
       <?xml version='1.0'?>
       <!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>
       <fontconfig>
@@ -64,7 +64,7 @@ let
 
   # rendering settings configuration file
   # priority 10
-  renderConf = pkgs.writeText "fc-10-nixos-rendering.conf" ''
+  renderConf = config.buildTrivial.writeText "fc-10-nixos-rendering.conf" ''
     <?xml version='1.0'?>
     <!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>
     <fontconfig>
@@ -83,7 +83,7 @@ let
   '';
 
   # local configuration file
-  localConf = pkgs.writeText "fc-local.conf" cfg.localConf;
+  localConf = config.buildTrivial.writeText "fc-local.conf" cfg.localConf;
 
   # default fonts configuration file
   # priority 52
@@ -101,7 +101,7 @@ let
         </alias>
       '';
     in
-    pkgs.writeText "fc-52-nixos-default-fonts.conf" ''
+    config.buildTrivial.writeText "fc-52-nixos-default-fonts.conf" ''
     <?xml version='1.0'?>
     <!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>
     <fontconfig>
@@ -120,7 +120,7 @@ let
 
   # bitmap font options
   # priority 53
-  rejectBitmaps = pkgs.writeText "fc-53-no-bitmaps.conf" ''
+  rejectBitmaps = config.buildTrivial.writeText "fc-53-no-bitmaps.conf" ''
     <?xml version="1.0"?>
     <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
     <fontconfig>
@@ -148,7 +148,7 @@ let
 
   # reject Type 1 fonts
   # priority 53
-  rejectType1 = pkgs.writeText "fc-53-nixos-reject-type1.conf" ''
+  rejectType1 = config.buildTrivial.writeText "fc-53-nixos-reject-type1.conf" ''
     <?xml version="1.0"?>
     <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
     <fontconfig>
@@ -173,7 +173,7 @@ let
   '';
 
   # fontconfig configuration package
-  confPkg = pkgs.runCommand "fontconfig-conf" {
+  confPkg = config.buildTrivial.runCommand "fontconfig-conf" {
     preferLocalBuild = true;
   } ''
     dst=$out/etc/fonts/conf.d

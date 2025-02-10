@@ -12,7 +12,8 @@ let
 
   setSessionScript = pkgs.callPackage ./account-service-util.nix { };
 
-  inherit (pkgs) lightdm writeScript writeText;
+  inherit (pkgs) lightdm;
+  inherit (config.buildTrivial) writeText writeScript;
 
   # lightdm runs with clearenv(), but we need a few things in the environment for X to startup
   xserverWrapper = writeScript "xserver-wrapper"
@@ -60,7 +61,7 @@ let
         autologin-session = ${sessionData.autologinSession}
       ''}
       ${optionalString (dmcfg.setupCommands != "") ''
-        display-setup-script=${pkgs.writeScript "lightdm-display-setup" ''
+        display-setup-script=${writeScript "lightdm-display-setup" ''
           #!${pkgs.bash}/bin/bash
           ${dmcfg.setupCommands}
         ''}

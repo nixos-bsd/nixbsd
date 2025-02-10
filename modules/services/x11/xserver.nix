@@ -101,7 +101,7 @@ let
     monitors = reverseList (foldl mkMonitor [] xrandrHeads);
   in concatMapStrings (getAttr "value") monitors;
 
-  configFile = pkgs.runCommand "xserver.conf"
+  configFile = config.buildTrivial.runCommand "xserver.conf"
     { fontpath = optionalString (cfg.fontPath != null)
         ''FontPath "${cfg.fontPath}"'';
       inherit (cfg) config;
@@ -725,7 +725,7 @@ in
         xorg.xf86inputkeyboard.out
       ];
 
-    system.checks = singleton (pkgs.runCommand "xkb-validated" {
+    system.checks = singleton (config.buidlTrivial.runCommand "xkb-validated" {
       inherit (cfg.xkb) dir model layout variant options;
       nativeBuildInputs = with pkgs.buildPackages; [ xkbvalidate ];
       preferLocalBuild = true;

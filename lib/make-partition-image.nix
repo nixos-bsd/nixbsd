@@ -1,6 +1,7 @@
 # Generate a partition image, for assembly later into a disk image.
 {
   pkgs,
+  buildTrivial,
   lib,
   label,
   filesystem,
@@ -114,7 +115,7 @@ let
       cp -a $f $root/${nixStorePath}
     done
   '';
-in pkgs.runCommand "partition-image-${label}" {
+in buildTrivial.runCommand "partition-image-${label}" {
     passthru = {
       inherit filesystem label contents;
       tooLargeIntermediate = true;

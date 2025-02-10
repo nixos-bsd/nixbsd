@@ -1,6 +1,6 @@
 {
   lib,
-  runCommand,
+  buildTrivial,
   makedev,
   buildPackages,
 }:
@@ -24,7 +24,7 @@ let
     chmod +x $TMP/bin/${name}
   '') bins;
 in
-runCommand "makedev-mtree"
+buildTrivial.runCommand "makedev-mtree"
   {
     nativeBuildInputs = [
       makedev

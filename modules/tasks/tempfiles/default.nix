@@ -34,7 +34,7 @@ let
     };
     config = {
       file = mkIf (config.text != null)
-        (pkgs.writeText "tempfile-mtree.cfg" config.text);
+        (config.buildTrivial.writeText "tempfile-mtree.cfg" config.text);
     };
   };
 in {
@@ -73,7 +73,7 @@ in {
       dependencies = [ "mountcritlocal" ];
       before = [ "FILESYSTEMS" ];
       startType = "oneshot";
-      startCommand = [(pkgs.writeScript "tempfiles-start"
+      startCommand = [(config.buildTrivial.writeScript "tempfiles-start"
         (''
           #!${pkgs.runtimeShell}
         '' +

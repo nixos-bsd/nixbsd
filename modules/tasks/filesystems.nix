@@ -113,7 +113,7 @@ let
   # Makes sequence of `specialMount device mountPoint options fsType` commands.
   # `systemMount` should be defined in the sourcing script.
   makeSpecialMounts = mounts:
-    pkgs.writeText "mounts.sh" (concatMapStringsSep "\n" (mount: ''
+    config.buildTrivial.writeText "mounts.sh" (concatMapStringsSep "\n" (mount: ''
       specialMount "${mount.device}" "${mount.mountPoint}" "${
         concatStringsSep "," mount.options
       }" "${mount.fsType}"
