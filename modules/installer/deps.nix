@@ -14,9 +14,8 @@
   };
 
   config = lib.mkIf config.system.includeInstallerDependencies {
-    system.installerDependencies = [
-      config.nixpkgs.fakeNativePkgs.stdenv
-    ];
+    system.installerDependencies = 
+      with config.nixpkgs.fakeNativePkgs.stdenv; initialPath ++ extraNativeBuildInputs ++ extraBuildInputs;
     system.extraDependencies = config.system.installerDependencies;
   };
 }
