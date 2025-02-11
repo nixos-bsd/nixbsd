@@ -27,8 +27,8 @@ with lib;
         hostPlatform = pkgs.stdenv.hostPlatform;
         targetPlatform = pkgs.stdenv.targetPlatform;
       };
-      stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs //  { cc = null; };
-      stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs // { cc = pkgs.clang; };
+      stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" (stdenvArgs // { cc = null; });
+      stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" (stdenvArgs // { cc = pkgs.clang; });
       mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" { inherit lib; config = pkgs.config; };
       mkStdenv = stdenv: stdenv // (mkMkDerivation stdenv);
       spliceLies = drv: drv // optionalAttrs (drv?__spliced) { __spliced = drv.__spliced // (with drv.__spliced; {
