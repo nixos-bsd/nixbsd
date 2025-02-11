@@ -52,7 +52,7 @@ let
       <fontconfig>
         <!-- Font directories -->
         ${concatStringsSep "\n" (map (font: "<dir>${font}</dir>") config.fonts.packages)}
-        ${optionalString (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
+        ${optionalString (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform && !config.nixpkgs.fakeNative) ''
         <!-- Pre-generated font caches -->
         <cachedir>${cache}</cachedir>
         ${optionalString (pkgs.stdenv.isx86_64 && cfg.cache32Bit) ''
