@@ -90,7 +90,8 @@ in [
   "${extPath}/config/fonts/fontdir.nix"
   "${extPath}/config/fonts/ghostscript.nix"
   "${extPath}/config/xdg/autostart.nix"
-  "${extPath}/config/xdg/mime.nix"
+  "${extPath}/config/xdg/mime.nix" # both
+  ./config/xdg/mime.nix # both
   "${extPath}/config/xdg/icons.nix"
   "${extPath}/config/xdg/menus.nix"
   ./services/x11/hardware/libinput.nix
