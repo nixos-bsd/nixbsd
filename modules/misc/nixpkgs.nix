@@ -135,7 +135,7 @@ let
     stdenv = mkStdenv stdenv';
     stdenvNoCC = mkStdenv stdenvNoCC';
     jq = spliceLies finalPkgs.jq;
-    lndir = spliceLies finalPkgs.lndir;
+    lndir = spliceLies finalPkgs.xorg.lndir;
     runtimeShell = lib.getExe finalPkgs.bash;
     shellcheck-minimal = spliceLies finalPkgs.shellcheck-minimal;
   };
