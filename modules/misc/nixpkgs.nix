@@ -242,6 +242,12 @@ in
       description = "Internal copy of pkgs.stdenv.hostPlatform to bypass some recursion";
       internal = true;
     };
+    fakeNativePkgs = lib.mkOption {
+      defaultText = "don't worry about it kitten";
+      type = pkgsType;
+      description = "The result of fakeNative crimes, available always";
+      default = liesScope';
+    };
 
     pkgs = lib.mkOption {
       defaultText = lib.literalExpression ''

@@ -15,7 +15,7 @@
 
   config = lib.mkIf config.system.includeInstallerDependencies {
     system.installerDependencies = [
-      pkgs.clang  # assuredly needed for stdenv (e.g. runCommandCC)
+      config.nixpkgs.fakeNativePkgs.stdenv
     ];
     system.extraDependencies = config.system.installerDependencies;
   };
