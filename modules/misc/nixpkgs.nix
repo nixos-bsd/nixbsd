@@ -151,7 +151,9 @@ let
       pkgsBuildTarget = self;
       pkgsHostHost = self;
       pkgsHostTarget = self;
+      buildPackages = self;
       pkgsTargetTarget = self;
+      targetPackages = self;
 
       stdenv = mkStdenv stdenv';
       stdenvNoCC = mkStdenv stdenvNoCC';
