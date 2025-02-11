@@ -201,7 +201,7 @@ in {
 
     boot.initmd.contents = [config.boot.kernelEnvironment.init0_path];
 
-    boot.kernelEnvironment.init0_path = builtins.toString (config.buildTrivial.runCommandCC "init0" {} ''
+    boot.kernelEnvironment.init0_path = builtins.toString (pkgs.runCommandCC "init0" {} ''
       $CC -x c -o $out - <<INIT0EOF
       ${init0_src}
       INIT0EOF

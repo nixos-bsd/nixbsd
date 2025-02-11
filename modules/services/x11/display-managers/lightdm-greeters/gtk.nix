@@ -9,7 +9,7 @@ let
   xcfg = config.services.xserver;
   cfg = ldmcfg.greeters.gtk;
 
-  inherit (config.buildTrivial) writeText;
+  inherit (pkgs) writeText;
 
   theme = cfg.theme.package;
   icons = cfg.iconTheme.package;

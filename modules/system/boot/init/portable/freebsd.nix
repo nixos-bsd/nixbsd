@@ -45,7 +45,7 @@ let
         "${cfg.name}_chdir" = cfg.directory;
       }
       // optionalAttrs (cfg.environment != null) {
-        "${cfg.name}_env_file" = config.buildTrivial.writeText "${cfg.name}-env" (toShellVars cfg.environment);
+        "${cfg.name}_env_file" = pkgs.writeText "${cfg.name}-env" (toShellVars cfg.environment);
       };
 
     hooks = {

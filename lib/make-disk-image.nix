@@ -1,6 +1,5 @@
 {
   pkgs,
-  buildTrivial,
   lib,
   partitions,
   totalSize ? null,
@@ -101,7 +100,7 @@ in let
   }.${partitionTableType};
 
 
-in buildTrivial.runCommand name {
+in pkgs.runCommand name {
     nativeBuildInputs = [ pkgs.freebsd.mkimg ] ++ lateBuildNativeInputs;
     passthru = {
       inherit filename partitions partitionTableType;

@@ -56,13 +56,13 @@ let
     initialState = { current = 0; phases = {}; };
     folder = state: svc: if svc.DUMMY or false then { phases = state.phases // { ${builtins.toString (state.current + 10)} = []; }; current = state.current + 10; } else { inherit (state) current; phases = state.phases // { ${builtins.toString state.current} = (state.phases.${builtins.toString state.current} or []) ++ [ svc ]; }; };
     phases = (foldl folder initialState sorted).phases;
-  in config.buildTrivial.runCommand "rc.order" { } (
+  in pkgs.runCommand "rc.order" { } (
     ''
       mkdir -p $out
     '' + concatStrings (
       mapAttrsToList (phase: services: let
         text = concatMapStringsSep "\n" (service: "start_daemon ${service}") (builtins.map (svc: svc.name) services);
-        drv = config.buildTrivial.writeTextFile { name = "phase_${phase}"; inherit text; };
+        drv = pkgs.writeTextFile { name = "phase_${phase}"; inherit text; };
       in ''
         ln -s ${drv} $out/${phase}
       ''
@@ -88,7 +88,7 @@ let
       ];
       fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
-    in config.buildTrivial.writeTextFile {
+    in pkgs.writeTextFile {
       inherit (opts) name;
       executable = true;
       text = ''

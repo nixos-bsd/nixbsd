@@ -743,7 +743,7 @@ let
 
   makePAMService = name: service: {
     name = "pam.d/${name}";
-    value.source = config.buildTrivial.writeText "${name}.pam" service.text;
+    value.source = pkgs.writeText "${name}.pam" service.text;
   };
 
   optionalSudoConfigForSSHAgentAuth =

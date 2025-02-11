@@ -62,7 +62,7 @@ let
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
 
     in
-    config.buildTrivial.writeTextFile {
+    pkgs.writeTextFile {
       inherit (opts) name;
       executable = true;
       text =
@@ -109,7 +109,7 @@ let
 
   makeRcDir =
     scripts:
-    config.buildTrivial.runCommand "rc.d" { } (
+    pkgs.runCommand "rc.d" { } (
       ''
         mkdir -p $out
       ''

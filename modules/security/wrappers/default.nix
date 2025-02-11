@@ -172,7 +172,7 @@ in {
       dependencies = [ "FILESYSTEMS" ];
       before = [ "LOGIN" ];
       startType = "oneshot";
-      startCommand = [ (config.buildTrivial.writeScript "suid-sgid-wrappers-start"
+      startCommand = [ (pkgs.writeScript "suid-sgid-wrappers-start"
       ''
         #!${pkgs.runtimeShell}
         chmod 755 "${parentWrapperDir}"
@@ -203,7 +203,7 @@ in {
 
     ###### wrappers consistency checks
     system.checks = lib.singleton
-      (config.buildTrivial.runCommandLocal "ensure-all-wrappers-paths-exist" { } ''
+      (pkgs.runCommandLocal "ensure-all-wrappers-paths-exist" { } ''
         # make sure we produce output
         mkdir -p $out
 

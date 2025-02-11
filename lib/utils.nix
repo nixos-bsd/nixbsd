@@ -5,7 +5,7 @@ rec {
 
   # Copy configuration files to avoid having the entire sources in the system closure
   copyFile = filePath:
-    config.buildTrivial.runCommand
+    pkgs.runCommand
     (builtins.unsafeDiscardStringContext (builtins.baseNameOf filePath)) { } ''
       cp ${filePath} $out
     '';

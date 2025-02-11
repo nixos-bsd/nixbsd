@@ -37,7 +37,7 @@ in {
   config = mkIf cfg.enable {
     system.build.installBootLoader = "${builder} ${builderArgs}";
     system.boot.loader.id = "stand-freebsd";
-    boot.loader.espContents = config.buildTrivial.runCommand "espDerivation" {} ''
+    boot.loader.espContents = pkgs.runCommand "espDerivation" {} ''
       mkdir -p $out
       ${populateBuilder} ${builderArgs} ${config.system.build.toplevel} -d $out -g 0
     '';

@@ -6,7 +6,7 @@ let
   ldmcfg = config.services.xserver.displayManager.lightdm;
   cfg = ldmcfg.greeters.slick;
 
-  inherit (config.buildTrivial) writeText;
+  inherit (pkgs) writeText;
 
   theme = cfg.theme.package;
   icons = cfg.iconTheme.package;

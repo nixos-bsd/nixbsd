@@ -13,7 +13,7 @@ let
   setSessionScript = pkgs.callPackage ./account-service-util.nix { };
 
   inherit (pkgs) lightdm;
-  inherit (config.buildTrivial) writeText writeScript;
+  inherit (pkgs) writeText writeScript;
 
   # lightdm runs with clearenv(), but we need a few things in the environment for X to startup
   xserverWrapper = writeScript "xserver-wrapper"

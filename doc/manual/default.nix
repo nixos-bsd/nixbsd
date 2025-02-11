@@ -83,7 +83,7 @@ in rec {
   inherit (optionsDoc) optionsJSON optionsNix optionsDocBook;
 
   # Generate the NixOS manual.
-  manualHTML = config.buildTrivial.runCommand "nixos-manual-html" {
+  manualHTML = pkgs.runCommand "nixos-manual-html" {
     nativeBuildInputs = [ buildPackages.nixos-render-docs ];
     inputs = lib.sourceFilesBySuffices ./. [ ".md" ];
     meta.description = "The NixOS manual in HTML format";
@@ -122,7 +122,7 @@ in rec {
   # Index page of the NixOS manual.
   manualHTMLIndex = "${manualHTML}/${common.outputPath}/${common.indexPath}";
 
-  manualEpub = config.buildTrivial.runCommand "nixos-manual-epub" {
+  manualEpub = pkgs.runCommand "nixos-manual-epub" {
     nativeBuildInputs =
       [ buildPackages.libxml2.bin buildPackages.libxslt.bin buildPackages.zip ];
     doc = ''
@@ -172,7 +172,7 @@ in rec {
 
   # Generate the `man configuration.nix` package
   nixos-configuration-reference-manpage =
-    config.buildTrivial.runCommand "nixos-configuration-reference-manpage" {
+    pkgs.runCommand "nixos-configuration-reference-manpage" {
       nativeBuildInputs =
         [ buildPackages.installShellFiles buildPackages.nixos-render-docs ];
       allowedReferences = [ "out" ];

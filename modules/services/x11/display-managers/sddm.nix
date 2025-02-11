@@ -11,17 +11,17 @@ let
 
   iniFmt = pkgs.formats.ini { };
 
-  xserverWrapper = config.buildTrivial.writeShellScript "xserver-wrapper" ''
+  xserverWrapper = pkgs.writeShellScript "xserver-wrapper" ''
     ${concatMapStrings (n: "export ${n}=\"${getAttr n xEnv}\"\n") (attrNames xEnv)}
     exec systemd-cat -t xserver-wrapper ${dmcfg.xserverBin} ${toString dmcfg.xserverArgs} "$@"
   '';
 
-  Xsetup = config.buildTrivial.writeShellScript "Xsetup" ''
+  Xsetup = pkgs.writeShellScript "Xsetup" ''
     ${cfg.setupScript}
     ${dmcfg.setupCommands}
   '';
 
-  Xstop = config.buildTrivial.writeShellScript "Xstop" ''
+  Xstop = pkgs.writeShellScript "Xstop" ''
     ${cfg.stopScript}
   '';
 

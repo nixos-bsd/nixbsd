@@ -10,7 +10,7 @@ let
   icons = cfg.iconTheme.package;
   cursors = cfg.cursorTheme.package;
 
-  ensoGreeterConf = config.buildTrivial.writeText "lightdm-enso-os-greeter.conf" ''
+  ensoGreeterConf = pkgs.writeText "lightdm-enso-os-greeter.conf" ''
     [greeter]
     default-wallpaper=${ldmcfg.background}
     gtk-theme=${cfg.theme.name}

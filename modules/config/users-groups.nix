@@ -520,7 +520,7 @@ let
     lib.filterAttrs (n: u: u.group != "" && !lib.elem u.group groupNames)
     cfg.users;
 
-  spec = config.buildTrivial.writeText "users-groups.json" (builtins.toJSON {
+  spec = pkgs.writeText "users-groups.json" (builtins.toJSON {
     inherit (cfg) mutableUsers;
     users = mapAttrsToList (_: u: {
       inherit (u)

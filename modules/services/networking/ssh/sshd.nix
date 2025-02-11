@@ -71,7 +71,7 @@ let
 
   configFile = settingsFormat.generate "sshd.conf-settings"
     (filterAttrs (n: v: v != null) cfg.settings);
-  sshconf = config.buildTrivial.runCommand "sshd.conf-final" { } ''
+  sshconf = pkgs.runCommand "sshd.conf-final" { } ''
     cat ${configFile} - >$out <<EOL
     ${cfg.extraConfig}
     EOL
@@ -130,7 +130,7 @@ let
     mkAuthKeyFile = u:
       nameValuePair "ssh/authorized_keys.d/${u.name}" {
         mode = "0444";
-        source = config.buildTrivial.writeText "${u.name}-authorized_keys" ''
+        source = pkgs.writeText "${u.name}-authorized_keys" ''
           ${concatStringsSep "\n" u.openssh.authorizedKeys.keys}
           ${concatMapStrings (f: readFile f + "\n")
           u.openssh.authorizedKeys.keyFiles}
@@ -689,7 +689,7 @@ in {
         if cfg.banner == null then
           "none"
         else
-          config.buildTrivial.writeText "ssh_banner" cfg.banner
+          pkgs.writeText "ssh_banner" cfg.banner
       }
 
       AddressFamily any
@@ -724,7 +724,7 @@ in {
     '';
 
     system.checks = [
-      (config.buildTrivial.runCommand "check-sshd-config" {
+      (pkgs.runCommand "check-sshd-config" {
         nativeBuildInputs = [ validationPackage ];
       } ''
         ${concatMapStringsSep "\n" (lport:

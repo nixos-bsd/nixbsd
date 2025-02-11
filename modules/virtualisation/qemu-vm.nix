@@ -216,7 +216,6 @@ let
 
   efiPartition = pkgs.callPackage ../../lib/make-partition-image.nix {
     inherit pkgs lib;
-    inherit (config) buildTrivial;
     label = espFilesystemLabel;
     filesystem = "efi";
     contents = [{
@@ -247,7 +246,6 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
 
   commonRoot = {
     inherit pkgs lib;
-    inherit (config) buildTrivial;
     label = rootFilesystemLabel;
     makeRootDirs = true;
     contents = [{
@@ -263,7 +261,6 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
 
   openbsdDataPartition = pkgs.callPackage ../../lib/make-disk-image.nix {
     inherit pkgs lib;
-    inherit (config) buildTrivial;
     partitions = [
       openbsdRootPartition
     ];
@@ -280,7 +277,6 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
   # a boot partition and root partition.
   systemImage = pkgs.callPackage ../../lib/make-disk-image.nix {
     inherit pkgs lib;
-    inherit (config) buildTrivial;
     partitions = [
       dataPartition
     ] ++ lib.optional (!cfg.netMountBoot) efiPartition;

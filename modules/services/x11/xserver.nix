@@ -101,7 +101,7 @@ let
     monitors = reverseList (foldl mkMonitor [] xrandrHeads);
   in concatMapStrings (getAttr "value") monitors;
 
-  configFile = config.buildTrivial.runCommand "xserver.conf"
+  configFile = pkgs.runCommand "xserver.conf"
     { fontpath = optionalString (cfg.fontPath != null)
         ''FontPath "${cfg.fontPath}"'';
       inherit (cfg) config;

@@ -96,7 +96,7 @@ let
     REDIRECT_STATUS   = "200";
   };
 
-  recommendedProxyConfig = config.buildTrivial.writeText "nginx-recommended-proxy-headers.conf" ''
+  recommendedProxyConfig = pkgs.writeText "nginx-recommended-proxy-headers.conf" ''
     proxy_set_header        Host $host;
     proxy_set_header        X-Real-IP $remote_addr;
     proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -145,7 +145,7 @@ let
       # need to expand the buildTrivial hack...
       /*if cfg.validateConfigFile
       then pkgs.writers.writeNginxConfig
-      else*/ config.buildTrivial.writeText
+      else*/ pkgs.writeText
     ) "nginx.conf" ''
     pid /run/nginx/nginx.pid;
     error_log ${cfg.logError};
@@ -469,7 +469,7 @@ let
     auth_basic secured;
     auth_basic_user_file ${auth_file};
   '');
-  mkHtpasswd = name: authDef: config.buildTrivial.writeText "${name}.htpasswd" (
+  mkHtpasswd = name: authDef: pkgs.writeText "${name}.htpasswd" (
     concatStringsSep "\n" (mapAttrsToList (user: password: ''
       ${user}:{PLAIN}${password}
     '') authDef)

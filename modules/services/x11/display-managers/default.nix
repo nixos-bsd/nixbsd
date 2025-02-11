@@ -18,7 +18,7 @@ let
   xorg = pkgs.xorg;
 
   fontconfig = config.fonts.fontconfig;
-  xresourcesXft = config.buildTrivial.writeText "Xresources-Xft" ''
+  xresourcesXft = pkgs.writeText "Xresources-Xft" ''
     Xft.antialias: ${if fontconfig.antialias then "1" else "0"}
     Xft.rgba: ${fontconfig.subpixel.rgba}
     Xft.lcdfilter: lcd${fontconfig.subpixel.lcdfilter}
@@ -52,7 +52,7 @@ let
   #'';
 
   # file provided by services.xserver.displayManager.sessionData.wrapper
-  xsessionWrapper = config.buildTrivial.writeScript "xsession-wrapper"
+  xsessionWrapper = pkgs.writeScript "xsession-wrapper"
     ''
       #! ${pkgs.bash}/bin/bash
 
@@ -124,7 +124,7 @@ let
       fi
     '';
 
-  installedSessions = config.buildTrivial.runCommand "desktops"
+  installedSessions = pkgs.runCommand "desktops"
     { # trivial derivation
       preferLocalBuild = true;
       allowSubstitutes = false;
@@ -424,7 +424,7 @@ in
         wms = filter (s: s.manage == "window") cfg.displayManager.session;
 
         # Script responsible for starting the window manager and the desktop manager.
-        xsession = dm: wm: config.buildTrivial.writeScript "xsession" ''
+        xsession = dm: wm: pkgs.writeScript "xsession" ''
           #! ${pkgs.bash}/bin/bash
 
           # Legacy session script used to construct .desktop files from
@@ -459,7 +459,7 @@ in
                              else sessionName;
             in
               optional (dm.name != "none" || wm.name != "none")
-                (config.buildTrivial.writeTextFile {
+                (pkgs.writeTextFile {
                   name = "${sessionName}-xsession";
                   destination = "/share/xsessions/${sessionName}.desktop";
                   # Desktop Entry Specification:
