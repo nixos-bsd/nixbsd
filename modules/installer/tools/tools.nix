@@ -85,7 +85,10 @@ in {
     })
 
     # These may be used in auxiliary scripts (ie not part of toplevel), so they are defined unconditionally.
-    ({ system.build = { inherit nixos-install nixos-rebuild nixos-enter; }; })
+    ({
+      system.build = { inherit nixos-install nixos-rebuild nixos-enter; };
+      system.installerDependencies = [ pkgs.installShellFiles ];
+    })
   ];
 
 }

@@ -40,6 +40,7 @@ in [
   ./config/users-groups.nix
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
+  ./installer/deps.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix

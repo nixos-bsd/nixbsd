@@ -324,6 +324,9 @@ in {
         ;
     })
 
+    {
+      system.installerDependencies = [ pkgs.installShellFiles pkgs.nixos-render-docs ];
+    }
   ]);
 
 }
