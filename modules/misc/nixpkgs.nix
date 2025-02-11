@@ -142,6 +142,17 @@ let
   liesScope' = finalPkgs.makeScopeWithSplicing' {
     f = self: (builtins.removeAttrs finalPkgs [ "callScope" "newScope" "overrideScope" "packages" "callPackages" "callPackage" "__splicedPackages" ]) // {
       pkgs = self;
+      __lying = true;
+
+      # sigh.
+      __splicedPackages = self;
+      pkgsBuildBuild = self;
+      pkgsBuildHost = self;
+      pkgsBuildTarget = self;
+      pkgsHostHost = self;
+      pkgsHostTarget = self;
+      pkgsTargetTarget = self;
+
       stdenv = mkStdenv stdenv';
       stdenvNoCC = mkStdenv stdenvNoCC';
       inherit (self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {})
@@ -190,12 +201,12 @@ let
       selfBuildTarget = pkgsHostTarget;
     };
   };
-  liesScope = import "${_nixbsdNixpkgsPath}/pkgs/top-level/splice.nix" finalPkgs.lib liesScope' true;
+  #liesScope = import "${_nixbsdNixpkgsPath}/pkgs/top-level/splice.nix" finalPkgs.lib liesScope' true;
   #lyingTrivialSet = lib.mapAttrs (_: installLiesOne) trivialSet;
   #evilCloak' = lyingTrivialSet // { __lies = true; };
   #evilCloak = lib.optionalAttrs cfg.fakeNative evilCloak';
 
-  evilPkgs = if cfg.fakeNative then liesScope else finalPkgs;
+  evilPkgs = if cfg.fakeNative then liesScope' else finalPkgs;
 
   # END EVIL BULLSHIT
 
