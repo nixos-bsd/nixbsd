@@ -139,8 +139,8 @@ let
   #  runtimeShell = lib.getExe finalPkgs.bash;
   #  shellcheck-minimal = spliceLies finalPkgs.shellcheck-minimal;
   #};
-  liesScope = finalPkgs.makeScopeWithSplicing' {
-    f = self: (builtins.removeAttrs finalPkgs [ "callScope" "newScope" "overrideScope" "packages" "callPackages" "callPackage" ]) // {
+  liesScope' = finalPkgs.makeScopeWithSplicing' {
+    f = self: (builtins.removeAttrs finalPkgs [ "callScope" "newScope" "overrideScope" "packages" "callPackages" "callPackage" "__splicedPackages" ]) // {
       pkgs = self;
       stdenv = mkStdenv stdenv';
       stdenvNoCC = mkStdenv stdenvNoCC';
@@ -190,6 +190,7 @@ let
       selfBuildTarget = pkgsHostTarget;
     };
   };
+  liesScope = import "${_nixbsdNixpkgsPath}/pkgs/top-level/splice.nix" finalPkgs.lib liesScope' true;
   #lyingTrivialSet = lib.mapAttrs (_: installLiesOne) trivialSet;
   #evilCloak' = lyingTrivialSet // { __lies = true; };
   #evilCloak = lib.optionalAttrs cfg.fakeNative evilCloak';
