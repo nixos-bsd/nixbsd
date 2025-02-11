@@ -15,7 +15,7 @@ with lib;
     default = if config._realBuildPlatform == "" || config._realBuildPlatform == pkgs.stdenv.buildPlatform.system then pkgs
     else if config._realBuildPlatform != pkgs.stdenv.hostPlatform.system then throw "Misuse of _realBuildPlatform `${config._realBuildPlatform}`"
     else let
-      stdenvAddons = { buildPlatform = pkgs.stdenv.hostPlatform; shell = pkgs.bash; };
+      stdenvAddons = { buildPlatform = pkgs.stdenv.hostPlatform; shell = lib.getExe pkgs.bash; };
       stdenv' = pkgs.stdenv // stdenvAddons // { cc = pkgs.clang; };
       stdenvNoCC' = pkgs.stdenvNoCC // stdenvAddons;
       mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" { inherit lib; config = pkgs.config; };
@@ -34,7 +34,7 @@ with lib;
         stdenvNoCC = mkStdenv stdenvNoCC';
         jq = spliceLies pkgs.jq;
         lndir = spliceLies pkgs.lndir;
-        runtimeShell = spliceLies pkgs.runtimeShell;
+        runtimeShell = lib.getExe pkgs.bash;
         shellcheck-minimal = spliceLies pkgs.shellcheck-minimal;
       };
       lyingTrivialSet = lib.mapAttrs (_: installLiesOne) trivialSet;
