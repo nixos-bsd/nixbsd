@@ -15,14 +15,20 @@ with lib;
     default = if config._realBuildPlatform == "" || config._realBuildPlatform == pkgs.stdenv.buildPlatform.system then pkgs
     else if config._realBuildPlatform != pkgs.stdenv.hostPlatform.system then throw "Misuse of _realBuildPlatform `${config._realBuildPlatform}`"
     else let
-      stdenvAddons = {
-        buildPlatform = pkgs.stdenv.hostPlatform;
+      stdenvArgs = {
+        name = "stdenvNoCC-lies";
         shell = lib.getExe pkgs.bash;
-        extraNativeBuildInputs = lib.map spliceLies pkgs.stdenv.extraNativeBuildInputs;
-        extraBuildInputs = lib.map spliceLies pkgs.stdenv.extraBuildInputs;
+        config = pkgs.config;
+        fetchurlBoot = pkgs.fetchurl;
+        initialPath = builtins.map (drv: drv.__spliced.hostHost) pkgs.stdenv.initialPath;
+        extraNativeBuildInputs = builtins.map (drv: drv.__spliced.hostHost) pkgs.stdenv.extraNativeBuildInputs;
+        extraBuildInputs = builtins.map (drv: drv.__spliced.hostTarget) pkgs.stdenv.extraBuildInputs;
+        buildPlatform = pkgs.stdenv.hostPlatform;
+        hostPlatform = pkgs.stdenv.hostPlatform;
+        targetPlatform = pkgs.stdenv.targetPlatform;
       };
-      stdenv' = pkgs.stdenv // stdenvAddons // { cc = pkgs.clang; };
-      stdenvNoCC' = pkgs.stdenvNoCC // stdenvAddons;
+      stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs;
+      stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs // { cc = pkgs.clang; };
       mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" { inherit lib; config = pkgs.config; };
       mkStdenv = stdenv: stdenv // (mkMkDerivation stdenv);
       spliceLies = drv: drv // optionalAttrs (drv?__spliced) { __spliced = drv.__spliced // (with drv.__spliced; {
