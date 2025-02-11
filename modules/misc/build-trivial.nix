@@ -20,9 +20,10 @@ with lib;
         shell = lib.getExe pkgs.bash;
         config = pkgs.config;
         fetchurlBoot = pkgs.fetchurl;
-        initialPath = builtins.map (drv: drv.__spliced.hostHost) pkgs.stdenv.initialPath;
-        extraNativeBuildInputs = builtins.map (drv: drv.__spliced.hostHost) pkgs.stdenv.extraNativeBuildInputs;
-        extraBuildInputs = builtins.map (drv: drv.__spliced.hostTarget) pkgs.stdenv.extraBuildInputs;
+        # hm.
+        initialPath = builtins.map (drv: pkgs.${drv.pname}) pkgs.stdenv.initialPath;
+        extraNativeBuildInputs = builtins.map spliceLies pkgs.stdenv.extraNativeBuildInputs;
+        extraBuildInputs = builtins.map spliceLies pkgs.stdenv.extraBuildInputs;
         buildPlatform = pkgs.stdenv.hostPlatform;
         hostPlatform = pkgs.stdenv.hostPlatform;
         targetPlatform = pkgs.stdenv.targetPlatform;
