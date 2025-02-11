@@ -15,7 +15,8 @@
 
   config = lib.mkIf config.system.includeInstallerDependencies {
     system.installerDependencies = 
-      with config.nixpkgs.fakeNativePkgs.stdenv; initialPath ++ extraNativeBuildInputs ++ extraBuildInputs;
+    with config.nixpkgs.fakeNativePkgs.stdenv; initialPath ++ extraNativeBuildInputs ++ extraBuildInputs
+    ++ [ xorg.lndir cc runtimeShell ];
     system.extraDependencies = config.system.installerDependencies;
   };
 }
