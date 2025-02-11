@@ -46,6 +46,7 @@ in [
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
+  ./misc/build-trivial.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
   ./security/acme/default.nix

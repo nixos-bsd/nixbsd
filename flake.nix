@@ -38,7 +38,6 @@
           extended = conf.extendModules {
             modules = [{
               config.nixpkgs.buildPlatform = buildPlatform;
-              __realBuildPlatform = buildPlatform;
             }];
           };
         in extended.config.system.build // {

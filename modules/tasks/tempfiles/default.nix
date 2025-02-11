@@ -1,6 +1,7 @@
 { config, pkgs, lib, ... }:
 with lib;
 let
+  inherit (config) buildTrivial;
   cfg = config.services.tempfiles;
   mtreeSubmodule = { config, ... }: {
     options = {
@@ -34,7 +35,7 @@ let
     };
     config = {
       file = mkIf (config.text != null)
-        (config.buildTrivial.writeText "tempfile-mtree.cfg" config.text);
+        (buildTrivial.writeText "tempfile-mtree.cfg" config.text);
     };
   };
 in {
@@ -73,7 +74,7 @@ in {
       dependencies = [ "mountcritlocal" ];
       before = [ "FILESYSTEMS" ];
       startType = "oneshot";
-      startCommand = [(config.buildTrivial.writeScript "tempfiles-start"
+      startCommand = [(buildTrivial.writeScript "tempfiles-start"
         (''
           #!${pkgs.runtimeShell}
         '' +
