@@ -127,21 +127,74 @@ let
     buildHost = hostHost;
     buildTarget = hostTarget;
   }); };
-  toLieIn = [ "buildInputs" "nativeBuildInputs" "depsBuildBuild" "depsBuildHost" "depsBuildTarget" "depsHostHost" "depsHostTarget" "depsTargetTarget" ];
-  installLiesOne = func: if builtins.isFunction func then (args: let result = func (if builtins.isAttrs args then (lib.mapAttrs (name: val: if builtins.elem name toLieIn then lib.map spliceLies val else val) args) else args); in if builtins.isFunction result then installLiesOne result else result) else func;
-  trivialSet = import "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {
-    inherit lib;
-    config = finalPkgs.config;
-    stdenv = mkStdenv stdenv';
-    stdenvNoCC = mkStdenv stdenvNoCC';
-    jq = spliceLies finalPkgs.jq;
-    lndir = spliceLies finalPkgs.xorg.lndir;
-    runtimeShell = lib.getExe finalPkgs.bash;
-    shellcheck-minimal = spliceLies finalPkgs.shellcheck-minimal;
+  #toLieIn = [ "buildInputs" "nativeBuildInputs" "depsBuildBuild" "depsBuildHost" "depsBuildTarget" "depsHostHost" "depsHostTarget" "depsTargetTarget" ];
+  #installLiesOne = func: if builtins.isFunction func then (args: let result = func (if builtins.isAttrs args then (lib.mapAttrs (name: val: if builtins.elem name toLieIn then lib.map spliceLies val else val) args) else args); in if builtins.isFunction result then installLiesOne result else result) else func;
+  #trivialSet = import "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {
+  #  inherit lib;
+  #  config = finalPkgs.config;
+  #  stdenv = mkStdenv stdenv';
+  #  stdenvNoCC = mkStdenv stdenvNoCC';
+  #  jq = spliceLies finalPkgs.jq;
+  #  lndir = spliceLies finalPkgs.xorg.lndir;
+  #  runtimeShell = lib.getExe finalPkgs.bash;
+  #  shellcheck-minimal = spliceLies finalPkgs.shellcheck-minimal;
+  #};
+  liesScope = finalPkgs.makeScopeWithSplicing' {
+    f = self: (builtins.removeAttrs finalPkgs [ "callScope" "newScope" "overrideScope" "packages" "callPackages" "callPackage" ]) // {
+      pkgs = self;
+      stdenv = mkStdenv stdenv';
+      stdenvNoCC = mkStdenv stdenvNoCC';
+      inherit (self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {})
+        runCommand
+        runCommandLocal
+        runCommandCC
+        runCommandWith
+        writeTextFile
+        writeText
+        writeTextDir
+        writeScript
+        writeScriptBin
+        writeShellScript
+        writeShellScriptBin
+        writeShellApplication
+        writeCBin
+        concatTextFile
+        concatText
+        concatScript
+        symlinkJoin
+        linkFarm
+        linkFarmFromDrvs
+        onlyBin
+        makeSetupHook
+        writeReferencesToFile
+        writeClosure
+        writeDirectReferencesToFile
+        writeStringReferencesToFile
+        requireFile
+        copyPathToStore
+        copyPathsToStore
+        applyPatches
+        emptyFile
+        emptyDirectory
+      ;
+      formats = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/pkgs-lib/formats.nix" {};
+    }
+    ;
+    otherSplices = with finalPkgs; {
+      selfHostHost = pkgsHostHost;
+      selfHostTarget = pkgsHostTarget;
+      selfTargetTarget = pkgsTargetTarget;
+      # lies begin
+      selfBuildBuild = pkgsHostHost;
+      selfBuildHost = pkgsHostHost;
+      selfBuildTarget = pkgsHostTarget;
+    };
   };
-  lyingTrivialSet = lib.mapAttrs (_: installLiesOne) trivialSet;
-  evilCloak' = lyingTrivialSet // { __lies = true; };
-  evilCloak = lib.optionalAttrs cfg.fakeNative evilCloak';
+  #lyingTrivialSet = lib.mapAttrs (_: installLiesOne) trivialSet;
+  #evilCloak' = lyingTrivialSet // { __lies = true; };
+  #evilCloak = lib.optionalAttrs cfg.fakeNative evilCloak';
+
+  evilPkgs = if cfg.fakeNative then liesScope else finalPkgs;
 
   # END EVIL BULLSHIT
 
@@ -409,7 +462,7 @@ in
         # which is somewhat costly for Nixpkgs. With an explicit priority, we only
         # evaluate the wrapper to find out that the priority is lower, and then we
         # don't need to evaluate `finalPkgs`.
-        lib.mkOverride lib.modules.defaultOverridePriority (finalPkgs.__splicedPackages // evilCloak);
+        lib.mkOverride lib.modules.defaultOverridePriority evilPkgs.__splicedPackages;
     };
 
     assertions =
