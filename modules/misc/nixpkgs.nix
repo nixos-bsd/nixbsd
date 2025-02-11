@@ -199,6 +199,10 @@ let
           inherit fontconfig fontDirectories;
         };
       buildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/buildenv" { }; # not actually a package
+      nixosOptionsDoc = attrs:
+        (import "${_nixbsdNixpkgsPath}/nixos/lib/make-options-doc")
+        ({ inherit lib; pkgs = self; } // attrs);
+
     }
     ;
     otherSplices = with finalPkgs; {
