@@ -206,6 +206,7 @@ if [[ -z $noBootLoader ]]; then
       mkdir -p "$mountPoint"
       mount -t nullfs / "$mountPoint"
       /run/current-system/bin/switch-to-configuration boot
+      cd /
       umount "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
 EOF
 )"
