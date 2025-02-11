@@ -198,6 +198,7 @@ let
         self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/libraries/fontconfig/make-fonts-cache.nix"  {
           inherit fontconfig fontDirectories;
         };
+      buildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/buildenv" { }; # not actually a package
     }
     ;
     otherSplices = with finalPkgs; {
