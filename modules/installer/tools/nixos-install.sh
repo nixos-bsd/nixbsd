@@ -203,6 +203,7 @@ if [[ -z $noBootLoader ]]; then
       # when not root, re-execute the script in an unshared namespace
       # On Linux this is done recursively, but that doesn't seem to be an option
       # on FreeBSD, so let's hope this works
+      mkdir -p "$mountPoint"
       mount -t nullfs / "$mountPoint"
       /run/current-system/bin/switch-to-configuration boot
       umount "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
