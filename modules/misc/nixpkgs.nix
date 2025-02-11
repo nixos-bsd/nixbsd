@@ -194,6 +194,10 @@ let
       substitute = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute.nix" { };
       substituteAll = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute-all.nix" { };
       substituteAllFiles = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute-files/substitute-all-files.nix" { };
+      makeFontsCache = {fontconfig ? self.fontconfig, fontDirectories}:
+        self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/libraries/fontconfig/make-fonts-cache.nix"  {
+          inherit fontconfig fontDirectories;
+        };
     }
     ;
     otherSplices = with finalPkgs; {
