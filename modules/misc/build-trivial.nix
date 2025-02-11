@@ -27,7 +27,7 @@ with lib;
         hostPlatform = pkgs.stdenv.hostPlatform;
         targetPlatform = pkgs.stdenv.targetPlatform;
       };
-      stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs;
+      stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs //  { cc = null; };
       stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" stdenvArgs // { cc = pkgs.clang; };
       mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" { inherit lib; config = pkgs.config; };
       mkStdenv = stdenv: stdenv // (mkMkDerivation stdenv);
