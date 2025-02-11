@@ -96,7 +96,7 @@ let
 
   nixbsdWithGender = nixbsdWithUserModules.extendModules {
     modules = import ../modules/module-list-gendered.nix nixpkgsPath
-      nixbsdWithUserModulesUnchecked._module.args.pkgs.stdenv.hostPlatform;
+      nixbsdWithUserModulesUnchecked.config.nixpkgs._hostPlatform;
   };
 
   withExtraAttrs = configuration:

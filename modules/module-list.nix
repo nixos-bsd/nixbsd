@@ -9,7 +9,6 @@ in [
   "${extPath}/misc/ids.nix"
   "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"
-  "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
   "${extPath}/programs/bash/bash-completion.nix"
   "${extPath}/programs/bash/bash.nix"
@@ -46,7 +45,7 @@ in [
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
-  ./misc/build-trivial.nix
+  ./misc/nixpkgs.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
   ./security/acme/default.nix
