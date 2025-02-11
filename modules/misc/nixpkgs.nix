@@ -191,6 +191,9 @@ let
         emptyDirectory
       ;
       formats = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/pkgs-lib/formats.nix" {};
+      substitute = self.callPackage "${_nixbsdNixpkgsPath}/build-support/substitute/substitute.nix" { };
+      substituteAll = self.callPackage "${_nixbsdNixpkgsPath}/build-support/substitute/substitute-all.nix" { };
+      substituteAllFiles = self.callPackage "${_nixbsdNixpkgsPath}/build-support/substitute-files/substitute-all-files.nix" { };
     }
     ;
     otherSplices = with finalPkgs; {
