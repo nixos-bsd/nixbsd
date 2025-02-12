@@ -136,7 +136,7 @@ fi
 
 # A place to drop temporary stuff.
 tmpdir="$(mktemp -d -p "$mountPoint")"
-trap 'rm -rf $tmpdir' EXIT
+trap 'rm -rf $tmpdir || true' EXIT
 
 # store temporary files on target filesystem by default
 export TMPDIR=${TMPDIR:-$tmpdir}
@@ -207,7 +207,9 @@ if [[ -z $noBootLoader ]]; then
       mount -t nullfs / "$mountPoint"
       /run/current-system/bin/switch-to-configuration boot
       cd /
-      umount "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
+      # even though we are inside the chroot we have to specify an absolute path for
+      # the unmount. TODO: see if jails fix this
+      umount "$mountPoint$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
 EOF
 )"
 fi

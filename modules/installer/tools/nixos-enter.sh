@@ -47,7 +47,8 @@ fi
 mkdir -p "$mountPoint/dev"
 chmod 0755 "$mountPoint/dev"
 mount -t devfs devfs "$mountPoint/dev"
-trap "umount '$mountPoint/dev'" EXIT
+_CLEANUP_MOUNTS=("$mountPoint/dev")
+trap 'umount "${_CLEANUP_MOUNTS[@]}" || true' EXIT
 
 # modified from https://github.com/archlinux/arch-install-scripts/blob/bb04ab435a5a89cd5e5ee821783477bc80db797f/arch-chroot.in#L26-L52
 chroot_add_resolv_conf() {
@@ -74,7 +75,7 @@ chroot_add_resolv_conf() {
     fi
 
     mount -t nullfs /etc/resolv.conf "$resolvConf"
-    trap "umount '$resolvConf'" EXIT
+    _CLEANUP_MOUNTS+=("$resolvConf")
 }
 
 chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" >&2
