@@ -293,7 +293,7 @@ in {
 
     environment.systemPackages = config.system.fsPackages ++ {
       freebsd = [ pkgs.freebsd.mount pkgs.freebsd.umount ];
-      openbsd = [ pkgs.openbsd.mount ];
+      openbsd = [ pkgs.openbsd.mount pkgs.openbsd.umount ];
     }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.etc.fstab.text =

@@ -1,11 +1,11 @@
-{ config, lib, lixFlake ? null, mini-tmpfiles-flake ? null, ... }:
+{ config, pkgs, lib, lixFlake ? null, mini-tmpfiles-flake ? null, ... }:
 with lib; {
   # TODO: @artemist remove when support is upstream
   # Also remove specialArgs and input changes in flake
   options = {
     nixpkgs.overrideNix = mkOption {
       type = types.bool;
-      default = true;
+      default = false;
       example = false;
       description = ''
         Overlay nix with a development version of lix.

@@ -28,7 +28,7 @@
   xdg.mime.enable = false;
   documentation.enable = false;
   documentation.man.man-db.enable = false;
-  nix.enable = false;
+  #nix.enable = false;
   programs.bash.completion.enable = false;
   system.switch.enable = false;
 }

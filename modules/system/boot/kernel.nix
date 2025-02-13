@@ -92,7 +92,7 @@ in {
   };
 
   config = mkIf cfg.enable {
-    system.installerDependencies = [
+    system.installerDependencies = mkIf pkgs.stdenv.hostPlatform.isFreeBSD [
       pkgs.freebsd.kldxref
     ];
     system.build = { inherit (config.boot) kernel; };

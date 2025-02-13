@@ -46,9 +46,15 @@ fi
 
 mkdir -p "$mountPoint/dev"
 chmod 0755 "$mountPoint/dev"
-mount -t devfs devfs "$mountPoint/dev"
-_CLEANUP_MOUNTS=("$mountPoint/dev")
-trap 'umount "${_CLEANUP_MOUNTS[@]}" || true' EXIT
+_CLEANUP_MOUNTS=()
+trap 'test "${#_CLEANUP_MOUNTS}" = 0 || umount "${_CLEANUP_MOUNTS[@]}" || true' EXIT
+
+case "@hostPlatform@" in
+    *-freebsd)
+        mount -t devfs devfs "$mountPoint/dev"
+        _CLEANUP_MOUNTS+=("$mountPoint/dev")
+        ;;
+esac
 
 # modified from https://github.com/archlinux/arch-install-scripts/blob/bb04ab435a5a89cd5e5ee821783477bc80db797f/arch-chroot.in#L26-L52
 chroot_add_resolv_conf() {
@@ -69,13 +75,21 @@ chroot_add_resolv_conf() {
       fi
     fi
 
-    # ensure file exists to bind mount over
-    if [[ ! -f "$resolvConf" ]]; then
-      install -Dm644 /dev/null "$resolvConf" || return 1
-    fi
+    case "@hostPlatform@" in
+        *-freebsd)
+            # ensure file exists to bind mount over
+            if [[ ! -f "$resolvConf" ]]; then
+              install -Dm644 /dev/null "$resolvConf" || return 1
+            fi
 
-    mount -t nullfs /etc/resolv.conf "$resolvConf"
-    _CLEANUP_MOUNTS+=("$resolvConf")
+            mount -t nullfs /etc/resolv.conf "$resolvConf"
+            _CLEANUP_MOUNTS+=("$resolvConf")
+            ;;
+
+        *-openbsd)
+            install -Dm644 /etc/resolv.conf "$resolvConf"
+            ;;
+    esac
 }
 
 chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" >&2

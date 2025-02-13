@@ -188,6 +188,13 @@ nix-env --store "$mountPoint" "${extraBuildFlags[@]}" \
 mkdir -m 0755 -p "$mountPoint/etc"
 touch "$mountPoint/etc/NIXOS"
 
+case "@hostPlatform@" in
+    *-openbsd)
+        mkdir "$mountPoint/dev"
+        (cd "$mountPoint/dev" && "@makedev@" all)
+        ;;
+esac
+
 # Switch to the new system configuration.  This will install Grub with
 # a menu default pointing at the kernel/initrd/etc of the new
 # configuration.
@@ -203,13 +210,27 @@ if [[ -z $noBootLoader ]]; then
       # when not root, re-execute the script in an unshared namespace
       # On Linux this is done recursively, but that doesn't seem to be an option
       # on FreeBSD, so let's hope this works
-      mkdir -p "$mountPoint"
-      mount -t nullfs / "$mountPoint"
+      case "@hostPlatform@" in
+          *-freebsd)
+              mkdir -p "$mountPoint"
+              mount -t nullfs / "$mountPoint"
+              ;;
+          *-openbsd)
+              ln -s / "$mountPoint" 2>/dev/null || true
+              ;;
+      esac
       /run/current-system/bin/switch-to-configuration boot
       cd /
-      # even though we are inside the chroot we have to specify an absolute path for
-      # the unmount. TODO: see if jails fix this
-      umount "$mountPoint$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
+      case "@hostPlatform" in
+          *-freebsd)
+              # even though we are inside the chroot we have to specify an absolute path for
+              # the unmount. TODO: see if jails fix this
+              umount "$mountPoint$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
+              ;;
+          *-openbsd)
+              rm "$mountPoint" 2>/dev/null || true
+              ;;
+      esac
 EOF
 )"
 fi
