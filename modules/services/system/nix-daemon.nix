@@ -107,7 +107,7 @@ in {
 
       # THIS IS A HACK
       preStop = ''
-        kill -INT $(cat ${pidfile-/dev/null}) &>/dev/null || true
+        kill -INT $(cat ''${pidfile-/dev/null}) &>/dev/null || true
       '';
     };
 

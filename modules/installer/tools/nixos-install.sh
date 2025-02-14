@@ -162,7 +162,7 @@ fi
 
 case "@hostPlatform@" in
     *-openbsd)
-        mkdir "$mountPoint/dev"
+        mkdir -p "$mountPoint/dev"
         (cd "$mountPoint/dev" && "@makedev@" all)
         ;;
 esac
@@ -182,9 +182,9 @@ if [[ -z $system ]]; then
             outLink="$tmpdir/nix"
             if [[ -z "$flake" ]]; then
                 nix-build --out-link "$outLink" "${extraBuildFlags[@]}" \
-                    '<nixbsd>' -A pkgs.nix -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+                    '<nixbsd>' -A config.nix.package -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
             else
-                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.pkgs.nix" "${verbosity[@]}" \
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.nix.package" "${verbosity[@]}" \
                     "${extraBuildFlags[@]}" --out-link "$outLink"
             fi
             nix --experimental-features nix-command copy --to "$mountPoint" "$(readlink -f "$outLink")"

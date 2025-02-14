@@ -30,6 +30,8 @@ let
         pkgs.freebsd.bin
       ] ++ optionals (!pkgs.stdenv.hostPlatform.isFreeBSD) [
         pkgs.socat
+      ] ++ optionals pkgs.stdenv.hostPlatform.isOpenBSD [
+        pkgs.openbsd.mknod
       ]);
     manPage = ./manpages/nixos-install.8;
     makedev = if pkgs.stdenv.hostPlatform.isOpenBSD then lib.getExe pkgs.openbsd.makedev else "MAKEDEV";
