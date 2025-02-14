@@ -139,6 +139,7 @@ let
         openbsd.pwd_mkdb
         openbsd.fsck
         openbsd.fsck_ffs
+        openbsd.fsck_msdos
         bash
         tosyslog
       ];

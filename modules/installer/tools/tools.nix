@@ -22,7 +22,15 @@ let
     inherit (pkgs) runtimeShell;
     hostPlatform = pkgs.stdenv.hostPlatform.system;
     nix = config.nix.package.out;
-    path = makeBinPath ([ pkgs.jq nixos-enter ] ++ optionals pkgs.stdenv.hostPlatform.isFreeBSD [ pkgs.freebsd.bin ]);
+    path = makeBinPath (
+      [
+        pkgs.jq
+        nixos-enter
+      ] ++ optionals pkgs.stdenv.hostPlatform.isFreeBSD [
+        pkgs.freebsd.bin
+      ] ++ optionals (!pkgs.stdenv.hostPlatform.isFreeBSD) [
+        pkgs.socat
+      ]);
     manPage = ./manpages/nixos-install.8;
     makedev = if pkgs.stdenv.hostPlatform.isOpenBSD then lib.getExe pkgs.openbsd.makedev else "MAKEDEV";
   };

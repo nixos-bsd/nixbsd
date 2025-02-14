@@ -160,21 +160,55 @@ if [[ -z $noChannelCopy ]]; then
     fi
 fi
 
+case "@hostPlatform@" in
+    *-openbsd)
+        mkdir "$mountPoint/dev"
+        (cd "$mountPoint/dev" && "@makedev@" all)
+        ;;
+esac
+
 # Build the system configuration in the target filesystem.
 if [[ -z $system ]]; then
+    socat_pid=
+    case "@hostPlatform@" in
+        *-freebsd)
+            storeFlags=("--store" "$mountPoint" "--extra-substituters" "$sub")
+            chrootFlags=()
+            ;;
+        *)
+            # if we don't have a sandbox we need to do shenannigans to be able to build in the chroot
+            storeFlags=("--extra-substituters" "unix:///socat-socket?trusted=1")
+            chrootFlags=("chroot" "$mountPoint")
+            outLink="$tmpdir/nix"
+            if [[ -z "$flake" ]]; then
+                nix-build --out-link "$outLink" "${extraBuildFlags[@]}" \
+                    '<nixbsd>' -A pkgs.nix -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+            else
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.pkgs.nix" "${verbosity[@]}" \
+                    "${extraBuildFlags[@]}" --out-link "$outLink"
+            fi
+            nix --experimental-features nix-command copy --to "$mountPoint" "$(readlink -f "$outLink")"
+            socat "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" "UNIX-LISTEN:$mountPoint/socat-socket,fork" &
+            socat_pid=$!
+            ;;
+    esac
+
     outLink="$tmpdir/system"
     if [[ -z $flake ]]; then
         echo "building the configuration in $NIXOS_CONFIG..."
-        nix-build --out-link "$outLink" --store "$mountPoint" "${extraBuildFlags[@]}" \
-            --extra-substituters "$sub" \
+        "${chrootFlags[@]}" nix-build --out-link "$outLink" \
+            "${storeFlags[@]}" "${extraBuildFlags[@]}" \
             '<nixbsd>' -A system -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
     else
         echo "building the flake in $flake..."
-        nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.system.build.toplevel" \
-            --store "$mountPoint" --extra-substituters "$sub" "${verbosity[@]}" \
+        "${chrootFlags[@]}" nix "${flakeFlags[@]}" build \
+            "$flake#$flakeAttr.config.system.build.toplevel" \
+            "${storeFlags[@]}" "${verbosity[@]}" \
             "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
     fi
     system=$(readlink -f "$outLink")
+
+    [[ -n "$socatPid" ]] && kill -INT "$socatPid"
 fi
 
 # Set the system profile to point to the configuration. TODO: combine
@@ -187,13 +221,6 @@ nix-env --store "$mountPoint" "${extraBuildFlags[@]}" \
 # Mark the target as a NixOS installation, otherwise switch-to-configuration will chicken out.
 mkdir -m 0755 -p "$mountPoint/etc"
 touch "$mountPoint/etc/NIXOS"
-
-case "@hostPlatform@" in
-    *-openbsd)
-        mkdir "$mountPoint/dev"
-        (cd "$mountPoint/dev" && "@makedev@" all)
-        ;;
-esac
 
 # Switch to the new system configuration.  This will install Grub with
 # a menu default pointing at the kernel/initrd/etc of the new

@@ -288,7 +288,7 @@ in {
     # Add the mount helpers to the system path so that `mount' can find them.
     system.fsPackages = {
       freebsd = [ pkgs.freebsd.mount_msdosfs pkgs.freebsd.mount_nullfs ];
-      openbsd = [ pkgs.openbsd.mount_ffs ];
+      openbsd = [ pkgs.openbsd.mount_ffs pkgs.openbsd.mount_msdos ];
     }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.systemPackages = config.system.fsPackages ++ {
