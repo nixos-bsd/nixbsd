@@ -182,6 +182,7 @@ case "@hostPlatform@" in
         (cd "$mountPoint/dev" && "@makedev@" all)
         ln -sfn "/" "$mountPoint$mountPoint" 2>/dev/null || true
         cp -rL /etc/ssl "$mountPoint/etc/ssl"
+        cp -rL /etc/nix "$mountPoint/etc/nix"
         ;;
 esac
 
@@ -204,11 +205,11 @@ if [[ -z $system ]]; then
                 nix-build --out-link "$outLink" "${extraBuildFlags[@]}" \
                     '<nixbsd>' -A config.nix.package -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
             else
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.nix.package" "${verbosity[@]}" \
+                    "${extraBuildFlags[@]}" --out-link "$outLink"
                 if [[ "$flake" == "path:$mountPoint/"* ]]; then
                     flake="${flake/path:${mountPoint}/path:}"
                 fi
-                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.nix.package" "${verbosity[@]}" \
-                    "${extraBuildFlags[@]}" --out-link "$outLink"
             fi
             nixPath="$(readlink -f "$outLink")"
             nix --experimental-features nix-command copy --no-check-sigs \
