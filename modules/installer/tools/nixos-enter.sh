@@ -17,6 +17,9 @@ while [ "$#" -gt 0 ]; do
         --system)
             system="$1"; shift 1
             ;;
+        --no-system)
+            system=
+            ;;
         --help)
             exec man nixos-enter
             exit 1
@@ -101,8 +104,10 @@ chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" 
         exec 2>/dev/null
     fi
 
-    # Run the activation script. Set $PATH_LOCALE to suppress some Perl locale warnings.
-    PATH_LOCALE="$system/sw/share/locale" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
+    if [[ -n "$system" ]]; then
+        # Run the activation script. Set $PATH_LOCALE to suppress some Perl locale warnings.
+        PATH_LOCALE="$system/sw/share/locale" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
+    fi
 
     # Create /tmp. This is needed for nix-build and the NixOS activation script to work.
     # Hide the unhelpful "failed to replace specifiers" errors caused by missing /etc/machine-id.

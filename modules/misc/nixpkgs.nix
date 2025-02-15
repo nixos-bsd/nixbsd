@@ -194,11 +194,19 @@ let
       substitute = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute.nix" { };
       substituteAll = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute-all.nix" { };
       substituteAllFiles = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute-files/substitute-all-files.nix" { };
+      replaceVarsWith = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars-with.nix" { };
+      replaceVars = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars.nix" { };
       makeFontsCache = {fontconfig ? self.fontconfig, fontDirectories}:
         self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/libraries/fontconfig/make-fonts-cache.nix"  {
           inherit fontconfig fontDirectories;
         };
       buildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/buildenv" { }; # not actually a package
+      perlBuildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/interpreters/perl/wrapper.nix" {
+        perl = finalPkgs.perl;
+        inherit (self.perlPackages) requiredPerlModules;
+      };
+      perlWithPackages = f: self.perlBuildEnv.override { extraLibs = f self.perlPackages; };
+      perl = finalPkgs.perl // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; passthru = finalPkgs.perl.passthru // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; }; };
       nixosOptionsDoc = attrs:
         (import "${_nixbsdNixpkgsPath}/nixos/lib/make-options-doc")
         ({ inherit lib; pkgs = self; } // attrs);
