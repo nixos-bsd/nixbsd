@@ -1,0 +1,98 @@
+diff --git a/src/libstore/unix/build/local-derivation-goal.cc b/src/libstore/unix/build/local-derivation-goal.cc
+index ec938b07b..4050cb5d3 100644
+--- a/src/libstore/unix/build/local-derivation-goal.cc
++++ b/src/libstore/unix/build/local-derivation-goal.cc
+@@ -877,9 +877,12 @@ void LocalDerivationGoal::startBuilder()
+     if (unlockpt(builderOut.get()))
+         throw SysError("unlocking pseudoterminal");
+ 
++    startupNotifyPipe.create();
++
+     /* Open the slave side of the pseudoterminal and use it as stderr. */
+     auto openSlave = [&]()
+     {
++        startupNotifyPipe.readSide = -1;
+         AutoCloseFD builderOut = open(slaveName.c_str(), O_RDWR | O_NOCTTY);
+         if (!builderOut)
+             throw SysError("opening pseudoterminal slave");
+@@ -977,6 +980,7 @@ void LocalDerivationGoal::startBuilder()
+             writeFull(sendPid.writeSide.get(), fmt("%d\n", child));
+             _exit(0);
+         });
++        startupNotifyPipe.writeSide = -1;
+ 
+         sendPid.writeSide.close();
+ 
+@@ -1051,6 +1055,7 @@ void LocalDerivationGoal::startBuilder()
+             openSlave();
+             runChild();
+         });
++        startupNotifyPipe.writeSide = -1;
+     }
+ 
+     /* parent */
+@@ -1062,13 +1067,14 @@ void LocalDerivationGoal::startBuilder()
+     while (true) {
+         std::string msg = [&]() {
+             try {
+-                return readLine(builderOut.get());
++                return readLine(startupNotifyPipe.readSide.get());
+             } catch (Error & e) {
+                 auto status = pid.wait();
+                 e.addTrace({}, "while waiting for the build environment for '%s' to initialize (%s, previous messages: %s)",
+                     worker.store.printStorePath(drvPath),
+                     statusToString(status),
+                     concatStringsSep("|", msgs));
++                startupNotifyPipe.readSide = -1;
+                 throw;
+             }
+         }();
+@@ -1077,11 +1083,13 @@ void LocalDerivationGoal::startBuilder()
+             FdSource source(builderOut.get());
+             auto ex = readError(source);
+             ex.addTrace({}, "while setting up the build environment");
++            startupNotifyPipe.readSide = -1;
+             throw ex;
+         }
+         debug("sandbox setup: " + msg);
+         msgs.push_back(std::move(msg));
+     }
++    startupNotifyPipe.readSide = -1;
+ }
+ 
+ 
+@@ -1997,7 +2005,7 @@ void LocalDerivationGoal::runChild()
+             throw SysError("changing into '%1%'", tmpDir);
+ 
+         /* Close all other file descriptors. */
+-        unix::closeMostFDs({STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO});
++        unix::closeMostFDs({STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, startupNotifyPipe.writeSide.get()});
+ 
+ #if __linux__
+         linux::setPersonality(drv->platform);
+@@ -2163,7 +2171,8 @@ void LocalDerivationGoal::runChild()
+ #endif
+ 
+         /* Indicate that we managed to set up the build environment. */
+-        writeFull(STDERR_FILENO, std::string("\2\n"));
++        writeFull(startupNotifyPipe.writeSide.get(), std::string("\2\n"));
++        startupNotifyPipe.writeSide = -1;
+ 
+         sendException = false;
+ 
+diff --git a/src/libstore/unix/build/local-derivation-goal.hh b/src/libstore/unix/build/local-derivation-goal.hh
+index bf25cf2a6..1ed715783 100644
+--- a/src/libstore/unix/build/local-derivation-goal.hh
++++ b/src/libstore/unix/build/local-derivation-goal.hh
+@@ -53,6 +53,11 @@ struct LocalDerivationGoal : public DerivationGoal
+      */
+     Pipe userNamespaceSync;
+ 
++    /**
++     * Pipe for synchronising the startup of the builder.
++     */
++    Pipe startupNotifyPipe;
++
+     /**
+      * The mount namespace and user namespace of the builder, used to add additional
+      * paths to the sandbox as a result of recursive Nix calls.

@@ -1,6 +1,9 @@
 { pkgs, lib, config, ... }:
 {
   nixpkgs.hostPlatform = "x86_64-openbsd";
+  nixpkgs.overlays = [
+    (import ../../overlays/nix-patches.nix)
+  ];
   boot.kernel.package = pkgs.openbsd.sys;
 
   boot.loader.stand-openbsd.enable = true;
