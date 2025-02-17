@@ -16,7 +16,7 @@
   config = lib.mkIf config.system.includeInstallerDependencies {
     system.installerDependencies = 
     with config.nixpkgs.fakeNativePkgs.stdenv; initialPath ++ extraNativeBuildInputs ++ extraBuildInputs
-    ++ [ pkgs.xorg.lndir cc shell ];
-    system.extraDependencies = config.system.installerDependencies;
+    ++ [ pkgs.xorg.lndir cc cc.libc shell ];
+    system.extraDependencies = lib.concatMap (drv: if drv ? "outputs" then lib.map (output: drv.${output}) drv.outputs else [ drv ]) config.system.installerDependencies;
   };
 }
