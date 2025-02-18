@@ -210,6 +210,7 @@ let
       nixosOptionsDoc = attrs:
         (import "${_nixbsdNixpkgsPath}/nixos/lib/make-options-doc")
         ({ inherit lib; pkgs = self; } // attrs);
+      makeBinaryWrapper = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/by-name/ma/makeBinaryWrapper/package.nix" { cc = self.stdenv.cc; };
 
     }
     ;
