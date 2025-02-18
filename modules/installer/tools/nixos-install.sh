@@ -204,20 +204,27 @@ if [[ -z $system ]]; then
             if [[ -z "$flake" ]]; then
                 nix-build --out-link "$outLink" "${extraBuildFlags[@]}" \
                     '<nixbsd>' -A config.nix.package -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+                nixPath="$(readlink -f "$outLink")"
             else
                 nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.nix.package" "${verbosity[@]}" \
-                    "${extraBuildFlags[@]}" --out-link "$outLink"
-                if [[ "$flake" == "path:$mountPoint/"* ]]; then
-                    flake="${flake/path:${mountPoint}/path:}"
-                fi
+                    "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
+                nixPath="$(readlink -f "$outLink")"
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.pkgs.gitMinimal" "${verbosity[@]}" \
+                    "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
+                gitPath="$(readlink -f "$outLink")"
             fi
-            nixPath="$(readlink -f "$outLink")"
+            if [[ -n "$flake" && "$flake" == "path:$mountPoint/"* ]]; then
+                flake="${flake/path:${mountPoint}/path:}"
+            fi
             nix --experimental-features nix-command copy --no-check-sigs \
                 --to "$mountPoint" "$nixPath"
-            socat "UNIX-LISTEN:$mountPoint/socat-socket,fork,reuseaddr" "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" &
+            nix --experimental-features nix-command copy --no-check-sigs \
+                --to "$mountPoint" "$gitPath"
+            socat "UNIX-LISTEN:$mountPoint/socat-socket,fork,reuseaddr" "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" & sleep 0.5
             socat_pid=$!
             trap 'rm -rf $tmpdir || true; kill -INT $socat_pid 2>/dev/null || true' EXIT
             nixPrefix="$nixPath/bin/"
+            chrootFlags+=("PATH=$gitPath/bin")
             ;;
     esac
 
