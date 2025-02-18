@@ -91,9 +91,11 @@ let
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        # TODO: Support other root paths
-        fsck /dev/sd0a
-        mount -u -w /dev/sd0a /
+        if [[ ! -w / ]]; then
+          # TODO: Support other root paths
+          fsck /dev/sd0a
+          mount -u -w /dev/sd0a /
+        fi
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
         mount -u -w /
       '' + ''
