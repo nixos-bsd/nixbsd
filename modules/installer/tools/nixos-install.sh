@@ -251,6 +251,8 @@ nix-env --store "$mountPoint" "${extraBuildFlags[@]}" \
         --extra-substituters "$sub" \
         -p "$mountPoint"/nix/var/nix/profiles/system --set "$system" "${verbosity[@]}"
 
+rm -rf "$mountPoint/etc/ssl" "$mountPoint/etc/nix"
+
 # Switch to the new system configuration.  This will install Grub with
 # a menu default pointing at the kernel/initrd/etc of the new
 # configuration.
