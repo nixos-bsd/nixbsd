@@ -1,4 +1,4 @@
-{ pkgs }:
+{ pkgs, stand-efi }:
 
 pkgs.substituteAll {
   src = ./stand-conf-builder.sh;
@@ -10,4 +10,5 @@ pkgs.substituteAll {
     pkgs.jq
   ];
   inherit (pkgs) bash;
+  stand = stand-efi;
 }

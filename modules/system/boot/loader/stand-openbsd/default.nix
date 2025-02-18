@@ -9,9 +9,11 @@ let
   cfg = config.boot.loader.stand-openbsd;
   builder = import ./stand-conf-builder.nix {
     inherit pkgs;
+    stand-efi = pkgs.openbsd.stand;
   };
   populateBuilder = import ./stand-conf-builder.nix {
     pkgs = pkgs.buildPackages;
+    stand-efi = pkgs.openbsd.stand;
   };
   builderArgs = "-c";
 in
