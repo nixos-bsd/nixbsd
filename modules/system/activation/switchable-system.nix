@@ -21,7 +21,7 @@
   config = lib.mkIf config.system.switch.enable {
     # TODO localeArchive
     system.activatableSystemBuilderCommands = ''
-      mkdir $out/bin
+      mkdir -p $out/bin
       substitute ${
         ./switch-to-configuration.sh
       } $out/bin/switch-to-configuration \
