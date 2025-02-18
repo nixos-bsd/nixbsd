@@ -204,6 +204,7 @@ let
       perlBuildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/interpreters/perl/wrapper.nix" {
         perl = finalPkgs.perl;
         inherit (self.perlPackages) requiredPerlModules;
+        makeBinaryWrapper = self.makeBinaryWrapper;
       };
       perlWithPackages = f: self.perlBuildEnv.override { extraLibs = f self.perlPackages; };
       perl = finalPkgs.perl // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; passthru = finalPkgs.perl.passthru // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; }; };
