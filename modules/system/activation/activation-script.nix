@@ -67,7 +67,7 @@ let
       done
 
       '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        if [[ $$ == 0 ]]; then
+        if [[ $$ == 1 ]]; then
           exec <>/dev/console 1>&0 2>&0
         fi
       '' +
@@ -93,7 +93,7 @@ let
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        if [[ $$ == 0 ]]; then
+        if [[ $$ == 1 ]]; then
           # TODO: Support other root paths
           fsck /dev/sd0a
           mount -u -w /dev/sd0a /
