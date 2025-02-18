@@ -27,7 +27,6 @@ in [
   "${extPath}/programs/zsh/zsh-syntax-highlighting.nix"
   "${extPath}/programs/zsh/zsh.nix"
   "${extPath}/security/ca.nix"
-  "${extPath}/security/sudo.nix"
   "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
@@ -49,6 +48,7 @@ in [
   ./misc/nixpkgs.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
+  ./security/sudo.nix
   ./security/acme/default.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
