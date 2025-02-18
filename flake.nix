@@ -1,12 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos-bsd/nixpkgs/nixbsd-dev-new";
-    lix = {
-      url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
-      inputs.nixpkgs.follows = "nixpkgs";
-      # We don't need another nixpkgs clone, it won't evaluate anyway
-      inputs.nixpkgs-regression.follows = "nixpkgs";
-    };
     mini-tmpfiles = {
       url = "github:nixos-bsd/mini-tmpfiles";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,7 +14,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, lix, mini-tmpfiles, ... }:
+  outputs = { self, nixpkgs, mini-tmpfiles, ... }:
     let
       inherit (nixpkgs) lib;
 
@@ -59,7 +53,6 @@
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
           specialArgs = {
-            lixFlake = lix;
             mini-tmpfiles-flake = mini-tmpfiles;
           } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });
