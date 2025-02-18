@@ -224,7 +224,7 @@ if [[ -z $system ]]; then
             socat_pid=$!
             trap 'rm -rf $tmpdir || true; kill -INT $socat_pid 2>/dev/null || true' EXIT
             nixPrefix="$nixPath/bin/"
-            chrootFlags+=("PATH=$gitPath/bin")
+            PATH="$gitPath/bin:$PATH"
             ;;
     esac
 
