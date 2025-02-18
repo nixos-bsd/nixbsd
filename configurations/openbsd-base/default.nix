@@ -33,5 +33,5 @@
   documentation.man.man-db.enable = false;
   #nix.enable = false;
   programs.bash.completion.enable = false;
-  system.switch.enable = false;
+  #system.switch.enable = false;
 }
