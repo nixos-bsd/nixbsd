@@ -67,7 +67,9 @@ let
       done
 
       '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        exec <>/dev/console 1>&0 2>&0
+        if [[ ! -r /dev/stdin ]]; then
+          exec <>/dev/console 1>&0 2>&0
+        fi
       '' +
       ''
 

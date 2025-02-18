@@ -161,7 +161,7 @@ if [[ -z $noChannelCopy ]]; then
 fi
 
 # Mark the target as a NixOS installation, otherwise switch-to-configuration will chicken out.
-mkdir -m 0755 -p "$mountPoint/etc"
+mkdir -m 0755 -p "$mountPoint/etc" "$mountPoint/run"
 touch "$mountPoint/etc/NIXOS"
 
 # Create a bind mount for each of the mount points inside the target file
