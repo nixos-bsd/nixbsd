@@ -9,9 +9,14 @@
   };
 
   nixConfig = {
-    extra-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
-    extra-trusted-public-keys =
-      [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
+    extra-substituters = [
+      "https://nixcache.reflex-frp.org" 
+      "https://attic.mildlyfunctional.gay/nixbsd"
+    ];
+    extra-trusted-public-keys = [
+      "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
+      "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc="
+    ];
   };
 
   outputs = { self, nixpkgs, mini-tmpfiles, ... }:
