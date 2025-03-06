@@ -223,18 +223,18 @@ let
       source = if config.boot.loader.espContents == null then throw "The bootloader configuration did not provide an EFI sys
 tem partition but the drive layout is asking for it!" else config.boot.loader.espContents;
     }];
-    totalSize = "64m";
+    totalSize = "128m";
   };
 
   freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = "ufs";
-    totalSize = "10g";
+    totalSize = "60g";
   });
 
   openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = "ufs";
     ufsVersion = "1";
-    totalSize = "10g";
+    totalSize = "60g";
     contents = commonRoot.contents ++ [{
       target = "/dev/MAKEDEV";
       source = getExe pkgs.openbsd.makedev;
