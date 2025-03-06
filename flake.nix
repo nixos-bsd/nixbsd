@@ -2,7 +2,7 @@
   inputs = {
     nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev";
     lix = {
-      url = "git+https://git.lix.systems/artemist/lix/src/branch/freebsd-build";
+      url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
       # We don't need another nixpkgs clone, it won't evaluate anyway
       inputs.nixpkgs-regression.follows = "nixpkgs";
