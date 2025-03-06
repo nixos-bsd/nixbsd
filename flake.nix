@@ -1,8 +1,8 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev-old";
+    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev";
     lix = {
-      url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
+      url = "git+https://git.lix.systems/artemist/lix/src/branch/freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
       # We don't need another nixpkgs clone, it won't evaluate anyway
       inputs.nixpkgs-regression.follows = "nixpkgs";
@@ -15,7 +15,7 @@
   };
 
   nixConfig = {
-    extra-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
+    extra-trusted-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
     extra-trusted-public-keys =
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
