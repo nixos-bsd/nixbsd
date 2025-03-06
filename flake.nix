@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev-old";
+    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev";
     lix = {
       url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,7 +15,7 @@
   };
 
   nixConfig = {
-    extra-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
+    extra-trusted-substituters = [ "https://attic.mildlyfunctional.gay/nixbsd" ];
     extra-trusted-public-keys =
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };

@@ -2,7 +2,7 @@
   imports = [ ../base/default.nix ];
 
   nix.settings = {
-    trusted-users = [ "@wheel" ];
+    trusted-users = [ "root" "nixbld" "@wheel" ];
     experimental-features = [ "nix-command" "flakes" ];
   };
 
