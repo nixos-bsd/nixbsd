@@ -93,9 +93,16 @@ let
     ];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
 
-  defaultPackageNames = [ ];
+  defaultPackageNames = {
+    freebsd = [
+      "freebsd.jail"
+      "freebsd.jexec"
+      "freebsd.jls"
+    ];
+    openbsd = [];
+  }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
   defaultPackages =
-    map (n: let pkg = pkgs.${n}; in setPrio ((pkg.meta.priority or 5) + 3) pkg)
+    map (n: let pkg = lib.attrByPath (lib.splitString "." n) (throw "No such package ${n}") pkgs; in setPrio ((pkg.meta.priority or 5) + 3) pkg)
     defaultPackageNames;
   defaultPackagesText =
     "[ ${concatMapStringsSep " " (n: "pkgs.${n}") defaultPackageNames} ]";

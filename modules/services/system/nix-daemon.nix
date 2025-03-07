@@ -81,17 +81,24 @@ in {
 
   ###### implementation
 
-  config = mkIf cfg.enable {
+  config = mkIf cfg.enable (mkMerge [{
     environment.systemPackages = [ nixPackage pkgs.nix-info ]
       ++ optional (config.programs.bash.completion.enable)
       pkgs.nix-bash-completions;
 
     services.tempfiles.specs = [{
       root = "/nix/var/nix";
-      extraFlags = [ "-d" "-e" "-i" "-U" ];
-      text = "daemon-socket type=dir uname=root gname=root mode=0755";
+      extraFlags = [ "-d" "-e" "-U" ];
+      text = ".\n\tdaemon-socket type=dir uname=root gname=root mode=0755";
     }];
 
+    # Set up the environment variables for running Nix.
+    environment.sessionVariables = cfg.envVars;
+
+    # Legacy configuration conversion.
+    nix.settings.sandbox-fallback = false;
+
+  } (mkIf (!config.boot.isJail) {
     init.services.nix-daemon = {
       description = "nix daemon for a multi-user store";
       dependencies = [ "FILESYSTEMS" "tempfiles" ];
@@ -109,23 +116,12 @@ in {
       preStop = ''
         kill -INT $(cat $pidfile) &>/dev/null || true
       '';
+
     };
-
-    # Set up the environment variables for running Nix.
-    environment.sessionVariables = cfg.envVars;
-
     nix.nrBuildUsers = mkDefault
-      (if cfg.settings.auto-allocate-uids or false then
-        0
-      else
-        max 32
-        (if cfg.settings.max-jobs == "auto" then 0 else cfg.settings.max-jobs));
+    (if cfg.settings.auto-allocate-uids or false then 0
+      else max 32 (if cfg.settings.max-jobs == "auto" then 0 else cfg.settings.max-jobs));
 
     users.users = nixbldUsers;
-
-    # Legacy configuration conversion.
-    nix.settings.sandbox-fallback = false;
-
-  };
-
+  })]);
 }

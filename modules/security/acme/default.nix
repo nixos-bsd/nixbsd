@@ -338,7 +338,7 @@ let
       wants = [ "network-online.target" "acme-fixperms.service" ] ++ selfsignedDeps ++ lib.optional (cfg.maxConcurrentRenewals > 0) "acme-lockfiles.service";
 
       # https://github.com/NixOS/nixpkgs/pull/81371#issuecomment-605526099
-      wantedBy = lib.optionals (!config.boot.isContainer) [ "multi-user.target" ];
+      wantedBy = lib.optionals (!config.boot.isJail) [ "multi-user.target" ];
 
       path = with pkgs; [ lego coreutils diffutils openssl ];
 

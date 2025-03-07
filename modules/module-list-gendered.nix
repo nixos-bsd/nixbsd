@@ -10,6 +10,7 @@ if hostPlatform.isFreeBSD then
     ./services/ttys/getty-freebsd.nix
     ./system/boot/init/portable/freebsd.nix
     ./system/boot/loader/stand-freebsd
+    ./virtualisation/jails.nix
   ]
 else if hostPlatform.isOpenBSD then
   [

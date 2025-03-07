@@ -77,6 +77,7 @@ let
       # Ensure a consistent umask.
       umask 0022
 
+      '' + optionalString (!config.boot.isJail) (''
       # Early mounts
       specialMount() {
         SRC="$1"
@@ -100,6 +101,9 @@ let
       source ${config.system.build.earlyMountScript}
 
       ${config.boot.postMountCommands}
+      '') + ''
+
+        mkdir -p /etc /dev /var /run /nix /tmp
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
