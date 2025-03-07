@@ -33,7 +33,13 @@ let
   ) else if totalSize != null then (
     "-m ${totalSize} -M ${totalSize}"
   ) else "";
-  ufsBuilder = ''
+  zfsSizeFlags = if additionalSize != null then (
+    if totalSize != null then throw "Cannot specify both totalSize and additionalSize" else
+    "-b ${additionalSize}"
+  ) else if totalSize != null then (
+    "-m ${totalSize}"
+  ) else "";
+  mtreeBuilder = ''
     pushd $root
     echo ' /set type=file uid=0 gid=0' >>../.mtree
     echo ' /set type=dir uid=0 gid=0' >>../.mtree
@@ -54,15 +60,26 @@ let
     ''}
     sort -o ../.mtree ../.mtree
     popd
+  '';
+  ufsBuilder = ''
+    ${mtreeBuilder}
     ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${ufsSizeFlags} -o version=${ufsVersion} -o label=${label} -F $root/../.mtree $out $root
+  '';
+  zfsBuilder = ''
+    ${mtreeBuilder}
+    ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${zfsSizeFlags} -t zfs -o poolname=${label} -o bootfs=${label} -o rootpath=/ -F $root/../.mtree $out $root
   '';
   fatSizeFlags = if additionalSize != null then throw "Cannot specify additionalSize for FAT filesystem" else
     if totalSize != null then "-o create_size=${totalSize}" else throw "Must specify totalSize for FAT filesystem";
   fatBuilder = ''
     ${pkgs.buildPackages.freebsd.makefs}/bin/makefs -t msdos -o fat_type=16 -o volume_label=${label} ${fatSizeFlags} $out $root
   '';
-  builder = if filesystem == "ufs" then ufsBuilder else if filesystem == "fat" || filesystem == "efi" then fatBuilder
-    else throw "Unknown filesystem type ${filesystem}";
+  builder = {
+    "zfs" = zfsBuilder;
+    "ufs" = ufsBuilder;
+    "fat" = fatBuilder;
+    "efi" = fatBuilder;
+  }.${filesystem} or (throw "Unknown filesystem type ${filesystem}");
   contentsCopier = lib.optionalString (contents != []) ''
     set -f
     sources_=(${lib.concatStringsSep " " sources})

@@ -227,7 +227,7 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
   };
 
   freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
-    filesystem = "ufs";
+    filesystem = cfg.rootFilesystem;
     totalSize = "10g";
   });
 
@@ -353,6 +353,12 @@ in {
         If you are *not* booting from a UEFI firmware, this value is, by
         default, `null`. The ESP is mounted under `/boot`.
       '';
+    };
+
+    virtualisation.rootFilesystem = mkOption {
+      type = types.str;
+      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
+      description = "The partition kind to use for the image root filesystem.";
     };
 
     virtualisation.rootDevice = mkOption {
@@ -929,7 +935,7 @@ in {
               fsType = "tmpfs";
             } else {
               device = cfg.rootDevice;
-              fsType = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
+              fsType = cfg.rootFilesystem;
             });
           "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
             device = "tmpfs";
