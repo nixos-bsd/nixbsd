@@ -67,8 +67,12 @@ let
           PATH=$PATH:$i/bin:$i/sbin
       done
 
+      if [[ $$ == 1 || $PPID == 1 ]]; then
+        REALINIT=1
+      fi
+
       '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        if [[ $$ == 1 ]]; then
+        if [[ $REALINIT == 1 ]]; then
           exec <>/dev/console 1>&0 2>&0
         fi
       '' +
@@ -89,6 +93,7 @@ let
         TYP="$4"
         test "$TYP" = tmpfs && SRC=tmpfs && NOFSCK=1
         test "$TYP" = devfs && SRC=devfs && NOFSCK=1
+        test "$TYP" = zfs && NOFSCK=1
         mount | grep "$SRC on $DST" &>/dev/null && return 0
 
         mkdir -m 0755 -p "$DST"
@@ -97,16 +102,16 @@ let
         fi
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
-      if [[ $$ == 1 ]]; then
+      if [[ $REALINIT == 1 ]]; then
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
         # TODO: Support other root paths
         fsck -C ${fsckY} /dev/sd0a
         mount -u -w /dev/sd0a /
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
-        fsck -C ${fsckY} /
+        ${lib.optionalString (config.fileSystems."/".fsType != "zfs") "fsck -C ${fsckY} /"}
         mount -u -w /
       '' + ''
-      source ${config.system.build.earlyMountScript}
+        source ${config.system.build.earlyMountScript}
       fi
 
       ${config.boot.postMountCommands}
