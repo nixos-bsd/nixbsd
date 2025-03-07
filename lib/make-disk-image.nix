@@ -74,7 +74,7 @@ in let
           "swap" = "freebsd-swap";
           "bsd" = "openbsd-data";
         };
-        filename = if part ? filename then "${part}/${part.filename}" else "${part}";
+        filename = if part ? filepath then part.filepath else if part ? filename then "${part}/${part.filename}" else "${part}";
         in "-p ${aliasMap.${part.filesystem or part.partitionTableType}}/${part.label}:=${filename}"
         ) partitionsFixed;
       sizeFlags = lib.optionalString (totalSize != null) "--capacity ${totalSize}";
