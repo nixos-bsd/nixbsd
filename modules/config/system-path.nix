@@ -43,6 +43,8 @@ let
       pkgs.freebsd.dmesg
       pkgs.freebsd.fdisk
       pkgs.freebsd.fsck
+      pkgs.freebsd.fsck_ffs
+      pkgs.freebsd.fsck_msdosfs
       pkgs.freebsd.geom
       pkgs.freebsd.ifconfig
       pkgs.freebsd.kldconfig

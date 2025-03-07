@@ -76,6 +76,14 @@ in {
       '';
     };
 
+    system.boot.autoFsck = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Whether fsck(8) should be invoked with the -y flag during activation, automatically fixing anything it can.
+      '';
+    };
+
     system.build = {
       toplevel = mkOption {
         type = types.package;

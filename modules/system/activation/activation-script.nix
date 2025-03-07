@@ -4,6 +4,7 @@
 with lib;
 
 let
+  fsckY = if config.system.boot.autoFsck then "-y" else "";
   tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
     mkdir -p $out/bin
     $CC -x c - -o $out/bin/tosyslog <<EOF
@@ -84,18 +85,22 @@ let
         DST="$2"
         OPT="$3"
         TYP="$4"
-        [ "$TYP" = tmpfs ] && SRC=tmpfs
-        [ "$TYP" = devfs ] && SRC=devfs
+        test "$TYP" = tmpfs && SRC=tmpfs && NOFSCK=1
+        test "$TYP" = devfs && SRC=devfs && NOFSCK=1
         mount | grep "$SRC on $DST" &>/dev/null && return 0
 
         mkdir -m 0755 -p "$DST"
+        if [[ -z "$NOFSCK" ]]; then
+          fsck -C ${fsckY} "$SRC"
+        fi
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
         # TODO: Support other root paths
-        fsck /dev/sd0a
+        fsck -C ${fsckY} /dev/sd0a
         mount -u -w /dev/sd0a /
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        fsck -C ${fsckY} /
         mount -u -w /
       '' + ''
       source ${config.system.build.earlyMountScript}
@@ -133,6 +138,9 @@ let
     ] ++ {
       freebsd = [
         freebsd.mount
+        freebsd.fsck
+        freebsd.fsck_ffs
+        freebsd.fsck_msdosfs
         freebsd.nscd
         freebsd.pwd_mkdb
       ];
@@ -143,6 +151,7 @@ let
         openbsd.pwd_mkdb
         openbsd.fsck
         openbsd.fsck_ffs
+        openbsd.fsck_msdos
         bash
         tosyslog
       ];
