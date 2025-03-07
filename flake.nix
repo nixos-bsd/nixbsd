@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:rhelmot/nixpkgs/nixbsd-dev-old";
+    nixpkgs.url = "github:nixos-bsd/nixpkgs/nixbsd-dev-new";
     lix = {
       url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -49,6 +49,7 @@
           vmClosureInfo = extended.pkgs.closureInfo {
             rootPaths = [ extended.config.system.build.vm.drvPath ];
           };
+          system = extended.config.system.build.toplevel;
           inherit (extended) pkgs config;
         };
     in {
