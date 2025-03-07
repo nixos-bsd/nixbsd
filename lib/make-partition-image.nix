@@ -40,9 +40,12 @@ let
     echo ' /set type=link uid=0 gid=0' >>../.mtree
     echo ' /set type=char uid=0 gid=0' >>../.mtree
     echo ' /set type=block uid=0 gid=0' >>../.mtree
-    find . -type d | awk '{ gsub(/ /, "\\s", $0); print $0, "type=dir" }' >>../.mtree
-    find . -type f | awk '{ gsub(/ /, "\\s", $0); print $0, "type=file" }' >>../.mtree
-    find . -type l | awk '{ gsub(/ /, "\\s", $0); print $0, "type=link" }' >>../.mtree
+    esc() {
+      sed -e 's@\\@\\\\@g' -e 's@#@\\x23@g' -e 's@ @\\x20@g'
+    }
+    find . -type d | esc | awk '{ print $0, "type=dir" }' >>../.mtree
+    find . -type f | esc | awk '{ print $0, "type=file" }' >>../.mtree
+    find . -type l | esc | awk '{ print $0, "type=link" }' >>../.mtree
     ${lib.optionalString (extraMtree != null) ''
       cat ${extraMtree} >>../.mtree
     ''}
