@@ -691,9 +691,9 @@ in {
               '')}
           '';
         };
-    in mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
+    in mkIf pkgs.stdenv.hostPlatform.isFreeBSD ({
       network_defaults = networkDefaults;
-    } // listToAttrs (map configureAddrs interfaces);
+    } // listToAttrs (map configureAddrs interfaces));
 
     boot.kernel.sysctl = {
       "net.inet6.ip6.use_tempaddr" =
