@@ -1,7 +1,5 @@
 #! @bash@/bin/sh -e
 
-shopt -s nullglob
-
 export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
 
@@ -103,12 +101,22 @@ addEntry $default/boot.json default >> $tmpFile
 
 if [ "$numGenerations" -gt 0 ]; then
     for generation in $(
-            (cd /nix/var/nix/profiles && ls -d system-*-link/boot.json) \
+            (cd /nix/var/nix/profiles && ls -d system-*-link/boot.json 2>/dev/null) \
             | sed 's#system-\([0-9]\+\)-link/boot.json#\1#' \
             | sort -n -r \
             | head -n $numGenerations); do
         link=/nix/var/nix/profiles/system-$generation-link/boot.json
         addEntry $link $generation
+    done >> $tmpFile
+    for profile in $(cd /nix/var/nix/profiles/system-profiles && ls -d * 2>/dev/null | grep -v -- '-link$'); do
+        for generation in $(
+                (cd /nix/var/nix/profiles/system-profiles && ls -d $profile-*-link/boot.json 2>/dev/null) \
+                | sed 's#.*-\([0-9]\+\)-link/boot.json#\1#' \
+                | sort -n -r \
+                | head -n $numGenerations); do
+            link=/nix/var/nix/profiles/system-profiles/${profile}-${generation}-link/boot.json
+            addEntry $link ${profile}-${generation}
+        done
     done >> $tmpFile
 fi
 
@@ -131,11 +139,11 @@ fi
 mkdir -p $target/efi/boot
 cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
 
-for fn in $target/nixos/*; do
+shopt -s nullglob
+for fn in $(ls -d $target/nixos/* 2>/dev/null); do
     if ! test "${filesCopied[$fn]}" = 1; then
         echo "Removing no longer needed boot file: $fn"
         chmod +w -- "$fn"
         rm -rf -- "$fn"
     fi
 done
-
