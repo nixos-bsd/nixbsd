@@ -56,6 +56,9 @@ in [
   ./services/networking/ssh/sshd.nix
   ./services/system/nix-daemon.nix
   ./services/web-servers/nginx/default.nix
+  ./services/databases/postgresql.nix
+  ./services/databases/redis.nix
+  ./services/web-apps/immich.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
