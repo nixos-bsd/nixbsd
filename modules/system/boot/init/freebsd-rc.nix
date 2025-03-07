@@ -81,11 +81,12 @@ let
           ''
 
             export PATH=${escapeShellArg pathStr}
+            ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${formatScriptLiteral v}\"") config.init.environment)}
 
             . /etc/rc.subr
           ''
           + concatStringsSep "\n" (
-            mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}\"") (
+            mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}${optionalString (name == "command_args" && opts.defaultLog.enable) " &>>/var/log/${opts.defaultLog.name}.log"}\"") (
               notNull opts.shellVariables
             )
           )
@@ -339,6 +340,16 @@ in
                     };
                   };
                 };
+              };
+
+              defaultLog.enable = mkOption {
+                type = types.bool;
+                default = false;
+                description = "Whether to redirect stdout and stderr to /var/log.";
+              };
+              defaultLog.name = mkOption {
+                type = types.str;
+                description = "The filename (without .log) to log to in /var/log.";
               };
             };
 

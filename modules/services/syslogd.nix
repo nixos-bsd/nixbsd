@@ -337,6 +337,7 @@ in {
       startType = "forking";
       pidFile = "/var/run/syslog.pid";
       startCommand = [ "${cfg.package}/bin/syslogd" ] ++ socketArgs ++ cfg.extraParams;
+      defaultLog.enable = false;
     };
 
     # Defaults overrides syslogd path, set it back

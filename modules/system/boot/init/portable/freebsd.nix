@@ -7,15 +7,16 @@
 
 with lib;
 let
+  convertName = builtins.replaceStrings [ "-" ] [ "_" ];
   convertService = name: cfg: {
-    name = builtins.replaceStrings [ "-" ] [ "_" ] cfg.name;
+    name = convertName cfg.name;
     description = cfg.description;
     rcorderSettings = {
       REQUIRE = cfg.dependencies;
       BEFORE = cfg.before;
     };
 
-    inherit (cfg) path;
+    inherit (cfg) path defaultLog;
 
     shellVariables =
       optionalAttrs (cfg.startType == "foreground") {
@@ -24,12 +25,15 @@ let
           "-u"
           cfg.user
           "-P"
-          "/var/run/${cfg.name}.pid"
+          "/run/${cfg.name}.pid"
+        ] ++ lib.optionals (!cfg.defaultLog.enable) [
           "-S"
+        ] ++ [
           "--"
-        ] ++ cfg.startCommand;
+        ] ++ cfg.startCommand
+        ;
 
-        pidfile = "/var/run/${cfg.name}.pid";
+        pidfile = "/run/${cfg.name}.pid";
       }
       // optionalAttrs (cfg.startType == "forking" || cfg.startType == "oneshot") {
         command = head cfg.startCommand;
@@ -42,10 +46,10 @@ let
         pidfile = cfg.pidFile;
       }
       // optionalAttrs (cfg.directory != null) {
-        "${cfg.name}_chdir" = cfg.directory;
+        "${convertName cfg.name}_chdir" = cfg.directory;
       }
       // optionalAttrs (cfg.environment != null) {
-        "${cfg.name}_env_file" = pkgs.writeText "${cfg.name}-env" (toShellVars cfg.environment);
+        "${convertName cfg.name}_env_file" = pkgs.writeText "${cfg.name}-env" (toShellVars cfg.environment);
       };
 
     hooks = {
