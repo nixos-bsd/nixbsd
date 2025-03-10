@@ -363,9 +363,9 @@ in {
 
     virtualisation.rootDevice = mkOption {
       type = types.nullOr types.path;
-      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "/dev/sd0a" else "/dev/ufs/${rootFilesystemLabel}";
-      defaultText = literalExpression "/dev/ufs/${rootFilesystemLabel}";
-      example = "/dev/ufs/nixos";
+      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "/dev/sd0a" else "/dev/gpt/${rootFilesystemLabel}";
+      defaultText = literalExpression "/dev/gpt/${rootFilesystemLabel}";
+      example = "/dev/gpt/nixos";
       description = ''
         The path (inside the VM) to the device containing the root filesystem.
       '';

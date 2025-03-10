@@ -18,7 +18,7 @@
   boot.loader.stand-freebsd.enable = true;
 
   fileSystems."/" = {
-    device = "/dev/ufs/nixos";
+    device = "/dev/gpt/nixos";
     fsType = "ufs";
   };
 
