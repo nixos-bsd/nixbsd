@@ -53,6 +53,7 @@ in [
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
+  ./services/fcron.nix
   ./services/networking/dhcpcd.nix
   ./services/networking/ssh/sshd.nix
   ./services/system/nix-daemon.nix
@@ -74,7 +75,8 @@ in [
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
-  ./tasks/filesystems.nix
+  ./tasks/filesystems
+  ./tasks/filesystems/zfs.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
   ./virtualisation/build-vm.nix

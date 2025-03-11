@@ -330,8 +330,6 @@ in {
       };
     });
 
-    boot.earlyModules = mkIf (config.fileSystems."/".fsType == "zfs") [ "zfs" ];
-
     freebsd.rc.services.mountcritlocal = {
       description = "Mount local filesystems";
       rcorderSettings = {
