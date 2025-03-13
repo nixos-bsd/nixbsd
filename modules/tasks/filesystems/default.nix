@@ -77,6 +77,12 @@ let
         '';
       };
 
+      neededForBoot = mkOption {
+        default = false;
+        type = types.bool;
+        description = "The filesystem must be mounted for boot to proceed";
+      };
+
       writable = mkOption {
         default = true;
         example = false;
@@ -154,8 +160,11 @@ let
   in fstabFileSystems:
   { }:
   concatMapStrings (fs:
-    escape fs.device + " " + escape fs.mountPoint + " " + fs.fsType + " "
-    + escape (builtins.concatStringsSep "," (fsOptions fs)) + " 0 "
+    escape fs.device
+    + " " + escape fs.mountPoint
+    + " " + fs.fsType
+    + " " + escape (builtins.concatStringsSep "," (fsOptions fs))
+    + " 0 "
     + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
     + "\n") fstabFileSystems;
 
@@ -278,6 +287,8 @@ in {
         } loops to ${ls ", " fileSystems'.loops}";
     }];
 
+    fileSystems."/".neededForBoot = true;
+
     # Export for use in other modules
     system.build.fileSystems = fileSystems;
     system.build.earlyMountScript = makeSpecialMounts
@@ -329,8 +340,6 @@ in {
         options = [ "nosuid" "noexec" "nodev" ];
       };
     });
-
-    boot.earlyModules = mkIf (config.fileSystems."/".fsType == "zfs") [ "zfs" ];
 
     freebsd.rc.services.mountcritlocal = {
       description = "Mount local filesystems";

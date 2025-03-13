@@ -835,6 +835,8 @@ in {
         mkdir -p $targetRoot/boot
       '';
 
+      networking.hostId = "12345678";
+
       # After booting, register the closure of the paths in
       # `virtualisation.additionalPaths' in the Nix database in the VM.  This
       # allows Nix operations to work in the VM.  The path to the
@@ -940,7 +942,7 @@ in {
           "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
             device = "tmpfs";
             fsType = "tmpfs";
-            #neededForBoot = true;
+            neededForBoot = true;
             # Sync with systemd's tmp.mount;
             options = [
               "mode=1777"

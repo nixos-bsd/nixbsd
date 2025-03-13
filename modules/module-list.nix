@@ -75,7 +75,8 @@ in [
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
-  ./tasks/filesystems.nix
+  ./tasks/filesystems
+  ./tasks/filesystems/zfs.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
   ./virtualisation/build-vm.nix
