@@ -4,7 +4,6 @@ let
 
   queuelen = lib.optionals (cfg.queuelen != null) ["-q" (toString cfg.queuelen)];
 
-  # Duplicate code, also found in cron.nix. Needs deduplication.
   fcrontab = ''
     SHELL=${pkgs.bash}/bin/bash
     PATH=${config.system.path}/bin:${config.system.path}/sbin
