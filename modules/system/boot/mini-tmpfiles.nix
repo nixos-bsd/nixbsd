@@ -150,6 +150,7 @@ in
     #  "systemd-tmpfiles-setup.service"
     #];
     init.services.mini-tmpfiles = {
+      provides = [ "tmpfiles" ];
       dependencies = [ "mountcritlocal" ];
       before = [ "FILESYSTEMS" ];
       startType = "oneshot";

@@ -316,7 +316,7 @@ in {
     init.services = lib.mapAttrs' (name: conf: lib.nameValuePair (redisName name) {
       description = "Redis Server - ${redisName name}";
 
-      dependencies = [ "mini_tmpfiles" "NETWORKING" ];
+      dependencies = [ "tmpfiles" "NETWORKING" ];
 
       startType = "foreground";
       startCommand = ["${cfg.package}/bin/${cfg.package.serverBin or "redis-server"}" "/var/lib/${redisName name}/redis.conf" ] ++ conf.extraParams;

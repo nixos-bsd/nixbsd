@@ -29,6 +29,12 @@ with lib;
                 description = "Name of the service.";
               };
 
+              provides = mkOption {
+                type = types.listOf types.str;
+                description = "Additional names this service should provide.";
+                default = [];
+              };
+
               description = mkOption {
                 type = types.str;
                 default = "";
