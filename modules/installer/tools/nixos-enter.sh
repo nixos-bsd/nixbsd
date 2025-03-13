@@ -17,6 +17,9 @@ while [ "$#" -gt 0 ]; do
         --system)
             system="$1"; shift 1
             ;;
+        --no-system)
+            system=
+            ;;
         --help)
             exec man nixos-enter
             exit 1
@@ -46,7 +49,15 @@ fi
 
 mkdir -p "$mountPoint/dev"
 chmod 0755 "$mountPoint/dev"
-mount -t devfs devfs "$mountPoint/dev"
+_CLEANUP_MOUNTS=()
+trap 'test "${#_CLEANUP_MOUNTS}" = 0 || umount "${_CLEANUP_MOUNTS[@]}" || true' EXIT
+
+case "@hostPlatform@" in
+    *-freebsd)
+        mount -t devfs devfs "$mountPoint/dev"
+        _CLEANUP_MOUNTS+=("$mountPoint/dev")
+        ;;
+esac
 
 # modified from https://github.com/archlinux/arch-install-scripts/blob/bb04ab435a5a89cd5e5ee821783477bc80db797f/arch-chroot.in#L26-L52
 chroot_add_resolv_conf() {
@@ -67,12 +78,21 @@ chroot_add_resolv_conf() {
       fi
     fi
 
-    # ensure file exists to bind mount over
-    if [[ ! -f "$resolvConf" ]]; then
-      install -Dm644 /dev/null "$resolvConf" || return 1
-    fi
+    case "@hostPlatform@" in
+        *-freebsd)
+            # ensure file exists to bind mount over
+            if [[ ! -f "$resolvConf" ]]; then
+              install -Dm644 /dev/null "$resolvConf" || return 1
+            fi
 
-    mount --bind /etc/resolv.conf "$resolvConf"
+            mount -t nullfs /etc/resolv.conf "$resolvConf"
+            _CLEANUP_MOUNTS+=("$resolvConf")
+            ;;
+
+        *-openbsd)
+            install -Dm644 /etc/resolv.conf "$resolvConf"
+            ;;
+    esac
 }
 
 chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" >&2
@@ -84,8 +104,10 @@ chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" 
         exec 2>/dev/null
     fi
 
-    # Run the activation script. Set $PATH_LOCALE to suppress some Perl locale warnings.
-    PATH_LOCALE="$system/sw/share/locale" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
+    if [[ -n "$system" ]]; then
+        # Run the activation script. Set $PATH_LOCALE to suppress some Perl locale warnings.
+        PATH_LOCALE="$system/sw/share/locale" IN_NIXOS_ENTER=1 chroot "$mountPoint" "$system/activate" 1>&2 || true
+    fi
 
     # Create /tmp. This is needed for nix-build and the NixOS activation script to work.
     # Hide the unhelpful "failed to replace specifiers" errors caused by missing /etc/machine-id.
@@ -95,4 +117,4 @@ chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" 
 
 unset TMPDIR
 
-exec chroot "$mountPoint" "${command[@]}"
+chroot "$mountPoint" "${command[@]}"

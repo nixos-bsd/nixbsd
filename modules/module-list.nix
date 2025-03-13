@@ -9,7 +9,6 @@ in [
   "${extPath}/misc/ids.nix"
   "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"
-  "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
   "${extPath}/programs/bash/bash-completion.nix"
   "${extPath}/programs/bash/bash.nix"
@@ -28,7 +27,6 @@ in [
   "${extPath}/programs/zsh/zsh-syntax-highlighting.nix"
   "${extPath}/programs/zsh/zsh.nix"
   "${extPath}/security/ca.nix"
-  "${extPath}/security/sudo.nix"
   "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
@@ -41,21 +39,28 @@ in [
   ./config/users-groups.nix
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
+  ./installer/deps.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
+  ./misc/nixpkgs.nix
   ./programs/ssh.nix
   ./programs/wayland/sway.nix
+  ./security/sudo.nix
   ./security/acme/default.nix
   ./security/pam.nix
   ./security/wrappers/default.nix
   ./services/base-system.nix
+  ./services/fcron.nix
   ./services/networking/dhcpcd.nix
   ./services/networking/ssh/sshd.nix
   ./services/system/nix-daemon.nix
   ./services/web-servers/nginx/default.nix
+  ./services/databases/postgresql.nix
+  ./services/databases/redis.nix
+  ./services/web-apps/immich.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix
@@ -70,7 +75,8 @@ in [
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
-  ./tasks/filesystems.nix
+  ./tasks/filesystems
+  ./tasks/filesystems/zfs.nix
   ./tasks/network-interfaces.nix
   ./tasks/tempfiles
   ./virtualisation/build-vm.nix
@@ -89,7 +95,8 @@ in [
   "${extPath}/config/fonts/fontdir.nix"
   "${extPath}/config/fonts/ghostscript.nix"
   "${extPath}/config/xdg/autostart.nix"
-  "${extPath}/config/xdg/mime.nix"
+  "${extPath}/config/xdg/mime.nix" # both
+  ./config/xdg/mime.nix # both
   "${extPath}/config/xdg/icons.nix"
   "${extPath}/config/xdg/menus.nix"
   ./services/x11/hardware/libinput.nix

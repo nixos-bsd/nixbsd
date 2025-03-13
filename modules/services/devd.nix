@@ -17,7 +17,7 @@ in {
       before = [ "NETWORKING" ];
 
       startType = "forking";
-      pidFile = "/var/run/devd.pid";
+      pidFile = "/run/devd.pid";
       startCommand = [ "${pkgs.freebsd.devd}/bin/devd" ];
       preStart = ''
         if ! checkyesno devd_enable; then
@@ -31,7 +31,7 @@ in {
       "devd.conf".text = ''
         options {
           directory "/etc/devd";
-          pid-file "/var/run/devd.pid";
+          pid-file "/run/devd.pid";
         };
       '';
     };

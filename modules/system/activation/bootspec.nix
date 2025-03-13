@@ -24,6 +24,12 @@ let
           };
           "gay.mildlyfunctional.nixbsd.v1" = {
             inherit (config.boot) kernelEnvironment;
+            rootDevice = let root = config.fileSystems."/";
+            in if root.fsType == "zfs" then "zfs:${root.device}"
+            else if lib.hasPrefix "/dev/gpt/" root.device then "label:${lib.strings.substring 9 -1 root.device}"
+else if lib.hasPrefix "/dev/" root.device && !(lib.hasPrefix "/dev/ufs" root.device) then lib.strings.substring 5 -1 root.device
+            else throw "Can't tell the bootloader how to boot ${root.device}. Try a zfs dataset or /dev/gpt/*.";
+            earlyModules = config.boot.earlyModules;
           };
         }));
 
@@ -119,5 +125,11 @@ in {
       internal = true;
       default = schemas.v1.filename;
     };
+  };
+
+  options.boot.earlyModules = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [];
+    description = "Names of kernel modules to load before the kernel boots.";
   };
 }

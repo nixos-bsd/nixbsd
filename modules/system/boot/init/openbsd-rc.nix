@@ -100,11 +100,11 @@ let
         daemon=${escapeShellArg opts.daemon}
   
         . /etc/rc.d/rc.subr
-      '' + lib.concatStringsSep "\n" (
+      '' + "\n" + lib.concatStringsSep "\n" (
         mapAttrsToList (name: value: "${name}=${formatScriptLiteral value}") (
           notNull opts.shellVariables
         )
-      ) + lib.concatStringsSep "\n" (
+      ) + "\n" + lib.concatStringsSep "\n" (
         mapAttrsToList (name: value: "export ${name}=${formatScriptLiteral value}") (
           notNull opts.environment
         )

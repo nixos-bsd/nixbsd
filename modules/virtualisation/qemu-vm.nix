@@ -227,7 +227,7 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
   };
 
   freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
-    filesystem = "ufs";
+    filesystem = cfg.rootFilesystem;
     totalSize = "10g";
   });
 
@@ -355,11 +355,17 @@ in {
       '';
     };
 
+    virtualisation.rootFilesystem = mkOption {
+      type = types.str;
+      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
+      description = "The partition kind to use for the image root filesystem.";
+    };
+
     virtualisation.rootDevice = mkOption {
       type = types.nullOr types.path;
-      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "/dev/sd0a" else "/dev/ufs/${rootFilesystemLabel}";
-      defaultText = literalExpression "/dev/ufs/${rootFilesystemLabel}";
-      example = "/dev/ufs/nixos";
+      default = if pkgs.stdenv.hostPlatform.isOpenBSD then "/dev/sd0a" else "/dev/gpt/${rootFilesystemLabel}";
+      defaultText = literalExpression "/dev/gpt/${rootFilesystemLabel}";
+      example = "/dev/gpt/nixos";
       description = ''
         The path (inside the VM) to the device containing the root filesystem.
       '';
@@ -829,6 +835,8 @@ in {
         mkdir -p $targetRoot/boot
       '';
 
+      networking.hostId = "12345678";
+
       # After booting, register the closure of the paths in
       # `virtualisation.additionalPaths' in the Nix database in the VM.  This
       # allows Nix operations to work in the VM.  The path to the
@@ -929,12 +937,12 @@ in {
               fsType = "tmpfs";
             } else {
               device = cfg.rootDevice;
-              fsType = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
+              fsType = cfg.rootFilesystem;
             });
           "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
             device = "tmpfs";
             fsType = "tmpfs";
-            #neededForBoot = true;
+            neededForBoot = true;
             # Sync with systemd's tmp.mount;
             options = [
               "mode=1777"

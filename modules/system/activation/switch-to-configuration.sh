@@ -38,8 +38,8 @@ if ! ( [ -f "/etc/NIXOS" ] || grep 'ID="@distroId@"' &>/dev/null ); then
 fi
 
 @coreutils@/bin/mkdir -p /run/nixos
-exec 100>>/run/nixos/switch-to-configuration.lock || { echo "Could not open lock"; exit 1; }
-@flock@/bin/flock -n 100 || { echo "Could not acquire lock"; exit 1; }
+@coreutils@/bin/mkdir /run/nixos/switch-to-configuration.lock || { echo "Could not acquire lock"; exit 1; }
+trap '@coreutils@/bin/rmdir /run/nixos/switch-to-configuration.lock' EXIT
 
 case "$action" in
 	switch|boot)

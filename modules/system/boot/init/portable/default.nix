@@ -10,6 +10,12 @@ with lib;
       '';
     };
 
+    init.environment = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      description = "Environment variables to set when running any service.";
+    };
+
     init.services = mkOption {
       default = { };
       description = "Services to instantiate";
@@ -21,6 +27,12 @@ with lib;
               name = mkOption {
                 type = types.str;
                 description = "Name of the service.";
+              };
+
+              provides = mkOption {
+                type = types.listOf types.str;
+                description = "Additional names this service should provide.";
+                default = [];
               };
 
               description = mkOption {
@@ -126,11 +138,26 @@ with lib;
                 default = [ ];
                 description = "Services that depend on this service but do not declare it.";
               };
+
+              defaultLog.enable = mkOption {
+                type = types.bool;
+                default = true;
+                description = "Whether to apply the system's typical logging mechanism to stdout and stderr.";
+              };
+              defaultLog.name = mkOption {
+                type = types.str;
+                description = "The key to use for the system's typical logging mechanism. Defaults to the service name.";
+              };
             };
 
-            config = {
-              name = mkOptionDefault name;
-            };
+            config = lib.mkMerge [
+              (lib.mkIf (config.startType == "oneshot") {
+                defaultLog.enable = false;
+              })
+              {
+                name = mkOptionDefault name;
+                defaultLog.name = mkOptionDefault name;
+              }];
           }
         )
       );

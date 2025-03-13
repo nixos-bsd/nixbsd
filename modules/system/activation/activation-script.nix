@@ -4,6 +4,7 @@
 with lib;
 
 let
+  fsckY = if config.system.boot.autoFsck then "-y" else "";
   tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
     mkdir -p $out/bin
     $CC -x c - -o $out/bin/tosyslog <<EOF
@@ -66,8 +67,14 @@ let
           PATH=$PATH:$i/bin:$i/sbin
       done
 
+      if [[ $$ == 1 || $PPID == 1 ]]; then
+        REALINIT=1
+      fi
+
       '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        exec <>/dev/console 1>&0 2>&0
+        if [[ $REALINIT == 1 ]]; then
+          exec <>/dev/console 1>&0 2>&0
+        fi
       '' +
       ''
 
@@ -77,29 +84,40 @@ let
       # Ensure a consistent umask.
       umask 0022
 
+      '' + optionalString (!config.boot.isJail) (''
       # Early mounts
       specialMount() {
         SRC="$1"
         DST="$2"
         OPT="$3"
         TYP="$4"
-        [ "$TYP" = tmpfs ] && SRC=tmpfs
-        [ "$TYP" = devfs ] && SRC=devfs
+        test "$TYP" = tmpfs && SRC=tmpfs && NOFSCK=1
+        test "$TYP" = devfs && SRC=devfs && NOFSCK=1
+        test "$TYP" = zfs && NOFSCK=1
         mount | grep "$SRC on $DST" &>/dev/null && return 0
 
         mkdir -m 0755 -p "$DST"
+        if [[ -z "$NOFSCK" ]]; then
+          fsck -C ${fsckY} "$SRC"
+        fi
         mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
       }
+      if [[ $REALINIT == 1 ]]; then
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
         # TODO: Support other root paths
-        fsck /dev/sd0a
+        fsck -C ${fsckY} /dev/sd0a
         mount -u -w /dev/sd0a /
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        ${lib.optionalString (config.fileSystems."/".fsType != "zfs") "fsck -C ${fsckY} /"}
         mount -u -w /
       '' + ''
-      source ${config.system.build.earlyMountScript}
+        source ${config.system.build.earlyMountScript}
+      fi
 
       ${config.boot.postMountCommands}
+      '') + ''
+
+        mkdir -p /etc /dev /var /run /nix /tmp
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
@@ -129,6 +147,9 @@ let
     ] ++ {
       freebsd = [
         freebsd.mount
+        freebsd.fsck
+        freebsd.fsck_ffs
+        freebsd.fsck_msdosfs
         freebsd.nscd
         freebsd.pwd_mkdb
       ];
@@ -139,6 +160,7 @@ let
         openbsd.pwd_mkdb
         openbsd.fsck
         openbsd.fsck_ffs
+        openbsd.fsck_msdos
         bash
         tosyslog
       ];

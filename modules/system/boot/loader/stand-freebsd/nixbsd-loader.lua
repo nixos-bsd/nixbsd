@@ -67,6 +67,9 @@ function config.loadKernel(other_kernel)
 		end
 	end
 	orig_loadKernel(entry.kernel)
+	for _, module in pairs(entry.earlyModules) do
+		loader.perform("load " .. module)
+	end
 	if initmd ~= nil and initmd ~= "" then
 		loader.perform("load -t md_image " .. initmd)
 	end

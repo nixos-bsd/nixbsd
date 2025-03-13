@@ -29,24 +29,41 @@
     - [x] "chroot" nixpkgs with shared store
     - [ ] "chroot" nixos with service config
 - [ ] encrypted rootfs (do we need to put any modules in the boot partition?)
-- [ ] jails
+- [x] jails
 - [ ] figure else what else has to be in requiredPackages
 - [x] Figure out how to generate documentation
 - [x] switch-to-configuration
 - [x] nixos-install
-- [ ] switch-to-configuration switch
-- [ ] fsck
+- [x] switch-to-configuration switch
+- [x] fsck
+- [ ] pf/firewall
+- [ ] nixos-generate-config
 
 # Nice to have modules
 - [ ] syslogd remote listening
 - [ ] newsyslog in cron
 - [ ] cache nixbsd module documentation
+- [ ] mail config
+- [ ] installer wizard
+
+# Applications I, personally, want to run
+- [ ] vaultwarden
+- [x] immich
+- [ ] sftpgo
+- [ ] hedgedoc
+- [ ] headscale
+- [ ] syncthing
 
 # maybe???
 - [ ] veriexec (sign nix store paths, load signatures into kernel)
 
+# Testcases/user stories
+- [ ] zfs installer
+- [ ] openbsd installer
+
 # Packages
-- [ ] Clean up gcc without breaking musl
+- [x] Clean up gcc without breaking musl
 - [x] Figure out why git is failing
 - [ ] Subsetting in locales (save a little build time and like 20MiB)
 - [x] Separate debug from packages (currently bin/.debug contains debug info)
+- [ ] freebsd.mkimg -t zfs with long symlinks

@@ -338,11 +338,13 @@ in
   };
 
   config = {
-    environment.etc."login.conf".text = concatStringsSep "\n" (lib.mapAttrsToList formatLine config.users.classes);
-
+    # login.conf cannot be a symlink
     system.activationScripts.cap_mkdb = {
       deps = [ "etc" ];
       text = ''
+        cat >/etc/login.conf <<EOF
+        ${concatStringsSep "\n" (lib.mapAttrsToList formatLine config.users.classes)}
+        EOF
         ${cap_mkdb} /etc/login.conf
       '';
     };

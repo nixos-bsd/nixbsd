@@ -636,6 +636,9 @@ in {
       "ssh/sshd_config".source = sshconf;
     };
 
+    # might as well...
+    environment.systemPackages = [ cfgc.package ];
+
     freebsd.rc.conf.sshd_program = "${cfgc.package}/bin/sshd";
 
     init.services.sshd = {

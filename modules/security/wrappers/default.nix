@@ -175,6 +175,7 @@ in {
       startCommand = [ (pkgs.writeScript "suid-sgid-wrappers-start"
       ''
         #!${pkgs.runtimeShell}
+        mkdir -p "${parentWrapperDir}"
         chmod 755 "${parentWrapperDir}"
 
         # We want to place the tmpdirs for the wrappers to the parent dir.

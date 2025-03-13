@@ -74,6 +74,11 @@ if [ "$numGenerations" -gt 0 ]; then
     done
 fi
 
+if [[ -d "$target/efi" ]]; then
+    mkdir -p $target/efi/efi/boot
+    cp @stand@/bin/BOOTX64.EFI $target/efi/efi/boot/bootx64.efi
+fi
+
 for fn in $target/nixos/*; do
     if ! test "${filesCopied[$fn]}" = 1; then
         echo "Removing no longer needed boot file: $fn"

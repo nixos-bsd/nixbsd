@@ -19,9 +19,14 @@ let
 in {
   options = {
     boot.loader.stand-freebsd = {
-      enable = mkEnableOption (''
-        Use the FreeBSD boot loader.
-      '');
+      enable = mkOption {
+        default = !config.boot.isJail;
+        defaultText = literalExpression "!config.boot.isJail";
+        type = types.bool;
+        description = ''
+          Use the FreeBSD bootloader.
+        '';
+      };
 
       configurationLimit = mkOption {
         default = 20;

@@ -77,6 +77,12 @@ let
         '';
       };
 
+      neededForBoot = mkOption {
+        default = false;
+        type = types.bool;
+        description = "The filesystem must be mounted for boot to proceed";
+      };
+
       writable = mkOption {
         default = true;
         example = false;
@@ -154,8 +160,11 @@ let
   in fstabFileSystems:
   { }:
   concatMapStrings (fs:
-    escape fs.device + " " + escape fs.mountPoint + " " + fs.fsType + " "
-    + escape (builtins.concatStringsSep "," (fsOptions fs)) + " 0 "
+    escape fs.device
+    + " " + escape fs.mountPoint
+    + " " + fs.fsType
+    + " " + escape (builtins.concatStringsSep "," (fsOptions fs))
+    + " 0 "
     + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
     + "\n") fstabFileSystems;
 
@@ -278,6 +287,8 @@ in {
         } loops to ${ls ", " fileSystems'.loops}";
     }];
 
+    fileSystems."/".neededForBoot = true;
+
     # Export for use in other modules
     system.build.fileSystems = fileSystems;
     system.build.earlyMountScript = makeSpecialMounts
@@ -287,13 +298,13 @@ in {
 
     # Add the mount helpers to the system path so that `mount' can find them.
     system.fsPackages = {
-      freebsd = [ pkgs.freebsd.mount_msdosfs ];
-      openbsd = [ pkgs.openbsd.mount_ffs ];
+      freebsd = [ pkgs.freebsd.mount_msdosfs pkgs.freebsd.mount_nullfs ];
+      openbsd = [ pkgs.openbsd.mount_ffs pkgs.openbsd.mount_msdos ];
     }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.systemPackages = config.system.fsPackages ++ {
-      freebsd = [ pkgs.freebsd.mount ];
-      openbsd = [ pkgs.openbsd.mount ];
+      freebsd = [ pkgs.freebsd.mount pkgs.freebsd.umount ];
+      openbsd = [ pkgs.openbsd.mount pkgs.openbsd.umount ];
     }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.etc.fstab.text =

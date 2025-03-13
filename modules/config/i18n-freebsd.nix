@@ -88,18 +88,19 @@ with lib;
 
   ###### implementation
 
-  config = {
+  config = let allLocaleVars = {
+      LANG = config.i18n.defaultLocale;
+      PATH_LOCALE = "/run/current-system/sw/share/locale";
+      MM_CHARSET = let parts = splitString "." config.i18n.defaultLocale;
+      in if length parts < 2 then "UTF-8" else elemAt parts 1;
+    } // config.i18n.extraLocaleSettings; in {
 
     environment.systemPackages =
       optional (config.i18n.supportedLocales != [ ]) config.i18n.freebsdLocales;
 
     environment.pathsToLink = [ "/share/locale" ];
 
-    environment.sessionVariables = {
-      LANG = config.i18n.defaultLocale;
-      PATH_LOCALE = "/run/current-system/sw/share/locale";
-      MM_CHARSET = let parts = splitString "." config.i18n.defaultLocale;
-      in if length parts < 2 then "UTF-8" else elemAt parts 1;
-    } // config.i18n.extraLocaleSettings;
+    environment.sessionVariables = allLocaleVars;
+    init.environment = allLocaleVars;
   };
 }

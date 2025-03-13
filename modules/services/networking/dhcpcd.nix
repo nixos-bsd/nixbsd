@@ -217,6 +217,8 @@ in {
         ++ optional cfg.persistent "--persistent";
     };
 
+    systemd.tmpfiles.settings.dhcpcd."/var/run/dhcpcd".d = { user = "dhcpcd"; group = "dhcpcd"; mode = "0700"; };
+
     users.users.dhcpcd = {
       isSystemUser = true;
       group = "dhcpcd";

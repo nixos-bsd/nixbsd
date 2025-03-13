@@ -36,6 +36,7 @@ verboseScript=
 noFlake=
 installBootloader=
 json=
+prebuilt=
 
 # log the given argument to stderr
 log() {
@@ -97,6 +98,15 @@ while [ "$#" -gt 0 ]; do
         buildNix=
         fast=1
         ;;
+      --profile-path)
+        if [ -z "$1" ]; then
+            log "$0: ‘--profile-path’ requires an argument"
+            exit 1
+        fi
+        profile="$1"
+        prebuilt=1
+        shift 1
+        ;;
       --profile-name|-p)
         if [ -z "$1" ]; then
             log "$0: ‘--profile-name’ requires an argument"
@@ -107,6 +117,9 @@ while [ "$#" -gt 0 ]; do
             mkdir -p -m 0755 "$(dirname "$profile")"
         fi
         shift 1
+        ;;
+      --prebuilt)
+        prebuilt=1
         ;;
       --specialisation|-c)
         if [ -z "$1" ]; then
@@ -170,7 +183,18 @@ logVerbose() {
 # Run a command, logging it first if verbose mode is on
 runCmd() {
     logVerbose "$" "$@"
-    "$@"
+    if [[ -z $nohup ]]; then
+      "$@"
+    else
+      # this is a sensitive command - let's nohup it and push stdio through the disk
+      # TODO: tail -f has some weird effects. Can we make data show up in real time
+      # without causing EPIPE or blocking on hangup?
+      echo -n >/var/log/nixos-rebuild.log
+      nohup "$@" &>>/var/log/nixos-rebuild.log </dev/null
+      result=$?
+      cat /var/log/nixos-rebuild.log
+      return $result
+    fi
 }
 
 buildHostCmd() {
@@ -520,7 +544,7 @@ fi
 # Update the version suffix if we're building from Git (so that
 # nixos-version shows something useful).
 if [[ -n $canRun && -z $flake ]]; then
-    if nixpkgs=$(runCmd nix-instantiate --find-file nixpkgs "${extraBuildFlags[@]}"); then
+    if nixpkgs=$(runCmd nix-instantiate --find-file nixpkgs "${extraBuildFlags[@]}" 2>/dev/null); then
         suffix=$(runCmd $SHELL "$nixbsd/modules/installer/tools/get-version-suffix" "${extraBuildFlags[@]}" || true)
         if [ -n "$suffix" ]; then
             echo -n "$suffix" > "$nixpkgs/.version-suffix" || true
@@ -682,7 +706,9 @@ fi
 # Either upgrade the configuration in the system profile (for "switch"
 # or "boot"), or just build it and create a symlink "result" in the
 # current directory (for "build" and "test").
-if [ -z "$rollback" ]; then
+if [[ -n $prebuilt ]]; then
+  pathToConfig="$profile"
+elif [[ -z $rollback ]]; then
     log "building the system configuration..."
     if [[ "$action" = switch || "$action" = boot ]]; then
         if [[ -z $flake ]]; then
@@ -742,9 +768,7 @@ if [[ "$action" = switch || "$action" = boot || "$action" = test || "$action" = 
     # Linux uses systemd-run here to protect against PTY failures/network
     # disconnections during rebuild.
     # See: https://github.com/NixOS/nixpkgs/issues/39118
-    # However, there isn't a great equivalant for FreeBSD.
-    # The best option is probably to use screen or tmux,
-    # but that doesn't make sens to start in a script
+    # Our best equivalent is nohup.
     if [[ -n "$NIXOS_SWITCH_USE_DIRTY_ENV" ]]; then
         cmd=("env" "NIXOS_INSTALL_BOOTLOADER=$installBootloader")
     else
@@ -766,10 +790,12 @@ if [[ "$action" = switch || "$action" = boot || "$action" = test || "$action" = 
         fi
     fi
 
+    nohup=1
     if ! targetHostSudoCmd "${cmd[@]}" "$action"; then
         log "warning: error(s) occurred while switching to the new configuration"
         exit 1
     fi
+    nohup=
 fi
 
 

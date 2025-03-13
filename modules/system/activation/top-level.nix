@@ -16,7 +16,7 @@ let
 
     cp "$extraDependenciesPath" "$out/extra-dependencies"
 
-    ${optionalString config.boot.bootspec.enable ''
+    ${optionalString (!config.boot.isJail && config.boot.bootspec.enable) ''
       ${config.boot.bootspec.writer}
       ${optionalString config.boot.bootspec.enableValidation ''
         ${config.boot.bootspec.validator} "$out/${config.boot.bootspec.filename}"''}
@@ -73,6 +73,14 @@ in {
       default = "";
       description = ''
         Id string of the used bootloader.
+      '';
+    };
+
+    system.boot.autoFsck = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Whether fsck(8) should be invoked with the -y flag during activation, automatically fixing anything it can.
       '';
     };
 

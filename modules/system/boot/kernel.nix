@@ -92,6 +92,9 @@ in {
   };
 
   config = mkIf cfg.enable {
+    system.installerDependencies = mkIf pkgs.stdenv.hostPlatform.isFreeBSD [
+      pkgs.freebsd.kldxref
+    ];
     system.build = { inherit (config.boot) kernel; };
     system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (pkgs.buildEnv {
       name = "sys-with-modules";
@@ -115,7 +118,6 @@ in {
     '';
 
     boot.kernelEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
-      module_path = cfg.modulesPath;
       init_shell = config.environment.binsh;
     };
   };

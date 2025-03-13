@@ -18,6 +18,9 @@ channelPath=
 system=
 verbosity=()
 
+cleanups=()
+trap 'set +e; for cleanup in "${cleanups[@]}"; do $cleanup; done' EXIT
+
 while [ "$#" -gt 0 ]; do
     i="$1"; shift 1
     case "$i" in
@@ -25,7 +28,7 @@ while [ "$#" -gt 0 ]; do
             j="$1"; shift 1
             extraBuildFlags+=("$i" "$j")
             ;;
-        --option)
+        --option|--arg|--argstr)
             j="$1"; shift 1
             k="$1"; shift 1
             extraBuildFlags+=("$i" "$j" "$k")
@@ -136,7 +139,7 @@ fi
 
 # A place to drop temporary stuff.
 tmpdir="$(mktemp -d -p "$mountPoint")"
-trap 'rm -rf $tmpdir' EXIT
+cleanups+=("rm -rf $tmpdir")
 
 # store temporary files on target filesystem by default
 export TMPDIR=${TMPDIR:-$tmpdir}
@@ -160,18 +163,87 @@ if [[ -z $noChannelCopy ]]; then
     fi
 fi
 
+# Mark the target as a NixOS installation, otherwise switch-to-configuration will chicken out.
+mkdir -m 0755 -p "$mountPoint/etc" "$mountPoint/run"
+touch "$mountPoint/etc/NIXOS"
+
+# Create a bind mount for each of the mount points inside the target file
+# system. This preserves the validity of their absolute paths after changing
+# the root with `nixos-enter`.
+# Without this the bootloader installation may fail due to options that
+# contain paths referenced during evaluation, like initrd.secrets.
+# when not root, re-execute the script in an unshared namespace
+# On Linux this is done recursively, but that doesn't seem to be an option
+# on FreeBSD, so let's hope this works
+case "@hostPlatform@" in
+    *-freebsd)
+        mkdir -p "$mountPoint$mountPoint"
+        mount -t nullfs "$mountPoint" "$mountPoint$mountPoint"
+        cleanups+=("umount '$mountPoint$mountPoint' && rmdir '$mountPoint$mountPoint' 2>/dev/null")
+        ;;
+    *-openbsd)
+        mkdir -p "$mountPoint/dev"
+        (cd "$mountPoint/dev" && "@makedev@" all)
+        ln -sfn "/" "$mountPoint$mountPoint" 2>/dev/null || true
+        cp -rL /etc/ssl "$mountPoint/etc/ssl"
+        cp -rL /etc/nix "$mountPoint/etc/nix"
+        cleanups+=("rm '$mountPoint' 2>/dev/null")
+        ;;
+esac
+
 # Build the system configuration in the target filesystem.
 if [[ -z $system ]]; then
+    socat_pid=
+    case "@hostPlatform@" in
+        *-freebsd)
+            storeFlags=("--store" "$mountPoint" "--extra-substituters" "$sub")
+            chrootFlags=()
+            nixPrefix=""
+            ;;
+        *)
+            # if we don't have a sandbox we need to do shenannigans to be able to build in the chroot
+            storeFlags=("--extra-substituters" "unix:///socat-socket?trusted=1")
+            chrootFlags=("nixos-enter" "--no-system" "--root" "$mountPoint" "--")
+            extraBuildFlags+=("--allow-symlinked-store")
+            outLink="$tmpdir/nix"
+            if [[ -z "$flake" ]]; then
+                nix-build --out-link "$outLink" "${extraBuildFlags[@]}" \
+                    '<nixbsd>' -A config.nix.package -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+                nixPath="$(readlink -f "$outLink")"
+            else
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.nix.package" "${verbosity[@]}" \
+                    "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
+                nixPath="$(readlink -f "$outLink")"
+                nix "${flakeFlags[@]}" build "$flake#$flakeAttr.pkgs.gitMinimal" "${verbosity[@]}" \
+                    "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
+                gitPath="$(readlink -f "$outLink")"
+            fi
+            if [[ -n "$flake" && "$flake" == "path:$mountPoint/"* ]]; then
+                flake="${flake/path:${mountPoint}/path:}"
+            fi
+            nix --experimental-features nix-command copy --no-check-sigs \
+                --to "$mountPoint" "$nixPath"
+            nix --experimental-features nix-command copy --no-check-sigs \
+                --to "$mountPoint" "$gitPath"
+            socat "UNIX-LISTEN:$mountPoint/socat-socket,fork,reuseaddr" "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" & sleep 0.5
+            socat_pid=$!
+            cleanups+=("kill -INT $socat_pid 2>/dev/null")
+            nixPrefix="$nixPath/bin/"
+            PATH="$gitPath/bin:$PATH"
+            ;;
+    esac
+
     outLink="$tmpdir/system"
     if [[ -z $flake ]]; then
         echo "building the configuration in $NIXOS_CONFIG..."
-        nix-build --out-link "$outLink" --store "$mountPoint" "${extraBuildFlags[@]}" \
-            --extra-substituters "$sub" \
-            '<nixpkgs/nixos>' -A system -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
+        "${chrootFlags[@]}" "${nixPrefix}nix-build" --out-link "$outLink" \
+            "${storeFlags[@]}" "${extraBuildFlags[@]}" \
+            '<nixbsd>' -A system -I "nixos-config=$NIXOS_CONFIG" "${verbosity[@]}"
     else
         echo "building the flake in $flake..."
-        nix "${flakeFlags[@]}" build "$flake#$flakeAttr.config.system.build.toplevel" \
-            --store "$mountPoint" --extra-substituters "$sub" "${verbosity[@]}" \
+        "${chrootFlags[@]}" "${nixPrefix}nix" "${flakeFlags[@]}" build \
+            "$flake#$flakeAttr.config.system.build.toplevel" \
+            "${storeFlags[@]}" "${verbosity[@]}" \
             "${extraBuildFlags[@]}" "${lockFlags[@]}" --out-link "$outLink"
     fi
     system=$(readlink -f "$outLink")
@@ -184,9 +256,7 @@ nix-env --store "$mountPoint" "${extraBuildFlags[@]}" \
         --extra-substituters "$sub" \
         -p "$mountPoint"/nix/var/nix/profiles/system --set "$system" "${verbosity[@]}"
 
-# Mark the target as a NixOS installation, otherwise switch-to-configuration will chicken out.
-mkdir -m 0755 -p "$mountPoint/etc"
-touch "$mountPoint/etc/NIXOS"
+rm -rf "$mountPoint/etc/ssl" "$mountPoint/etc/nix"
 
 # Switch to the new system configuration.  This will install Grub with
 # a menu default pointing at the kernel/initrd/etc of the new
@@ -195,17 +265,7 @@ if [[ -z $noBootLoader ]]; then
     echo "installing the boot loader..."
     export mountPoint
     NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root "$mountPoint" -c "$(cat <<'EOF'
-      # Create a bind mount for each of the mount points inside the target file
-      # system. This preserves the validity of their absolute paths after changing
-      # the root with `nixos-enter`.
-      # Without this the bootloader installation may fail due to options that
-      # contain paths referenced during evaluation, like initrd.secrets.
-      # when not root, re-execute the script in an unshared namespace
-      # On Linux this is done recursively, but that doesn't seem to be an option
-      # on FreeBSD, so let's hope this works
-      mount -t nullfs / "$mountPoint"
       /run/current-system/bin/switch-to-configuration boot
-      umount "$mountPoint" && (rmdir "$mountPoint" 2>/dev/null || true)
 EOF
 )"
 fi
