@@ -18,6 +18,9 @@ channelPath=
 system=
 verbosity=()
 
+cleanups=()
+trap 'set +e; for cleanup in "${cleanups[@]}"; do $cleanup; done' EXIT
+
 while [ "$#" -gt 0 ]; do
     i="$1"; shift 1
     case "$i" in
@@ -136,7 +139,7 @@ fi
 
 # A place to drop temporary stuff.
 tmpdir="$(mktemp -d -p "$mountPoint")"
-trap 'rm -rf $tmpdir || true' EXIT
+cleanups+=("rm -rf $tmpdir")
 
 # store temporary files on target filesystem by default
 export TMPDIR=${TMPDIR:-$tmpdir}
@@ -176,6 +179,7 @@ case "@hostPlatform@" in
     *-freebsd)
         mkdir -p "$mountPoint$mountPoint"
         mount -t nullfs "$mountPoint" "$mountPoint$mountPoint"
+        cleanups+=("umount '$mountPoint$mountPoint' && rmdir '$mountPoint$mountPoint' 2>/dev/null")
         ;;
     *-openbsd)
         mkdir -p "$mountPoint/dev"
@@ -183,6 +187,7 @@ case "@hostPlatform@" in
         ln -sfn "/" "$mountPoint$mountPoint" 2>/dev/null || true
         cp -rL /etc/ssl "$mountPoint/etc/ssl"
         cp -rL /etc/nix "$mountPoint/etc/nix"
+        cleanups+=("rm '$mountPoint' 2>/dev/null")
         ;;
 esac
 
@@ -222,7 +227,7 @@ if [[ -z $system ]]; then
                 --to "$mountPoint" "$gitPath"
             socat "UNIX-LISTEN:$mountPoint/socat-socket,fork,reuseaddr" "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" & sleep 0.5
             socat_pid=$!
-            trap 'rm -rf $tmpdir || true; kill -INT $socat_pid 2>/dev/null || true' EXIT
+            cleanups+=("kill -INT $socat_pid 2>/dev/null")
             nixPrefix="$nixPath/bin/"
             PATH="$gitPath/bin:$PATH"
             ;;
@@ -264,15 +269,6 @@ if [[ -z $noBootLoader ]]; then
 EOF
 )"
 fi
-
-case "@hostPlatform@" in
-    *-freebsd)
-        umount "$mountPoint$mountPoint" && (rmdir "$mountPoint$mountPoint" 2>/dev/null || true)
-        ;;
-    *-openbsd)
-        rm "$mountPoint" 2>/dev/null || true
-        ;;
-esac
 
 # Ask the user to set a root password, but only if the passwd command
 # exists (i.e. when mutable user accounts are enabled).
