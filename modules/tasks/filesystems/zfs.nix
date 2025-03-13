@@ -488,6 +488,10 @@ in
 
 
       boot.earlyModules = [ "zfs" ];
+      boot.kernelEnvironment = {
+        "kern.geom.label.disk_ident.enable" = "0";
+        "kern.geom.label.gptid.enable" = "0";
+      };
 
       #systemd.shutdownRamfs.contents."/etc/systemd/system-shutdown/zpool".source = pkgs.writeShellScript "zpool-sync-shutdown" ''
       #  exec ${cfgZfs.package}/bin/zpool sync
