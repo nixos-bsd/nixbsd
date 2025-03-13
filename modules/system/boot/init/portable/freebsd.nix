@@ -12,8 +12,8 @@ let
     name = convertName cfg.name;
     description = cfg.description;
     rcorderSettings = {
-      REQUIRE = cfg.dependencies;
-      BEFORE = cfg.before;
+      REQUIRE = builtins.map convertName cfg.dependencies;
+      BEFORE = builtins.map convertName cfg.before;
     };
 
     inherit (cfg) path defaultLog;
