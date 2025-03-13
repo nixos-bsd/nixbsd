@@ -1,5 +1,4 @@
-{ lib, config, pkgs, _nixbsdNixpkgsPath, ... }:
-with lib;
+{ lib, config, pkgs, ... }:
 
 {
   _module.args = {
