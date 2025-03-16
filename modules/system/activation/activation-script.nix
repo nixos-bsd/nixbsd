@@ -118,6 +118,7 @@ let
       '') + ''
 
         mkdir -p /etc /dev /var /run /nix /tmp
+        chmod 777 /tmp
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
