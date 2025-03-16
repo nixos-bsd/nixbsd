@@ -19,6 +19,7 @@
 - [x] nix-daemon
 - [x] hostname
 - [x] syslog
+- [ ] restart-on-file-changed
 
 # Less important modules
 - [x] sysctl

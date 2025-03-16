@@ -8,7 +8,7 @@ let
 
   homeDir = "/run/dbus";
 
-  configDir = pkgs.makeDBusConf {
+  configDir = pkgs.makeDBusConf.override {
     #inherit (cfg) apparmor;
     suidHelper = "${config.security.wrapperDir}/dbus-daemon-launch-helper";
     serviceDirectories = cfg.packages;
