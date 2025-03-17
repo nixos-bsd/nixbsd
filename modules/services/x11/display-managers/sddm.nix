@@ -93,7 +93,7 @@ in
         '';
       };
 
-      package = mkPackageOption pkgs [ "plasma5Packages" "sddm" ] {};
+      package = mkPackageOption pkgs [ "qt6Packages" "sddm" ] {};
 
       enableHidpi = mkOption {
         type = types.bool;
@@ -223,11 +223,11 @@ in
     services.xserver.displayManager.job = {
       environment = {
         # Load themes from system environment
-        QT_PLUGIN_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtPluginPrefix;
-        QML2_IMPORT_PATH = "/run/current-system/sw/" + pkgs.qt5.qtbase.qtQmlPrefix;
+        QT_PLUGIN_PATH = "/run/current-system/sw/" + pkgs.qt6.qtbase.qtPluginPrefix;
+        QML2_IMPORT_PATH = "/run/current-system/sw/" + pkgs.qt6.qtbase.qtQmlPrefix;
       };
 
-      execCmd = [ "${pkgs.plasma5Packages.sddm}/bin/sddm" ];
+      execCmd = [ "${pkgs.qt6Packages.sddm}/bin/sddm" ];
     };
 
     security.pam.services = {
