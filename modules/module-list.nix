@@ -13,6 +13,7 @@ in [
   "${extPath}/programs/bash/bash-completion.nix"
   "${extPath}/programs/bash/bash.nix"
   "${extPath}/programs/bash/ls-colors.nix"
+  "${extPath}/programs/direnv.nix"
   "${extPath}/programs/environment.nix"
   "${extPath}/programs/fish.nix"
   "${extPath}/programs/git.nix"

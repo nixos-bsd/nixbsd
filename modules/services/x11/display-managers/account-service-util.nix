@@ -1,9 +1,14 @@
 { accountsservice
+, stdenv
+, buildPackages
 , glib
 , gobject-introspection
 , python3
 , wrapGAppsNoGuiHook
 , lib
+, withIntrospection ?
+    lib.meta.availableOn stdenv.hostPlatform gobject-introspection
+    && stdenv.hostPlatform.emulatorAvailable buildPackages
 }:
 
 python3.pkgs.buildPythonApplication {
@@ -19,6 +24,7 @@ python3.pkgs.buildPythonApplication {
 
   nativeBuildInputs = [
     wrapGAppsNoGuiHook
+  ] ++ lib.optionals withIntrospection [
     gobject-introspection
   ];
 
@@ -28,8 +34,9 @@ python3.pkgs.buildPythonApplication {
   ];
 
   propagatedBuildInputs = with python3.pkgs; [
-    pygobject3
     ordered-set
+  ] ++ lib.optionals withIntrospection [
+    pygobject3
   ];
 
   installPhase = ''

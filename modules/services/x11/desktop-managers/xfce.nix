@@ -44,7 +44,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = utils.removePackagesByName (with pkgs.xfce // pkgs; [
+    environment.systemPackages = utils.removePackagesByName (with pkgs // pkgs.xfce; [
       glib # for gsettings
       gtk3.out # gtk-update-icon-cache
 
