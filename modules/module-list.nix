@@ -16,6 +16,7 @@ in [
   "${extPath}/programs/direnv.nix"
   "${extPath}/programs/environment.nix"
   "${extPath}/programs/fish.nix"
+  "${extPath}/programs/htop.nix"
   "${extPath}/programs/git.nix"
   "${extPath}/programs/less.nix"
   "${extPath}/programs/nano.nix"
