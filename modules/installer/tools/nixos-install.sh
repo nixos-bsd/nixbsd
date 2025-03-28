@@ -19,7 +19,7 @@ system=
 verbosity=()
 
 cleanups=()
-trap 'set +e; for cleanup in "${cleanups[@]}"; do $cleanup; done' EXIT
+trap 'set +e; for cleanup in "${cleanups[@]}"; do $cleanup 2>/dev/null; done' EXIT
 
 while [ "$#" -gt 0 ]; do
     i="$1"; shift 1
@@ -179,7 +179,7 @@ case "@hostPlatform@" in
     *-freebsd)
         mkdir -p "$mountPoint$mountPoint"
         mount -t nullfs "$mountPoint" "$mountPoint$mountPoint"
-        cleanups+=("umount '$mountPoint$mountPoint' && rmdir '$mountPoint$mountPoint' 2>/dev/null")
+        cleanups+=("umount '$mountPoint$mountPoint'" "rmdir '$mountPoint$mountPoint'")
         ;;
     *-openbsd)
         mkdir -p "$mountPoint/dev"
@@ -187,7 +187,7 @@ case "@hostPlatform@" in
         ln -sfn "/" "$mountPoint$mountPoint" 2>/dev/null || true
         cp -rL /etc/ssl "$mountPoint/etc/ssl"
         cp -rL /etc/nix "$mountPoint/etc/nix"
-        cleanups+=("rm '$mountPoint' 2>/dev/null")
+        cleanups+=("rm '$mountPoint'")
         ;;
 esac
 
@@ -227,7 +227,7 @@ if [[ -z $system ]]; then
                 --to "$mountPoint" "$gitPath"
             socat "UNIX-LISTEN:$mountPoint/socat-socket,fork,reuseaddr" "UNIX-CONNECT:/nix/var/nix/daemon-socket/socket" & sleep 0.5
             socat_pid=$!
-            cleanups+=("kill -INT $socat_pid 2>/dev/null")
+            cleanups+=("kill -INT $socat_pid")
             nixPrefix="$nixPath/bin/"
             PATH="$gitPath/bin:$PATH"
             ;;
