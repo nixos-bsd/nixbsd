@@ -49,6 +49,8 @@ in [
   ./misc/substituter.nix
   ./misc/nixpkgs.nix
   ./programs/ssh.nix
+  ./programs/tmux.nix # both
+  "${extPath}/programs/tmux.nix" # both
   ./programs/wayland/sway.nix
   ./security/sudo.nix
   ./security/acme/default.nix
