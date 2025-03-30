@@ -13,7 +13,7 @@ let
   cfgTrim = config.services.zfs.trim;
 
   #inInitrd = config.boot.initrd.supportedFilesystems.zfs or false;
-  inSystem = config.boot.supportedFilesystems.zfs or false;
+  inSystem = builtins.elem "zfs" config.boot.supportedFilesystems;
 
   autosnapPkg = pkgs.zfstools.override {
     zfs = cfgZfs.package;
@@ -576,6 +576,12 @@ in
       in lib.listToAttrs (map createImportService' dataPools ++
           map createSyncService allPools ++
           map createMarkerService ["marker-zfs-import"]);
+    })
+
+    # FreeBSD can only mount one zfs dataset as the root, not a whole pool. Fix this with an initmd.
+    (lib.mkIf (cfgZfs.enable && (config.fileSystems ? "/nix" || config.fileSystems ? "/nix/store")) {
+      boot.initmd.enable = true;
+      boot.initmd.pivotFileSystems = [ "/nix/store" ];
     })
 
     (lib.mkIf (cfgZfs.enable && cfgZfsd.enable) {

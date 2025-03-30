@@ -111,8 +111,10 @@ chroot_add_resolv_conf "$mountPoint" || echo "$0: failed to set up resolv.conf" 
 
     # Create /tmp. This is needed for nix-build and the NixOS activation script to work.
     # Hide the unhelpful "failed to replace specifiers" errors caused by missing /etc/machine-id.
-    # TODO: When we have minitmpfiles, use that here
-    mkdir -p "$mountPoint/tmp"
+    chroot "$mountPoint" "/etc/rc.d/mini_tmpfiles" start 2>/dev/null || true
+
+    # Set up SUID/SGID wrappers. This is needed to run passwd.
+    chroot "$mountPoint" "/etc/rc.d/suid_sgid_wrappers" start || true
 )
 
 unset TMPDIR

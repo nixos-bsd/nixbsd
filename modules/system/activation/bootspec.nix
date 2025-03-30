@@ -22,13 +22,22 @@ let
             label =
               "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
           };
-          "gay.mildlyfunctional.nixbsd.v1" = {
+          "gay.mildlyfunctional.nixbsd.v1" = let
+            root = config.fileSystems."/";
+            kernelMount = if config.fileSystems ? "/nix/store" then "/nix/store"
+              else if config.fileSystems ? "/nix" then "/nix"
+              else "/";
+            kernelFs = config.fileSystems.${kernelMount};
+
+            mkDevice = fs: if fs.fsType == "zfs" then "zfs:${fs.device}"
+              else if lib.hasPrefix "/dev/gpt/" fs.device then "label:${lib.strings.substring 9 (-1) fs.device}"
+              else if lib.hasPrefix "/dev/" fs.device && !(lib.hasPrefix "/dev/ufs" fs.device) then lib.strings.substring 5 (-1) fs.device
+              else throw "Can't tell the bootloader how to boot ${fs.device}. Try a zfs dataset or /dev/gpt/*.";
+          in {
             inherit (config.boot) kernelEnvironment;
-            rootDevice = let root = config.fileSystems."/";
-            in if root.fsType == "zfs" then "zfs:${root.device}"
-            else if lib.hasPrefix "/dev/gpt/" root.device then "label:${lib.strings.substring 9 (-1) root.device}"
-else if lib.hasPrefix "/dev/" root.device && !(lib.hasPrefix "/dev/ufs" root.device) then lib.strings.substring 5 (-1) root.device
-            else throw "Can't tell the bootloader how to boot ${root.device}. Try a zfs dataset or /dev/gpt/*.";
+            kernelStrip = kernelMount;
+            kernelDevice = mkDevice kernelFs;
+            rootDevice = mkDevice root;
             earlyModules = config.boot.earlyModules;
           };
         }));

@@ -49,8 +49,10 @@ addEntry() {
 
     local kernelPath=$(jq -r '."org.nixos.bootspec.v1".kernel' <$path)
     local rootDevice=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".rootDevice' <$path)
+    local kernelStrip=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelStrip' <$path)
+    local kernelDevice=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelDevice' <$path)
 
-    modulePath=$rootDevice:$(dirname $kernelPath)
+    modulePath=$kernelDevice:$(dirname ${kernelPath#${kernelStrip}})
     kernelName=$(basename $kernelPath)
 
     cat <<EOF

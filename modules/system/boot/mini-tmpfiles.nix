@@ -213,10 +213,10 @@ in
     ) cfg.settings);
 
     systemd.tmpfiles.rules = [
-      #"d  /nix/var                           0755 root root - -"
+      "d  /nix/var                           0755 root root - -"
       "L+ /nix/var/nix/gcroots/booted-system 0755 root root - /run/booted-system"
-      #"d  /run/lock                          0755 root root - -"
-      #"d  /var/db                            0755 root root - -"
+      "d  /run/lock                          0755 root root - -"
+      "d  /var/db                            0755 root root - -"
       #"L  /etc/mtab                          -    -    -    - ../proc/mounts"
       #"L  /var/lock                          -    -    -    - ../run/lock"
       # Boot-time cleanup

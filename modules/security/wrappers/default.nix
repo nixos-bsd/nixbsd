@@ -139,21 +139,21 @@ in {
 
   ###### implementation
   config = {
-    #security.wrappers =
-    #  let
-    #    mkSetuidRoot = source:
-    #      { setuid = true;
-    #        owner = "root";
-    #        group = "root";
-    #        inherit source;
-    #      };
-    #  in
-    #  { # These are mount related wrappers that require the +s permission.
-    #    fusermount  = mkSetuidRoot "${pkgs.fuse}/bin/fusermount";
-    #    fusermount3 = mkSetuidRoot "${pkgs.fuse3}/bin/fusermount3";
-    #    mount  = mkSetuidRoot "${lib.getBin pkgs.util-linux}/bin/mount";
-    #    umount = mkSetuidRoot "${lib.getBin pkgs.util-linux}/bin/umount";
-    #  };
+    security.wrappers =
+      let
+        mkSetuidRoot = source:
+          { setuid = true;
+            owner = "root";
+            group = "root";
+            inherit source;
+          };
+      in
+      { # These are mount related wrappers that require the +s permission.
+        #fusermount  = mkSetuidRoot "${pkgs.fuse}/bin/fusermount";
+        #fusermount3 = mkSetuidRoot "${pkgs.fuse3}/bin/fusermount3";
+        #mount  = mkSetuidRoot "${lib.getBin pkgs.util-linux}/bin/mount";
+        #umount = mkSetuidRoot "${lib.getBin pkgs.util-linux}/bin/umount";
+      };
 
     boot.specialFileSystems.${parentWrapperDir} = {
       fsType = "tmpfs";

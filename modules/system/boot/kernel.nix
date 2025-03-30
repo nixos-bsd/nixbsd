@@ -96,15 +96,14 @@ in {
       pkgs.freebsd.kldxref
     ];
     system.build = { inherit (config.boot) kernel; };
-    system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (pkgs.buildEnv {
-      name = "sys-with-modules";
-      paths = [ cfg.package ] ++ config.boot.extraModulePackages;
-      pathsToLink = [ "/kernel" ];
-
-      postBuild = ''
-        ${pkgs.buildPackages.freebsd.kldxref}/bin/kldxref $out/kernel
-      '';
-    });
+    # can't just do symlinkjoin or buildenv because symlinks can't be absolute
+    # because the store partition might be accessed as a temporary rootfs in stand
+    system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (pkgs.runCommand "sys-with-modules" {} ''
+      mkdir -p $out/kernel
+      cd $out/kernel
+      ${lib.concatMapStringsSep "\n" (pkg: "ln -s ../../$(basename ${pkg})/kernel/* .") ([ cfg.package ] ++ config.boot.extraModulePackages)}
+      ${pkgs.buildPackages.freebsd.kldxref}/bin/kldxref $out/kernel
+    '');
 
     system.systemBuilderCommands = ''
       if [ ! -f ${cfg.imagePath} ]; then
