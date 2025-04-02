@@ -104,6 +104,8 @@ let
       "freebsd.jail"
       "freebsd.jexec"
       "freebsd.jls"
+      "freebsd.ldd"
+      "freebsd.procstat"
     ];
     openbsd = [];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
