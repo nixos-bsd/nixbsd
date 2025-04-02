@@ -8,7 +8,7 @@ let
 
 in {
   options.services.devd = {
-    enable = mkEnableOption "devd service";
+    enable = mkEnableOption "devd service" // { default = true; };
   };
 
   config = mkIf cfg.enable {
