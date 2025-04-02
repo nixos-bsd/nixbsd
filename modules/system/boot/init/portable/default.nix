@@ -108,6 +108,12 @@ with lib;
                 description = "Command to run to stop service. If null then the init system's default behavior applies.";
               };
 
+              stopSignal = mkOption {
+                type = types.enum [ "TERM" "KILL" "QUIT" "INT" "HUP" "USR1" "USR2" ];
+                default = "TERM";
+                description = "Signal to send to the program as the first-shot shutdown notice.";
+              };
+
               environment = mkOption {
                 type = types.attrsOf types.str;
                 default = { };

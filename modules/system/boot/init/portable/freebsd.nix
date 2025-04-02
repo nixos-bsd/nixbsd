@@ -36,6 +36,9 @@ let
 
         pidfile = "/run/${cfg.name}.pid";
       }
+      // {
+        sig_stop = cfg.stopSignal;
+      }
       // optionalAttrs (cfg.startType == "forking" || cfg.startType == "oneshot") {
         command = head cfg.startCommand;
         command_args = tail cfg.startCommand;
