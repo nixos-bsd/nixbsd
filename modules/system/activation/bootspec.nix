@@ -38,7 +38,7 @@ let
             kernelStrip = kernelMount;
             kernelDevice = mkDevice kernelFs;
             rootDevice = mkDevice root;
-            earlyModules = config.boot.earlyModules;
+            earlyModules = config.boot.kernelModules;
           };
         }));
 
@@ -136,7 +136,7 @@ in {
     };
   };
 
-  options.boot.earlyModules = lib.mkOption {
+  options.boot.kernelModules = lib.mkOption {
     type = lib.types.listOf lib.types.str;
     default = [];
     description = "Names of kernel modules to load before the kernel boots.";

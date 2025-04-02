@@ -119,5 +119,7 @@ in {
     boot.kernelEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
       init_shell = config.environment.binsh;
     };
+
+    boot.kernelModules = [ "nullfs" "unionfs" ];
   };
 }
