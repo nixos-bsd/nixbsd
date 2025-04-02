@@ -189,10 +189,10 @@ runCmd() {
       # this is a sensitive command - let's nohup it and push stdio through the disk
       # TODO: tail -f has some weird effects. Can we make data show up in real time
       # without causing EPIPE or blocking on hangup?
-      echo -n >/var/log/nixos-rebuild.log
-      nohup "$@" &>>/var/log/nixos-rebuild.log </dev/null
+      echo -n >/tmp/nixos-rebuild.log
+      nohup "$@" &>>/tmp/nixos-rebuild.log </dev/null
       result=$?
-      cat /var/log/nixos-rebuild.log
+      cat /tmp/nixos-rebuild.log
       return $result
     fi
 }
@@ -707,7 +707,11 @@ fi
 # or "boot"), or just build it and create a symlink "result" in the
 # current directory (for "build" and "test").
 if [[ -n $prebuilt ]]; then
-  pathToConfig="$profile"
+  if [[ "$action" = switch || "$action" = boot ]]; then
+    pathToConfig="$profile"
+    copyToTarget "$pathToConfig"
+    targetHostSudoCmd nix-env -p "$profile" --set "$pathToConfig"
+  fi
 elif [[ -z $rollback ]]; then
     log "building the system configuration..."
     if [[ "$action" = switch || "$action" = boot ]]; then

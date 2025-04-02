@@ -70,7 +70,9 @@
         (builtins.readDir configBase);
 
       packages = forAllSystems (system:
-        lib.mapAttrs (name: makeImage system) self.nixosConfigurations);
+        lib.mapAttrs (name: makeImage system) self.nixosConfigurations // {
+          tools = nixpkgs.legacyPackages.${system}.callPackages ./modules/installer/tools/package.nix {};
+        });
 
       formatter = forAllSystems (system: (makePkgs system).nixfmt-rfc-style);
 
