@@ -90,7 +90,9 @@ with lib;
 
   config = let allLocaleVars = {
       LANG = config.i18n.defaultLocale;
-      PATH_LOCALE = "/run/current-system/sw/share/locale";
+      # These are now hardcoded
+      #PATH_LOCALE = "/run/current-system/sw/share/locale";
+      #PATH_I18NMODULE = "/run/current-system/sw/lib/i18n";
       MM_CHARSET = let parts = splitString "." config.i18n.defaultLocale;
       in if length parts < 2 then "UTF-8" else elemAt parts 1;
     } // config.i18n.extraLocaleSettings; in {
@@ -98,7 +100,7 @@ with lib;
     environment.systemPackages =
       optional (config.i18n.supportedLocales != [ ]) config.i18n.freebsdLocales;
 
-    environment.pathsToLink = [ "/share/locale" ];
+    environment.pathsToLink = [ "/share/locale" "/share/i18n" ];
 
     environment.sessionVariables = allLocaleVars;
     init.environment = allLocaleVars;
