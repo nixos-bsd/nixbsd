@@ -107,9 +107,11 @@ in [
   ./config/xdg/mime.nix # both
   "${extPath}/config/xdg/icons.nix"
   "${extPath}/config/xdg/menus.nix"
+  "${extPath}/config/xdg/portal.nix"
   ./services/x11/hardware/libinput.nix
   ./services/devd.nix
   ./services/desktops/seatd.nix
+  ./services/desktops/consolekit2.nix
   ./services/x11/display-managers/lightdm.nix
   ./services/desktops/accountsservice.nix
   ./security/polkit.nix
