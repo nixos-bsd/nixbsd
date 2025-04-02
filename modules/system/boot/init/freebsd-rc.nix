@@ -51,12 +51,14 @@ let
             pkgs.freebsd.bin
             pkgs.freebsd.limits
             pkgs.coreutils
+            pkgs.freebsd.sysctl
           ]
         else
           [
             pkgs.coreutils
             pkgs.freebsd.bin
             pkgs.freebsd.limits
+            pkgs.freebsd.sysctl
           ];
       fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
