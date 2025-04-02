@@ -7,6 +7,7 @@ let
   cfg = config.services.dbus;
 
   homeDir = "/run/dbus";
+  pidfile = "${homeDir}/pid";
 
   configDir = pkgs.makeDBusConf.override {
     #inherit (cfg) apparmor;
@@ -91,15 +92,19 @@ in
       init.services.dbus = {
         dependencies = ["DAEMON" "ldconfig"];
         startType = "forking";
-        startCommand = [ "${pkgs.dbus}/bin/dbus-daemon" ];
+        startCommand = [ "${pkgs.dbus}/bin/dbus-daemon" "--system" ];
         preStart = ''
-          mkdir -p /var/lib/dbus
+          if ! ps -p $(cat ${pidfile}) >/dev/null 2>&1; then
+            rm -f ${pidfile}
+          fi
           ${pkgs.dbus}/bin/dbus-uuidgen --ensure
-          mkdir -p /var/run/dbus /run/dbus
         '';
-        environment = {
-          dbus_flags = "--system";
-        };
+      };
+
+      systemd.tmpfiles.settings.dbus = {
+        "/var/run/dbus".d = {};
+        "/run/dbus".d = {};
+        "/var/lib/dbus".d = {};
       };
     }
 
