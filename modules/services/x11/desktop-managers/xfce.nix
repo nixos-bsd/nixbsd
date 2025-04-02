@@ -133,16 +133,21 @@ in
     programs.dconf.enable = true;
 
     # Shell integration for VTE terminals
-    #programs.bash.vteIntegration = mkDefault true;
-    #programs.zsh.vteIntegration = mkDefault true;
+    programs.bash.vteIntegration = mkDefault true;
+    programs.zsh.vteIntegration = mkDefault true;
 
     # Systemd services
     #systemd.packages = utils.removePackagesByName (with pkgs.xfce; [
     #  xfce4-notifyd
     #]) excludePackages;
 
-    #security.pam.services.xfce4-screensaver.unixAuth = cfg.enableScreensaver;
+    security.pam.services.xfce4-screensaver = lib.mkIf cfg.enableScreensaver {
+      text = ''
+        auth            include         system
+        account         include         system
+      '';
+    };
 
-    #xdg.portal.configPackages = mkDefault [ pkgs.xfce.xfce4-session ];
+    xdg.portal.configPackages = mkDefault [ pkgs.xfce.xfce4-session ];
   };
 }

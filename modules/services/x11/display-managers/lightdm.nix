@@ -10,7 +10,7 @@ let
   cfg = dmcfg.lightdm;
   sessionData = dmcfg.sessionData;
 
-  setSessionScript = pkgs.callPackage ./account-service-util.nix { };
+  #setSessionScript = pkgs.callPackage ./account-service-util.nix { };
 
   inherit (pkgs) lightdm writeScript writeText;
 
@@ -81,20 +81,6 @@ in
     ./lightdm-greeters/tiny.nix
     ./lightdm-greeters/slick.nix
     ./lightdm-greeters/mobile.nix
-    (mkRenamedOptionModule [ "services" "xserver" "displayManager" "lightdm" "autoLogin" "enable" ] [
-      "services"
-      "xserver"
-      "displayManager"
-      "autoLogin"
-      "enable"
-    ])
-    (mkRenamedOptionModule [ "services" "xserver" "displayManager" "lightdm" "autoLogin" "user" ] [
-     "services"
-     "xserver"
-     "displayManager"
-     "autoLogin"
-     "user"
-    ])
   ];
 
   options = {
@@ -201,10 +187,8 @@ in
     # Set default session in session chooser to a specified values – basically ignore session history.
     # Auto-login is already covered by a config value.
     # lightdm relaunches itself via just `lightdm`, so needs to be on the PATH
+    # ${setSessionScript}/bin/set-session ${dmcfg.defaultSession}  <-- not necessary?
     services.xserver.displayManager.job.preStart = optionalString (!dmcfg.autoLogin.enable && dmcfg.defaultSession != null) ''
-      ${setSessionScript}/bin/set-session ${dmcfg.defaultSession}
-      mkdir -p /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
-      chown lightdm:lightdm /run/lightdm /var/cache/lightdm /var/lib/lightdm /var/lib/lightdm-data /var/log/lightdm
       export PATH=${lightdm}/sbin:$PATH
     '';
 
@@ -216,7 +200,7 @@ in
     #  "accounts-daemon"
     #];
 
-    services.xserver.displayManager.job.execCmd = [ "${lightdm}/sbin/lightdm" ];
+    services.xserver.displayManager.job.execCmd = [ "${lightdm}/sbin/lightdm" "-d" ];
 
     # lightdm stops plymouth so when it fails make sure plymouth stops.
     #systemd.services.display-manager.onFailure = [
@@ -278,13 +262,13 @@ in
       uid = config.ids.uids.lightdm;
     };
 
-    #systemd.tmpfiles.rules = [
-    #  "d /run/lightdm 0711 lightdm lightdm -"
-    #  "d /var/cache/lightdm 0711 root lightdm -"
-    #  "d /var/lib/lightdm 1770 lightdm lightdm -"
-    #  "d /var/lib/lightdm-data 1775 lightdm lightdm -"
-    #  "d /var/log/lightdm 0711 root lightdm -"
-    #];
+    systemd.tmpfiles.rules = [
+      "d /run/lightdm 0711 lightdm lightdm -"
+      "d /var/cache/lightdm 0711 root lightdm -"
+      "d /var/lib/lightdm 1770 lightdm lightdm -"
+      "d /var/lib/lightdm-data 1775 lightdm lightdm -"
+      "d /var/log/lightdm 0711 root lightdm -"
+    ];
 
     users.groups.lightdm.gid = config.ids.gids.lightdm;
     services.xserver.tty     = null; # We might start multiple X servers so let the tty increment themselves..

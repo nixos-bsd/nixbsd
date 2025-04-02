@@ -35,7 +35,6 @@ python3.pkgs.buildPythonApplication {
 
   propagatedBuildInputs = with python3.pkgs; [
     ordered-set
-  ] ++ lib.optionals withIntrospection [
     pygobject3
   ];
 
