@@ -34,6 +34,7 @@ in [
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc.nix"
+  ./systemd-compat.nix
   ./config/resolvconf.nix
   ./config/swap.nix
   ./config/sysctl.nix
