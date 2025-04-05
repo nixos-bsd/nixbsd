@@ -106,6 +106,7 @@ let
       "freebsd.jls"
       "freebsd.ldd"
       "freebsd.procstat"
+      "freebsd.pciconf"
     ];
     openbsd = [];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
