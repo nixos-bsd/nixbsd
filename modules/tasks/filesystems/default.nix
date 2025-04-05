@@ -346,7 +346,7 @@ in {
       rcorderSettings = {
         REQUIRE = [ "root" ];
         BEFORE = [ "FILESYSTEMS" ];
-        KEYWORD = [ "shutdown" "nojail" ];
+        KEYWORD = [ "shutdown" "nojail" "noswitch" ];
       };
       path = with pkgs; [ findutils gnugrep ] ++ config.system.fsPackages ++ {
         freebsd = [ freebsd.mount ];
