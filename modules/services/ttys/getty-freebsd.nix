@@ -23,8 +23,9 @@ in {
         ttyv3	"${gettyBin} Pc"		xterm	onifexists secure
         ttyv4	"${gettyBin} Pc"		xterm	onifexists secure
         ttyv5	"${gettyBin} Pc"		xterm	onifexists secure
-        ttyv6	"${gettyBin} Pc"		xterm	onifexists secure
-        ttyv7	"${gettyBin} Pc"		xterm	onifexists secure
+        # Let's leave ttyv6 free, sddm wants to seize it
+        #ttyv6	"${gettyBin} Pc"		xterm	onifexists secure
+        #ttyv7	"${gettyBin} Pc"		xterm	onifexists secure
         # Serial terminals
         ttyu0	"${gettyBin} 3wire"	vt100	onifconsole secure
         ttyu1	"${gettyBin} 3wire"	vt100	onifconsole secure

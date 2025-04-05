@@ -7,6 +7,7 @@ in [
   "${extPath}/config/system-environment.nix"
   "${extPath}/config/terminfo.nix"
   "${extPath}/config/vte.nix"
+  "${extPath}/config/qt.nix"
   "${extPath}/misc/ids.nix"
   "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"
@@ -93,6 +94,7 @@ in [
   ./services/x11/xserver.nix
   ./services/x11/desktop-managers/default.nix
   ./services/x11/desktop-managers/xfce.nix
+  ./services/x11/desktop-managers/plasma6.nix
   ./services/x11/display-managers/default.nix
   ./services/x11/display-managers/sddm.nix
   ./services/x11/window-managers/default.nix
@@ -116,5 +118,6 @@ in [
   ./services/desktops/accountsservice.nix
   ./security/polkit.nix
   "${extPath}/programs/xfconf.nix"
+  "${extPath}/programs/gdk-pixbuf.nix"
   ./programs/thunar.nix
 ]

@@ -7,7 +7,10 @@ let
   cfg = dmcfg.sddm;
   xEnv = config.init.services.display-manager.environment;
 
-  sddm = cfg.package;
+  sddm = cfg.package.override (old: {
+    withWayland = cfg.wayland.enable;
+    extraPackages = old.extraPackages or [ ] ++ cfg.extraPackages;
+  });
 
   iniFmt = pkgs.formats.ini { };
 
@@ -50,7 +53,7 @@ let
     };
 
     X11 = {
-      MinimumVT = if xcfg.tty != null then xcfg.tty else 7;
+      MinimumVT = if xcfg.tty != null then xcfg.tty else 8;
       ServerPath = toString xserverWrapper;
       XephyrPath = "${pkgs.xorg.xorgserver.out}/bin/Xephyr";
       SessionCommand = toString dmcfg.sessionData.wrapper;
@@ -62,6 +65,7 @@ let
     };
 
     Wayland = {
+      MinimumVT = 8;
       EnableHiDPI = cfg.enableHidpi;
       SessionDir = "${dmcfg.sessionData.desktops}/share/wayland-sessions";
       CompositorCommand = lib.optionalString cfg.wayland.enable cfg.wayland.compositorCommand;
@@ -80,6 +84,33 @@ let
   autoLoginSessionName =
     "${dmcfg.sessionData.autologinSession}.desktop";
 
+  compositorCmds = {
+    kwin = concatStringsSep " " [
+      "${lib.getBin pkgs.kdePackages.kwin}/bin/kwin_wayland"
+      "--no-global-shortcuts"
+      "--no-kactivities"
+      "--no-lockscreen"
+      "--locale1"
+    ];
+    # This is basically the upstream default, but with Weston referenced by full path
+    # and the configuration generated from NixOS options.
+    weston =
+      let
+        westonIni = (pkgs.formats.ini { }).generate "weston.ini" {
+          libinput = {
+            enable-tap = config.services.libinput.mouse.tapping;
+            left-handed = config.services.libinput.mouse.leftHanded;
+          };
+          keyboard = {
+            keymap_model = xcfg.xkb.model;
+            keymap_layout = xcfg.xkb.layout;
+            keymap_variant = xcfg.xkb.variant;
+            keymap_options = xcfg.xkb.options;
+          };
+        };
+      in
+      "${getExe pkgs.weston} --shell=kiosk -c ${westonIni}";
+  };
 in
 {
   options = {
@@ -123,6 +154,13 @@ in
         description = ''
           Greeter theme to use.
         '';
+      };
+
+      extraPackages = mkOption {
+        type = types.listOf types.package;
+        default = [ ];
+        defaultText = "[]";
+        description = "Extra Qt plugins / QML libraries to add to the environment.";
       };
 
       autoNumlock = mkOption {
@@ -179,24 +217,16 @@ in
       wayland = {
         enable = mkEnableOption "experimental Wayland support";
 
+        compositor = mkOption {
+          description = "The compositor to use: ${lib.concatStringsSep ", " (builtins.attrNames compositorCmds)}";
+          type = types.enum (builtins.attrNames compositorCmds);
+          default = "kwin";
+        };
+
         compositorCommand = mkOption {
           type = types.str;
           internal = true;
-
-          # This is basically the upstream default, but with Weston referenced by full path
-          # and the configuration generated from NixOS options.
-          default = let westonIni = (pkgs.formats.ini {}).generate "weston.ini" {
-              libinput = {
-                enable-tap = xcfg.libinput.mouse.tapping;
-                left-handed = xcfg.libinput.mouse.leftHanded;
-              };
-              keyboard = {
-                keymap_model = xcfg.xkb.model;
-                keymap_layout = xcfg.xkb.layout;
-                keymap_variant = xcfg.xkb.variant;
-                keymap_options = xcfg.xkb.options;
-              };
-            }; in "${pkgs.weston}/bin/weston --shell=fullscreen-shell.so -c ${westonIni}";
+          default = compositorCmds.${cfg.wayland.compositor};
           description = "Command used to start the selected compositor";
         };
       };
@@ -239,23 +269,22 @@ in
       '';
 
       sddm-greeter.text = ''
-        auth     required       pam_succeed_if.so audit quiet_success user = sddm
-        auth     optional       pam_permit.so
+        # Always let the greeter start without authentication
+        auth		required pam_permit.so
 
-        account  required       pam_succeed_if.so audit quiet_success user = sddm
-        account  sufficient     pam_unix.so
+        # No action required for account management
+        account		required pam_permit.so
 
-        password required       pam_deny.so
+        # Can't change password
+        password	required pam_deny.so
 
-        session  required       pam_succeed_if.so audit quiet_success user = sddm
-        session  required       pam_env.so conffile=/etc/pam/environment readenv=0
-        session  optional       pam_keyinit.so force revoke
-        session  optional       pam_permit.so
+        # Setup session
+        session		required pam_permit.so
+        session         optional ${pkgs.pam_xdg}/lib/security/pam_xdg.so notroot track_sessions
       '';
 
       sddm-autologin.text = ''
         auth     requisite pam_nologin.so
-        auth     required  pam_succeed_if.so uid >= ${toString cfg.autoLogin.minimumUid} quiet
         auth     required  pam_permit.so
 
         account  include   sddm
@@ -283,6 +312,16 @@ in
     environment.systemPackages = [ sddm ];
     services.dbus.packages = [ sddm ];
     #systemd.tmpfiles.packages = [ sddm ];
+    systemd.tmpfiles.settings.sddm = {
+      "/var/lib/sddm".d = {
+        user = "sddm";
+        group = "sddm";
+        mode = "0750";
+      };
+      "/var/run/sddm".d = {
+        mode = "0711";
+      };
+    };
 
     # We're not using the upstream unit, so copy these: https://github.com/sddm/sddm/blob/develop/services/sddm.service.in
     #systemd.services.display-manager.after = [
