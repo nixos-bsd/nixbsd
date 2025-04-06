@@ -1,0 +1,13 @@
+diff --git a/usr.bin/netstat/Makefile b/usr.bin/netstat/Makefile
+index 742de485a6b5..121911b8a18b 100644
+--- a/usr.bin/netstat/Makefile
++++ b/usr.bin/netstat/Makefile
+@@ -50,8 +50,6 @@ CFLAGS+=-DSDP
+ CFLAGS+=-DPF
+ .endif
+ 
+-BINGRP=	kmem
+-BINMODE=2555
+ LIBADD=	kvm memstat xo util
+ 
+ .if ${MK_NETGRAPH_SUPPORT} != "no"

@@ -1,0 +1,13 @@
+diff --git a/sbin/devd/Makefile b/sbin/devd/Makefile
+index 4ff0187a5a22..d8ef17152a41 100644
+--- a/sbin/devd/Makefile
++++ b/sbin/devd/Makefile
+@@ -5,7 +5,7 @@ PACKAGE=devd
+ CONFGROUPS=	CONFS DEVD
+ CONFS=	devd.conf
+ DEVD=	devmatch.conf
+-DEVDDIR=	/etc/devd
++DEVDDIR=	${etc}/etc/devd
+ .if ${MK_ACPI} != "no"
+ DEVD+=	asus.conf
+ .endif

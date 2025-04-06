@@ -5,28 +5,27 @@ final': prev': {
       branch = "CURRENT";
       major = 15;
       minor = 0;
-      reldate = "1500027";
+      reldate = "1500035";
       release = "15.0-CURRENT";
       revision = "15.0";
       type = "FreeBSD";
       version = "FreeBSD 15.0-CURRENT";
     };
     sourceData = {
-      rev = "8ea6c115409450ff58a8c6b5e818319d181c6bff";
-      hash = "sha256-1rjZYEx1lP4nPn0dbBpqNWTh19QaPL68Qf92Luf+y3w=";
+      rev = "c5773d366ecc5271b9bd6e5506c00fb3520f19ae";
+      hash = "sha256-xsgY5Ex/B5ngOTa5OZRauSaSYvET5lWI7veJRrSq1oY=";
     };
 
     compat = prev.compat.override {
       extraSrc = [
         "sys/sys/md4.h"
+        "sys/sys/_nv.h"
       ];
     };
     sys = (prev.sys.override {
       extraConfig = ''
         options P9FS
         device virtio_p9fs
-        options UNIONFS
-        options NULLFS
       '';
     }).overrideAttrs (prev'': {
       hardeningDisable = prev.sys.hardeningDisable ++ [ "fortify" ];
@@ -117,6 +116,15 @@ final': prev': {
 
     librt = prev.librt.overrideAttrs (prev'': {
       buildInputs = prev''.buildInputs ++ [ final.libsys ];
+    });
+
+    drm-kmod = prev.drm-kmod.overrideAttrs (prev'': {
+      #NIX_CFLAGS_COMPILE = (prev''.NIX_CFLAGS_COMPILE or "") + " -I${final.sys.src}/include";
+      hardeningDisable = (prev''.hardeningDisable or []) ++ [ "fortify" ];
+
+      # sketchy... if this breaks, we need a patch
+      XARGS = "${final.buildFreebsd.xargs-j}/bin/xargs-j";
+      XARGS_J = "";
     });
   });
 }

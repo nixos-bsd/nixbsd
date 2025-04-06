@@ -1,0 +1,101 @@
+diff --git a/include/paths.h b/include/paths.h
+index f8861ea4e5a8..2cc47926bf91 100644
+--- a/include/paths.h
++++ b/include/paths.h
+@@ -34,66 +34,65 @@
+ 
+ #include <sys/cdefs.h>
+ 
+-#define	_PATH_LOCALBASE	"/usr/local"
++#define	_PATH_LOCALBASE	"/run/current-system/sw"
+ 
+ /* Default search path. */
+-#define	_PATH_DEFPATH	"/sbin:/bin:/usr/sbin:/usr/bin:" \
+-  			_PATH_LOCALBASE "/sbin:" _PATH_LOCALBASE "/bin"
++#define	_PATH_DEFPATH	"/run/current-system/sw/bin"
+ /* All standard utilities path. */
+-#define	_PATH_STDPATH	"/usr/bin:/bin:/usr/sbin:/sbin"
++#define	_PATH_STDPATH	"/run/current-system/sw/bin"
+ /* Locate system binaries. */
+-#define	_PATH_SYSPATH	"/sbin:/usr/sbin"
++#define	_PATH_SYSPATH	"/run/current-system/sw/bin"
+ 
+ #define	_PATH_BSHELL	"/bin/sh"
+ #define	_PATH_CAPABILITY	"/etc/capability"
+ #define	_PATH_CAPABILITY_DB	"/etc/capability.db"
+ #define	_PATH_CONSOLE	"/dev/console"
+-#define	_PATH_CP	"/bin/cp"
+-#define	_PATH_CSHELL	"/bin/csh"
+-#define	_PATH_CSMAPPER	"/usr/share/i18n/csmapper"
++#define	_PATH_CP	"/run/current-system/sw/bin/cp"
++#define	_PATH_CSHELL	"/run/current-system/sw/bin/csh"
++#define	_PATH_CSMAPPER	"/run/current-system/sw/share/i18n/csmapper"
+ #define	_PATH_DEFTAPE	"/dev/sa0"
+ #define	_PATH_DEVGPIOC	"/dev/gpioc"
+ #define	_PATH_DEVNULL	"/dev/null"
+ #define	_PATH_DEVZERO	"/dev/zero"
+ #define	_PATH_DRUM	"/dev/drum"
+-#define	_PATH_ESDB	"/usr/share/i18n/esdb"
++#define	_PATH_ESDB	"/run/current-system/sw/share/i18n/esdb"
+ #define	_PATH_ETC	"/etc"
+-#define	_PATH_FIRMWARE	"/usr/share/firmware"
++#define	_PATH_FIRMWARE	"/run/current-system/sw/share/firmware"
+ #define	_PATH_FTPUSERS	"/etc/ftpusers"
+ #define	_PATH_FWMEM	"/dev/fwmem"
+-#define	_PATH_GELI	"/sbin/geli"
+-#define	_PATH_HALT	"/sbin/halt"
++#define	_PATH_GELI	"/run/current-system/sw/bin/geli"
++#define	_PATH_HALT	"/run/current-system/sw/bin/halt"
+ #ifdef COMPAT_libcompat
+-#define	_PATH_I18NMODULE	"/usr/lib" COMPAT_libcompat "/i18n"
++#define	_PATH_I18NMODULE	"/run/current-system/sw/lib" COMPAT_libcompat "/i18n"
+ #else
+-#define	_PATH_I18NMODULE	"/usr/lib/i18n"
++#define	_PATH_I18NMODULE	"/run/current-system/sw/lib/i18n"
+ #endif
+-#define	_PATH_IFCONFIG	"/sbin/ifconfig"
++#define	_PATH_IFCONFIG	"/run/current-system/sw/bin/ifconfig"
+ #define	_PATH_KMEM	"/dev/kmem"
+ #define	_PATH_LIBMAP_CONF	"/etc/libmap.conf"
+-#define	_PATH_LOCALE	"/usr/share/locale"
+-#define	_PATH_LOGIN	"/usr/bin/login"
++#define	_PATH_LOCALE	"/run/current-system/sw/share/locale"
++#define	_PATH_LOGIN	"/run/current-system/sw/bin/login"
+ #define	_PATH_MAILDIR	"/var/mail"
+-#define	_PATH_MAN	"/usr/share/man"
+-#define	_PATH_MDCONFIG	"/sbin/mdconfig"
++#define	_PATH_MAN	"/run/current-system/sw/share/man"
++#define	_PATH_MDCONFIG	"/run/current-system/sw/bin/mdconfig"
+ #define	_PATH_MEM	"/dev/mem"
+-#define	_PATH_MKSNAP_FFS	"/sbin/mksnap_ffs"
+-#define	_PATH_MOUNT	"/sbin/mount"
+-#define	_PATH_NEWFS	"/sbin/newfs"
++#define	_PATH_MKSNAP_FFS	"/run/current-system/sw/bin/mksnap_ffs"
++#define	_PATH_MOUNT	"/run/current-system/sw/bin/mount"
++#define	_PATH_NEWFS	"/run/current-system/sw/bin/newfs"
+ #define	_PATH_NOLOGIN	"/var/run/nologin"
+-#define	_PATH_RCP	"/bin/rcp"
+-#define	_PATH_REBOOT	"/sbin/reboot"
+-#define	_PATH_RLOGIN	"/usr/bin/rlogin"
+-#define	_PATH_RM	"/bin/rm"
+-#define	_PATH_RSH	"/usr/bin/rsh"
+-#define	_PATH_SENDMAIL	"/usr/sbin/sendmail"
++#define	_PATH_RCP	"/run/current-system/sw/bin/rcp"
++#define	_PATH_REBOOT	"/run/current-system/sw/bin/reboot"
++#define	_PATH_RLOGIN	"/run/current-system/sw/bin/rlogin"
++#define	_PATH_RM	"/run/current-system/sw/bin/rm"
++#define	_PATH_RSH	"/run/current-system/sw/bin/rsh"
++#define	_PATH_SENDMAIL	"/run/current-system/sw/bin/sendmail"
+ #define	_PATH_SHELLS	"/etc/shells"
+ #define	_PATH_TTY	"/dev/tty"
+-#define	_PATH_TUNEFS	"/sbin/tunefs"
++#define	_PATH_TUNEFS	"/run/current-system/sw/bin/tunefs"
+ #define	_PATH_UNIX	"don't use _PATH_UNIX"
+ #define	_PATH_UFSSUSPEND	"/dev/ufssuspend"
+-#define	_PATH_VI	"/usr/bin/vi"
+-#define	_PATH_WALL	"/usr/bin/wall"
++#define	_PATH_VI	"/run/current-system/sw/bin/vi"
++#define	_PATH_WALL	"/run/current-system/sw/bin/wall"
+ 
+ /* Provide trailing slash, since mostly used for building pathnames. */
+ #define	_PATH_DEV	"/dev/"
