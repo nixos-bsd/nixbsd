@@ -10,12 +10,11 @@
     services.dbus.packages = [ pkgs.consolekit2 ];
     environment.systemPackages = [ pkgs.consolekit2 ];
 
-    # seems to work better when dbus-activated
-    #init.services.consolekit2 = {
-    #  dependencies = ["DAEMON"];
-    #  description = "Consolekit2 Session Manager";
-    #  startCommand = [ "${pkgs.consolekit2}/bin/console-kit-daemon" "--no-daemon" "--debug"];
-    #  startType = "foreground";
-    #};
+    init.services.consolekit2 = {
+      dependencies = ["DAEMON"];
+      description = "Consolekit2 Session Manager";
+      startCommand = [ "${pkgs.consolekit2}/bin/console-kit-daemon" "--no-daemon" "--debug"];
+      startType = "foreground";
+    };
   };
 }

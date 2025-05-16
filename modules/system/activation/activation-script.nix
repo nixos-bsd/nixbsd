@@ -296,11 +296,11 @@ in {
         rmdir --ignore-fail-on-non-empty /usr/bin /usr
       '';
 
-    #systemd.tmpfiles.rules = [
-    #  #"d /nix/var/nix/gcroots -"
-    #  "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
+    systemd.tmpfiles.rules = [
+      "d /nix/var/nix/gcroots -"
+      "L+ /nix/var/nix/gcroots/current-system - - - - /run/current-system"
     #  #"D /var/empty 0555 root root -"
     #  #"h /var/empty - - - - +i"
-    #];
+    ];
   };
 }

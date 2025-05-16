@@ -63,6 +63,7 @@ M.entries["$tag"] = {
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
         kernelEnvironment = {["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
         earlyModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".earlyModules | @json' <$path | tr [] {}),
+        unsafeModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".unsafeModules | @json' <$path | tr [] {}),
 }
 M.tags[#M.tags + 1] = "$tag"
 EOF
@@ -93,7 +94,7 @@ if [ "$numGenerations" -gt 0 ]; then
         link=/nix/var/nix/profiles/system-$generation-link/boot.json
         addEntry $link $generation
     done >> $tmpFile
-    for profile in $(cd /nix/var/nix/profiles/system-profiles && ls -d * 2>/dev/null | grep -v -- '-link$'); do
+    for profile in $(cd /nix/var/nix/profiles/system-profiles 2>/dev/null && ls -d * 2>/dev/null | grep -v -- '-link$'); do
         for generation in $(
                 (cd /nix/var/nix/profiles/system-profiles && ls -d $profile-*-link/boot.json 2>/dev/null) \
                 | sed 's#.*-\([0-9]\+\)-link/boot.json#\1#' \

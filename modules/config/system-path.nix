@@ -107,6 +107,8 @@ let
       "freebsd.ldd"
       "freebsd.procstat"
       "freebsd.pciconf"
+      "freebsd.growfs"
+      "freebsd.tip"
     ];
     openbsd = [];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};

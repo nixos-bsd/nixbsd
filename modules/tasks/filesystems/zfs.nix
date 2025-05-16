@@ -487,7 +487,7 @@ in
       ];
 
 
-      boot.kernelModules = [ "zfs" ];
+      boot.safeEarlyKernelModules = [ "zfs" ];
       boot.kernelEnvironment = {
         "kern.geom.label.disk_ident.enable" = "0";
         "kern.geom.label.gptid.enable" = "0";

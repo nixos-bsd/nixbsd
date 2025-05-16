@@ -15,6 +15,7 @@ let
       REQUIRE = builtins.map convertName cfg.dependencies;
       BEFORE = builtins.map convertName cfg.before;
       PROVIDE = builtins.map convertName cfg.provides;
+      KEYWORDS = lib.optionals (!cfg.onSwitch) [ "noswitch" ];
     };
 
     inherit (cfg) path defaultLog;

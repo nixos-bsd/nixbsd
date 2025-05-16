@@ -118,8 +118,22 @@ in {
 
     boot.kernelEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
       init_shell = config.environment.binsh;
+      module_path = cfg.modulesPath;
     };
 
-    boot.kernelModules = [ "nullfs" "unionfs" ];
+    boot.safeEarlyKernelModules = [ "nullfs" "unionfs" ];
+
+    init.services.kldload = {
+      path = [ pkgs.freebsd.kldload pkgs.freebsd.bin ];
+      startType = "oneshot";
+      before = [ "FILESYSTEMS" ];
+      onSwitch = false;
+      startCommand = [ (pkgs.writeScript "kldload-init" ''
+        ${if (builtins.length config.boot.safeKernelModules) != 0 then "kldload ${lib.concatStringsSep " " config.boot.safeKernelModules}" else ":"}
+        if [[ "$(kenv boot_safe 2>/dev/null)" != "YES" ]]; then
+          ${if (builtins.length config.boot.kernelModules) != 0 then "kldload ${lib.concatStringsSep " " config.boot.kernelModules}" else ":"}
+        fi
+      '') ];
+    };
   };
 }

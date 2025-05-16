@@ -280,7 +280,6 @@ in
 
         # Setup session
         session		required pam_permit.so
-        session         optional ${pkgs.pam_xdg}/lib/security/pam_xdg.so notroot track_sessions
       '';
 
       sddm-autologin.text = ''

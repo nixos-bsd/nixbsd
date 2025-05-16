@@ -38,7 +38,8 @@ let
             kernelStrip = kernelMount;
             kernelDevice = mkDevice kernelFs;
             rootDevice = mkDevice root;
-            earlyModules = config.boot.kernelModules;
+            earlyModules = config.boot.safeEarlyKernelModules;
+            unsafeModules = config.boot.earlyKernelModules;
           };
         }));
 
@@ -139,6 +140,24 @@ in {
   options.boot.kernelModules = lib.mkOption {
     type = lib.types.listOf lib.types.str;
     default = [];
-    description = "Names of kernel modules to load before the kernel boots.";
+    description = "Names of kernel modules to load after the kernel boots. These will not be loaded when booting in safe mode.";
+  };
+
+  options.boot.safeKernelModules = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [];
+    description = "Names of kernel modules to load after the kernel boots, including in safe mode.";
+  };
+
+  options.boot.earlyKernelModules = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [];
+    description = "Names of kernel modules to load before the kernel boots. These will not be loaded when booting in safe mode.";
+  };
+
+  options.boot.safeEarlyKernelModules = lib.mkOption {
+    type = lib.types.listOf lib.types.str;
+    default = [];
+    description = "Names of kernel modules to load before the kernel boots, including in safe mode.";
   };
 }

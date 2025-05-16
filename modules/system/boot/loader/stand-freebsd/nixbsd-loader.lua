@@ -70,6 +70,11 @@ function config.loadKernel(other_kernel)
 	for _, module in pairs(entry.earlyModules) do
 		loader.perform("load " .. module)
 	end
+	if not core.sm then
+		for _, module in pairs(entry.unsafeModules) do
+			loader.perform("load " .. module)
+		end
+	end
 	if initmd ~= nil and initmd ~= "" then
 		loader.perform("load -t md_image " .. initmd)
 	end

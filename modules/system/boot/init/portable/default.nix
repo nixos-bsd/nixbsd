@@ -114,6 +114,12 @@ with lib;
                 description = "Signal to send to the program as the first-shot shutdown notice.";
               };
 
+              onSwitch = mkOption {
+                type = types.bool;
+                default = true;
+                description = "Whether this service should be considered for starting during switch-to-configuration.";
+              };
+
               environment = mkOption {
                 type = types.attrsOf types.str;
                 default = { };
