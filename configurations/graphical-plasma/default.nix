@@ -8,14 +8,25 @@
     ((pkg.meta or {}).sourceProvenance or []) == [ lib.sourceTypes.binaryFirmware ];
 
   #programs.sway.enable = true;
+  environment.systemPackages = with pkgs; [
+    freebsd.truss
+    gdb
+    vim
+    clang
+  ];
 
   services.dbus.enable = true;
-  services.xserver.displayManager.sddm = {
+  services.xserver = {
     enable = true;
-    wayland.enable = true;
+    displayManager.sddm = {
+      enable = true;
+      wayland.enable = false;
+    };
+  };
+  services.desktopManager.plasma6 = {
+    enable = true;
   };
   services.consolekit2.enable = true;
   security.sudo.wheelNeedsPassword = false;
   services.seatd.enable = true;
-  services.desktopManager.plasma6.enable = true;
 }

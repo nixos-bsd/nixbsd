@@ -71,7 +71,7 @@ function config.loadKernel(other_kernel)
 		loader.perform("load " .. module)
 	end
 	if not core.sm then
-		for _, module in pairs(entry.unsafeModules) do
+		for _, module in pairs(entry.unsafeModules or {}) do
 			loader.perform("load " .. module)
 		end
 	end

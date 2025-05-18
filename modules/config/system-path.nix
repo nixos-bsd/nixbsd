@@ -106,6 +106,7 @@ let
       "freebsd.jls"
       "freebsd.ldd"
       "freebsd.procstat"
+      "freebsd.netstat"
       "freebsd.pciconf"
       "freebsd.growfs"
       "freebsd.tip"

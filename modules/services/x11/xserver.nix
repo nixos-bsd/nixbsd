@@ -664,6 +664,7 @@ in
         pkgs.xdg-utils
         xorg.xf86inputevdev.out # get evdev.4 man page
         pkgs.nixos-icons # needed for gnome and pantheon about dialog, nixos-manual and maybe more
+        pkgs.util-linuxMinimal  # hexdump needed by startx
       ] config.services.xserver.excludePackages
       ++ optional (elem "virtualbox" cfg.videoDrivers) xorg.xrefresh;
 
@@ -690,18 +691,18 @@ in
         dependencies = ["LOGIN" "cleanvar" "syscons" "dbus"];
 
         startType = "foreground";
-        startCommand = cfg.displayManager.job.execCmd ;
+        startCommand = cfg.displayManager.job.execCmd;
         preStart = ''
           ${cfg.displayManager.job.preStart}
 
           rm -f /tmp/.X0-lock
         '';
 
-        #environment =
-        #  optionalAttrs config.hardware.opengl.setLdLibraryPath
-        #    { LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.addOpenGLRunpath.driverLink ]; }
-        #  // cfg.displayManager.job.environment;
-        environment = cfg.displayManager.job.environment;
+        environment =
+          optionalAttrs config.hardware.opengl.setLdLibraryPath
+            { LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.addDriverRunpath.driverLink ]; }
+          // cfg.displayManager.job.environment;
+        #environment = cfg.displayManager.job.environment;
       };
 
     services.xserver.displayManager.xserverArgs =

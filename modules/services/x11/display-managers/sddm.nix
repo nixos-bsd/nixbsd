@@ -16,7 +16,7 @@ let
 
   xserverWrapper = pkgs.writeShellScript "xserver-wrapper" ''
     ${concatMapStrings (n: "export ${n}=\"${getAttr n xEnv}\"\n") (attrNames xEnv)}
-    exec systemd-cat -t xserver-wrapper ${dmcfg.xserverBin} ${toString dmcfg.xserverArgs} "$@"
+    exec ${dmcfg.xserverBin} ${toString dmcfg.xserverArgs} "$@"
   '';
 
   Xsetup = pkgs.writeShellScript "Xsetup" ''
@@ -260,6 +260,7 @@ in
       execCmd = [ "${pkgs.qt6Packages.sddm}/bin/sddm" ];
     };
 
+    security.polkit.enable = true;
     security.pam.services = {
       sddm.text = ''
         auth      substack      login

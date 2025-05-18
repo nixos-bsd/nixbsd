@@ -12,6 +12,7 @@
     extraGroups = [ "wheel" ];
     inherit (config.users.users.root) initialPassword;
   };
+  nix.settings.trusted-users = [ "bestie" ];
 
   services.sshd.enable = true;
   boot.loader.stand-freebsd.enable = true;
