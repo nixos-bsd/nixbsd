@@ -6,10 +6,11 @@
   nixpkgs.config.allowUnfree = true;
 
   security.sudo.wheelNeedsPassword = false;
-  hardware.opengl.enable = true;
   services.dbus.enable = true;
   services.seatd.enable = true;
   services.desktopManager.plasma6.enable = true;
+  hardware.opengl.enable = true;
+  hardware.opengl.setLdLibraryPath = true;
   hardware.opengl.driModulePackages = with pkgs.freebsd; [
     drm-kmod
     nvidia-driver
@@ -18,6 +19,8 @@
   ];
   environment.systemPackages = with pkgs; [
     freebsd.truss
+    freebsd.nvidia-nvml
+    freebsd.nvidia-x11
     gdb
     vim
     clang
@@ -38,7 +41,8 @@
   };
   services.xserver.displayManager.sddm = {
     enable = true;
-    wayland.enable = true;
+    #wayland.enable = true;
   };
   services.consolekit2.enable = true;
+  programs.sway.enable = true;
 }
