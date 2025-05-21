@@ -309,7 +309,7 @@ in
 
     users.groups.sddm.gid = config.ids.gids.sddm;
 
-    environment.systemPackages = [ sddm ];
+    environment.systemPackages = [ sddm pkgs.kdePackages.kirigami.unwrapped pkgs.kdePackages.qt5compat pkgs.kdePackages.qtdeclarative pkgs.kdePackages.plasma5support pkgs.kdePackages.ksvg ];
     services.dbus.packages = [ sddm ];
     #systemd.tmpfiles.packages = [ sddm ];
     systemd.tmpfiles.settings.sddm = {

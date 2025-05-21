@@ -146,6 +146,13 @@ in
           libksysguard
           systemsettings
           kcmutils
+
+          # ???
+          sonnet
+          kwindowsystem
+          kdeclarative
+          kirigami-addons
+          kitemmodels
         ];
         optionalPackages =
           [
