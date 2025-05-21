@@ -307,7 +307,7 @@ in
         breeze-icons
         kirigami
         libplasma
-        #plasma5support
+        plasma5support
         qtsvg
         qtvirtualkeyboard
       ];

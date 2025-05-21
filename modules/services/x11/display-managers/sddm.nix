@@ -263,9 +263,9 @@ in
     security.polkit.enable = true;
     security.pam.services = {
       sddm.text = ''
-        auth      substack      login
+        auth      include      login
         account   include       login
-        password  substack      login
+        password  include      login
         session   include       login
       '';
 
