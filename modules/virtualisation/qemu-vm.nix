@@ -84,17 +84,6 @@ let
 
     set -e
 
-    # Create an empty filesystem image. A filesystem image does not
-    # contain a partition table but just a filesystem.
-    createEmptyFilesystemImage() {
-      local name=$1
-      local size=$2
-      local temp=$(mktemp)
-      ${hostPkgs.freebsd.makefs}/bin/makefs -s "$size" -o label=${rootFilesystemLabel} "$temp"
-      ${qemu}/bin/qemu-img convert -f raw -O qcow2 "$temp" "$name"
-      rm "$temp"
-    }
-
     NIX_DISK_IMAGE=$(readlink -f "''${NIX_DISK_IMAGE:-${
       toString config.virtualisation.diskImage
     }}") || test -z "$NIX_DISK_IMAGE"
@@ -114,10 +103,6 @@ let
               -b ${systemImage}/${systemImage.filename} \
               -F qcow2 \
               "$NIX_DISK_IMAGE"
-          '' else if cfg.useDefaultFilesystems then ''
-            createEmptyFilesystemImage "$NIX_DISK_IMAGE" "${
-              toString cfg.diskSize
-            }M"
           '' else ''
             # Create an empty disk image without a filesystem.
             ${qemu}/bin/qemu-img create -f qcow2 "$NIX_DISK_IMAGE" "${
@@ -202,8 +187,8 @@ let
     hostPkgs.closureInfo { rootPaths = config.virtualisation.additionalPaths; };
 
   # Use well-defined and persistent filesystem labels to identify block devices.
-  rootFilesystemLabel = "nixos";
-  espFilesystemLabel = "ESP"; # Hard-coded by make-disk-image.nix
+  rootFilesystemLabel = config.networking.hostName;
+  espFilesystemLabel = "${config.networking.hostName}-ESP"; # Hard-coded by make-disk-image.nix
   nixStoreFilesystemLabel = "nix-store";
 
   # The root drive is a raw disk which does not necessarily contain a

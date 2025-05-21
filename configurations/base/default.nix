@@ -18,12 +18,12 @@
   boot.loader.stand-freebsd.enable = true;
 
   fileSystems."/" = {
-    device = "/dev/gpt/nixos";
+    device = "/dev/gpt/${config.networking.hostName}";
     fsType = "ufs";
   };
 
   fileSystems."/boot" = {
-    device = "/dev/msdosfs/ESP";
+    device = "/dev/gpt/${config.networking.hostName}-ESP";
     fsType = "msdosfs";
   };
 
