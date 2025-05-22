@@ -83,6 +83,7 @@ in [
   ./system/boot/loader/efi.nix
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
+  ./system/boot/firstboot.nix
   ./system/etc/etc-activation.nix
   ./tasks/filesystems
   ./tasks/filesystems/zfs.nix

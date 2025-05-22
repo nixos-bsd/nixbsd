@@ -11,6 +11,7 @@ if hostPlatform.isFreeBSD then
     ./system/boot/init/portable/freebsd.nix
     ./system/boot/loader/stand-freebsd
     ./virtualisation/jails.nix
+    ./system/boot/growfs-freebsd.nix
   ]
 else if hostPlatform.isOpenBSD then
   [

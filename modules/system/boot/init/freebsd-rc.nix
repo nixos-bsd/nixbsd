@@ -62,53 +62,53 @@ let
           ];
       fullPath = opts.path ++ defaultPath;
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
-
-    in
-    pkgs.writeTextFile {
-      inherit (opts) name;
-      executable = true;
-      text =
-        ''
-          #!${pkgs.runtimeShell}
-        ''
-        + concatStrings (
-          mapAttrsToList (name: value: ''
-            # ${name}: ${concatStringsSep " " value}
-          '') opts.rcorderSettings
-        )
-        + lib.optionalString (opts.description != null) ''
-          #  ${opts.description}
-        ''
-        + lib.optionalString (!opts.dummy) (
+      generatedScript = pkgs.writeTextFile {
+        inherit (opts) name;
+        executable = true;
+        text =
           ''
-
-            export PATH=${escapeShellArg pathStr}
-            ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${formatScriptLiteral v}\"") config.init.environment)}
-
-            . /etc/rc.subr
+            #!${pkgs.runtimeShell}
           ''
-          + concatStringsSep "\n" (
-            mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}${optionalString (name == "command_args" && opts.defaultLog.enable) " &>>/var/log/${opts.defaultLog.name}.log"}\"") (
-              notNull opts.shellVariables
-            )
-          )
-          + "\n"
           + concatStrings (
-            mapAttrsToList (func_name: value: ''
-              ${opts.name}_${func_name}() {
-                ${value}
-              }
-            '') (notNull opts.hooks)
+            mapAttrsToList (name: value: ''
+              # ${name}: ${concatStringsSep " " value}
+            '') opts.rcorderSettings
           )
-          + ''
-
-            ${opts.extraConfig}
-
-            load_rc_config ${opts.name}
-            run_rc_command "$1"
+          + lib.optionalString (opts.description != null) ''
+            #  ${opts.description}
           ''
-        );
-    };
+          + lib.optionalString (!opts.dummy) (
+            ''
+
+              export PATH=${escapeShellArg pathStr}
+              ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${formatScriptLiteral v}\"") config.init.environment)}
+
+              . /etc/rc.subr
+            ''
+            + concatStringsSep "\n" (
+              mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}${optionalString (name == "command_args" && opts.defaultLog.enable) " &>>/var/log/${opts.defaultLog.name}.log"}\"") (
+                notNull opts.shellVariables
+              )
+            )
+            + "\n"
+            + concatStrings (
+              mapAttrsToList (func_name: value: ''
+                ${opts.name}_${func_name}() {
+                  ${value}
+                }
+              '') (notNull opts.hooks)
+            )
+            + ''
+
+              ${opts.extraConfig}
+
+              load_rc_config ${opts.name}
+              run_rc_command "$1"
+            ''
+          );
+      };
+
+    in if opts.script == null then generatedScript else opts.script;
 
   makeRcDir =
     scripts:
@@ -183,6 +183,12 @@ in
                 # Should be a variableName, that breaks evaluating documentation
                 type = types.str;
                 description = "Name of the service, also used for rc variables.";
+              };
+
+              script = mkOption {
+                type = types.nullOr types.pathInStore;
+                default = null;
+                description = "A file to use for the entire script contents.";
               };
 
               description = mkOption {

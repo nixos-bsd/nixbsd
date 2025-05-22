@@ -188,7 +188,7 @@ let
 
   # Use well-defined and persistent filesystem labels to identify block devices.
   rootFilesystemLabel = config.networking.hostName;
-  espFilesystemLabel = "${config.networking.hostName}-ESP"; # Hard-coded by make-disk-image.nix
+  espFilesystemLabel = "ESP"; # Hard-coded by make-disk-image.nix
   nixStoreFilesystemLabel = "nix-store";
 
   # The root drive is a raw disk which does not necessarily contain a
@@ -239,7 +239,7 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
     }] ++ lib.optionals (config.boot.loader.bootContents != null) [{
       target = "/boot";
       source = config.boot.loader.bootContents;
-    }];
+    }] ++ config.virtualisation.extraRootContents;
     nixStorePath = "/nix/store";
     nixStoreClosure = config.virtualisation.additionalPaths;
   };
@@ -784,6 +784,19 @@ in {
         Instead of embedding EFI system partition and the rest of /boot in the system image,
         mount it through qemu's VVFAT driver.
       '';
+    };
+
+    virtualisation.extraRootContents = mkOption {
+      type = types.listOf (types.submodule {
+        options.target = mkOption {
+          type = types.str;
+          description = "The path at which to place the given file";
+        };
+        options.source = mkOption {
+          type = types.pathInStore;
+          description = "The file or directory to place at that path";
+        };
+      });
     };
   };
 
