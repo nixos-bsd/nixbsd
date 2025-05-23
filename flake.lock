@@ -43,11 +43,11 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1732339771,
-        "narHash": "sha256-/ViH3RRdFm9R9WN4szwdwMSbnDnRzNqgkFNR5dBh+Og=",
+        "lastModified": 1741969094,
+        "narHash": "sha256-N9URV6eRf3FfWPuFHwEpTjrDBwvP9ekNPeMe5HqPycY=",
         "ref": "freebsd-build",
-        "rev": "a26c6228c31cc66b31a75f24a95f420952a6cbb2",
-        "revCount": 16516,
+        "rev": "d003841587befb47d41373cba00d9921df8e237b",
+        "revCount": 17650,
         "type": "git",
         "url": "https://git.lix.systems/artemist/lix.git"
       },
@@ -95,16 +95,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1741684394,
-        "narHash": "sha256-6G65wM+dJUgt0RfzxbN08OnhdY+YiYFdEpExFvPU6yg=",
-        "owner": "nixos-bsd",
+        "lastModified": 1747852751,
+        "narHash": "sha256-MhD8OFls7LllYJ7bjivTQO0UT1a0MU6H1n9JBK/3ph0=",
+        "owner": "rhelmot",
         "repo": "nixpkgs",
-        "rev": "30f30c8fdf82dfcbceb0c4e1dafda15e6faaa76d",
+        "rev": "f1c115b42f3b94d5e3894cdeda6990fc3dc6a065",
         "type": "github"
       },
       "original": {
-        "owner": "nixos-bsd",
-        "ref": "nixbsd-dev-new",
+        "owner": "rhelmot",
+        "ref": "nixbsd-dev-tmp",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -112,11 +112,11 @@
     "pre-commit-hooks": {
       "flake": false,
       "locked": {
-        "lastModified": 1726745158,
-        "narHash": "sha256-D5AegvGoEjt4rkKedmxlSEmC+nNLMBPWFxvmYnVLhjk=",
+        "lastModified": 1733318908,
+        "narHash": "sha256-SVQVsbafSM1dJ4fpgyBqLZ+Lft+jcQuMtEL3lQWx2Sk=",
         "owner": "cachix",
         "repo": "git-hooks.nix",
-        "rev": "4e743a6920eab45e8ba0fbe49dc459f1423a4b74",
+        "rev": "6f4e2a2112050951a314d2733a994fbab94864c6",
         "type": "github"
       },
       "original": {
