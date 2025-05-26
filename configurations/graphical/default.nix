@@ -7,7 +7,7 @@
   nixpkgs.config.allowUnfreePredicate = pkg:
     ((pkg.meta or {}).sourceProvenance or []) == [ lib.sourceTypes.binaryFirmware ];
 
-  #programs.sway.enable = true;
+  programs.sway.enable = true;
 
   services.dbus.enable = true;
   services.xserver = {
@@ -18,6 +18,6 @@
       enable = true;
     };
     exportConfiguration = true;
-    #libinput.enable = true; # for touchpad support on many laptops
+    libinput.enable = true; # for touchpad support on many laptops
   };
 }

@@ -7,7 +7,7 @@
   nixpkgs.config.allowUnfreePredicate = pkg:
     ((pkg.meta or {}).sourceProvenance or []) == [ lib.sourceTypes.binaryFirmware ];
 
-  #programs.sway.enable = true;
+  programs.sway.enable = true;
   environment.systemPackages = with pkgs; [
     freebsd.truss
     gdb

@@ -346,9 +346,12 @@ in {
     };
 
     virtualisation.rootSize = mkOption {
-      type = types.str;
-      default = "10g";
-      description = "The size of the root disk image to generate.";
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        The size of the root disk image to generate with lowercase suffix, e.g 'g'.
+        Use null to match the contents precisely.
+      '';
     };
 
     virtualisation.rootDevice = mkOption {
