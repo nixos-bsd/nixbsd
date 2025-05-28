@@ -20,7 +20,7 @@
     enable = true;
     displayManager.sddm = {
       enable = true;
-      wayland.enable = false;
+      wayland.enable = true;
     };
   };
   services.desktopManager.plasma6 = {

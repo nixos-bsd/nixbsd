@@ -110,6 +110,9 @@ let
       "freebsd.pciconf"
       "freebsd.growfs"
       "freebsd.tip"
+      "freebsd.usbconfig"
+      "freebsd.vidcontrol"
+      "freebsd.kbdmap"
     ];
     openbsd = [];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};

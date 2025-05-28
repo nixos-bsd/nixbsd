@@ -281,6 +281,7 @@ in
 
         # Setup session
         session		required pam_permit.so
+        session         optional ${pkgs.consolekit2}/lib/security/pam_ck_connector.so
       '';
 
       sddm-autologin.text = ''

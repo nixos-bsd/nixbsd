@@ -23,7 +23,7 @@
   };
 
   fileSystems."/boot" = {
-    device = "/dev/gpt/${config.networking.hostName}-ESP";
+    device = "/dev/gpt/ESP";
     fsType = "msdosfs";
   };
 
