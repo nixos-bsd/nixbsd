@@ -215,17 +215,35 @@ buildHostCmd() {
 }
 
 targetHostCmd() {
-    local c
-    if [[ "${useSudo:-x}" = 1 ]]; then
-        c=("sudo")
-    else
-        c=()
-    fi
-
     if [ -z "$targetHost" ]; then
-        runCmd "${c[@]}" "$@"
+        runCmd "$@"
     else
-        runCmd ssh $SSHOPTS "$targetHost" "${c[@]}" "$@"
+      local payload=()
+      local payloadPayload=()
+      local finalPayload=""
+      if [[ -n $nohup ]]; then
+          payload+=("echo -n >/tmp/nixos-rebuild.log")
+          payloadPayload+=("nohup")
+      fi
+      if [[ "${useSudo:-x}" = 1 ]]; then
+          payloadPayload+=("sudo")
+      fi
+      if [ -n "$remoteNix" ]; then
+        payloadPayload+=("env" "PATH=\"$remoteNix:\$PATH\"")
+      fi
+      payloadPayload+=("$@")
+      if [[ -n $nohup ]]; then
+        payload+=("${payloadPayload[*]} &>>/tmp/nixos-rebuild.log </dev/null")
+        payload+=('result=$?')
+        payload+=('cat /tmp/nixos-rebuild.log')
+        payload+=('exit $result')
+      else
+        payload+=("${payloadPayload[*]}")
+      fi
+      IFS=$'\n'
+      finalPayload="base64 -d <<<$(base64 -w0 <<<"${payload[*]}") | bash"
+      unset IFS
+      runCmd ssh $SSHOPTS "$targetHost" "$finalPayload"
     fi
 }
 

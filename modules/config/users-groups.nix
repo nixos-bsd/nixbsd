@@ -678,6 +678,7 @@ in {
       users.gid = ids.gids.users;
       wheel.gid = ids.gids.wheel;
       _shadow.gid = ids.gids._shadow;
+      video.gid = 44;  # uhhhhhh
     };
 
     system.activationScripts.users = {

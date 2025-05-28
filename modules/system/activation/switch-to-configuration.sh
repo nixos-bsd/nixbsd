@@ -18,7 +18,7 @@ fi
 case "$action" in
 	switch|boot|test|dry-activate) ;;
 	*)
-		cat >&2 <<-EOF
+		@coreutils@/bin/cat >&2 <<-EOF
 		Usage: $0 [switch|boot|test|dry-activate]
 
 		switch:       make the configuration the boot default and activate now

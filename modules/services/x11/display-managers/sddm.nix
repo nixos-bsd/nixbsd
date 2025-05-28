@@ -300,6 +300,7 @@ in
       createHome = true;
       home = "/var/lib/sddm";
       group = "sddm";
+      extraGroups = [ "video" ];
       uid = config.ids.uids.sddm;
     };
 

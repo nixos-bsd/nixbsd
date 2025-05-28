@@ -8,7 +8,6 @@ in [
   "${extPath}/config/terminfo.nix"
   "${extPath}/config/vte.nix"
   "${extPath}/config/qt.nix"
-  "${extPath}/misc/ids.nix"
   "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"
   "${extPath}/misc/version.nix"
@@ -45,6 +44,7 @@ in [
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./installer/deps.nix
+  ./misc/ids.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
