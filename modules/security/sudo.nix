@@ -214,6 +214,12 @@ in
     };
   };
 
+  options.security.sudo-rs = lib.mkOption {
+    type = lib.types.anything;
+    default = null;
+    description = "Placeholder";
+  };
+
   ###### implementation
 
   config = lib.mkIf cfg.enable {
