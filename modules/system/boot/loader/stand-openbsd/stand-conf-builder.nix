@@ -1,14 +1,16 @@
 { pkgs, stand-efi }:
 
-pkgs.substituteAll {
+pkgs.replaceVarsWith {
   src = ./stand-conf-builder.sh;
   isExecutable = true;
-  path = [
-    pkgs.coreutils
-    pkgs.gnused
-    pkgs.gnugrep
-    pkgs.jq
-  ];
-  inherit (pkgs) bash;
-  stand = stand-efi;
+  replacements = {
+    path = [
+      pkgs.coreutils
+      pkgs.gnused
+      pkgs.gnugrep
+      pkgs.jq
+    ];
+    inherit (pkgs) bash;
+    stand = stand-efi;
+  };
 }

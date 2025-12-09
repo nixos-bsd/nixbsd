@@ -926,7 +926,7 @@ in {
           name = share.target;
           value.device = if share.type == "9p" then tag else "/dev/msdosfs/QEMU%20VVFAT";
           value.fsType = if share.type == "9p" then "p9fs" else "msdosfs";
-          value.options = if share.type == "9p" then [] else [];  # ???
+          value.options = if share.type == "9p" then [ /*"msize=${toString cfg.msize}"*/ ] else [];
         };
       in lib.mkMerge [
         (lib.mapAttrs' mkSharedDir cfg.sharedDirectories)
@@ -999,10 +999,14 @@ in {
         type = "9p";
         readOnly = true;
       };
+      boot.kernelModules = ["p9fs" "virtio_p9fs"];
 
       # init needs to be on the rootfs... let's push it onto a memory disk and pivot off of that
       boot.initmd.enable = true;
       boot.initmd.pivotFileSystems = [ "/nix/store" ];
+
+      # kernel can't be on 9p, I think?
+      boot.copyKernelToBoot = true;
     })
     (mkIf cfg.useHostCerts {  # MODULE 4 - net-mounted certs
       security.pki.installCACerts = false;

@@ -29,7 +29,7 @@ let
         _localstatus=0
         ${v.text}
 
-        if (( _localstatus > 0 )); then
+        if (( _localstatus != 0 )); then
           printf "Activation script snippet '%s' failed (%s)\n" "${a}" "$_localstatus"
         fi
       '';
@@ -79,6 +79,7 @@ let
       ''
 
       _status=0
+      _localstatus=0
       trap "_status=1 _localstatus=\$?" ERR
 
       # Ensure a consistent umask.
@@ -108,17 +109,26 @@ let
         fsck -C ${fsckY} /dev/sd0a
         mount -u -w /dev/sd0a /
       '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
-        ${lib.optionalString (config.fileSystems."/".fsType != "zfs") "fsck -C ${fsckY} /"}
+        ${lib.optionalString (config.fileSystems."/".fsType != "zfs" && config.fileSystems."/".fsType != "tmpfs") "fsck -C ${fsckY} /"}
         mount -u -w /
       '' + ''
         source ${config.system.build.earlyMountScript}
       fi
 
+      if (( _localstatus != 0 )); then
+        printf "Early mounts failed (%s)\n" "$_localstatus"
+      fi
+      _localstatus=0
+
       ${config.boot.postMountCommands}
+      if (( _localstatus != 0 )); then
+        printf "Post-mount commands failed (%s)\n" "$_localstatus"
+      fi
+      _localstatus=0
       '') + ''
 
-        mkdir -p /etc /dev /var /run /nix /tmp
-        chmod 777 /tmp
+      mkdir -p /etc /dev /var /run /nix /tmp
+      chmod 777 /tmp
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 

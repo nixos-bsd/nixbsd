@@ -46,7 +46,7 @@ let
         ] ++ builtins.map (option: let
             split = lib.strings.splitString "=" option;
             name = builtins.elemAt split 0;
-            values = lib.lists.sublist 1 ((builtins.length split) - 1);
+            values = lib.lists.sublist 1 ((builtins.length split) - 1) split;
             valueLit = lib.strings.concatStringsSep "=" values;
         in { inherit name valueLit; }) fs.options;
         toEntryC = entry: "{ .iov_base = (void*)${cStringLit entry.name}, .iov_len = ${mountStrlen entry.name} }, { .iov_base = (void*)${if entry ? valueLit then cStringLit entry.valueLit else entry.valueVar}, .iov_len = ${if entry ? valueLit then mountStrlen entry.valueLit else entry.valueLen} }";
@@ -188,6 +188,13 @@ in {
       '';
       default = [];
     };
+    boot.initmd.init0_src = mkOption {
+        type = types.str;
+        description = "For debugging";
+        default = init0_src;
+        internal = true;
+        readOnly = true;
+    };
   };
   config = mkIf config.boot.initmd.enable {
     boot.initmd.image = import ../../../lib/make-partition-image.nix {
@@ -201,12 +208,11 @@ in {
 
     boot.initmd.contents = [config.boot.kernelEnvironment.init0_path];
 
-    boot.kernelEnvironment.init0_path = builtins.toString (pkgs.runCommandCC "init0" {} ''
+    boot.kernelEnvironment.init0_path = builtins.toString (pkgs.pkgsStatic.runCommandCC "init0" {} ''
       $CC -x c -o $out - <<INIT0EOF
       ${init0_src}
       INIT0EOF
     '');
-    boot.kernelEnvironment.initmd_name = "/boot/initmd";
     boot.kernelEnvironment."vfs.root.mountfrom" = lib.mkOverride 20 "ufs:/dev/md0";
     boot.kernelEnvironment."vfs.root.mountfrom.options" = lib.mkOverride 20 "";
   };

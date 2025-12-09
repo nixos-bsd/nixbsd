@@ -153,12 +153,12 @@ let
 
 in {
   imports = [
-    (mkAliasOptionModuleMD [ "services" "sshd" "enable" ] [
+    (mkAliasOptionModule [ "services" "sshd" "enable" ] [
       "services"
       "openssh"
       "enable"
     ])
-    (mkAliasOptionModuleMD [ "services" "openssh" "knownHosts" ] [
+    (mkAliasOptionModule [ "services" "openssh" "knownHosts" ] [
       "programs"
       "ssh"
       "knownHosts"

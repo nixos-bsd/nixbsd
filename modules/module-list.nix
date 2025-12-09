@@ -18,6 +18,7 @@ in [
   "${extPath}/programs/direnv.nix"
   "${extPath}/programs/environment.nix"
   "${extPath}/programs/fish.nix"
+  "${extPath}/programs/xonsh.nix"
   "${extPath}/programs/htop.nix"
   "${extPath}/programs/git.nix"
   "${extPath}/programs/less.nix"
@@ -35,7 +36,7 @@ in [
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
   "${extPath}/system/etc/etc.nix"
-  ./systemd-compat.nix
+  ./nixos-compat.nix
   ./config/resolvconf.nix
   ./config/swap.nix
   ./config/sysctl.nix

@@ -1,11 +1,16 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos-bsd/nixpkgs/nixbsd-dev-new";
-    lix = {
-      url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
+    nixpkgs.url = "github:rhelmot/nixpkgs/beachepisode";  # everything on this branch is pending to nixpkgs master/staging
+    # I can't figure out how to rebase our lix fork easily. Let's use cppnix for now.
+    # lix = {
+    #   url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    #   # We don't need another nixpkgs clone, it won't evaluate anyway
+    #   inputs.nixpkgs-regression.follows = "nixpkgs";
+    # };
+    cppnix = {
+      url = "github:rhelmot/nix/freebsd";
       inputs.nixpkgs.follows = "nixpkgs";
-      # We don't need another nixpkgs clone, it won't evaluate anyway
-      inputs.nixpkgs-regression.follows = "nixpkgs";
     };
     mini-tmpfiles = {
       url = "github:nixos-bsd/mini-tmpfiles";
@@ -20,7 +25,7 @@
       [ "nixbsd:gwcQlsUONBLrrGCOdEboIAeFq9eLaDqfhfXmHZs1mgc=" ];
   };
 
-  outputs = { self, nixpkgs, lix, mini-tmpfiles, ... }:
+  outputs = { self, nixpkgs, cppnix ? null, mini-tmpfiles, ... }:
     let
       inherit (nixpkgs) lib;
 
@@ -60,7 +65,9 @@
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
           specialArgs = {
-            lixFlake = lix;
+            #lixFlake = lix;
+            lixFlake = null;
+            cppnixFlake = cppnix;
             mini-tmpfiles-flake = mini-tmpfiles;
           } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });

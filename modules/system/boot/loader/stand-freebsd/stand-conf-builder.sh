@@ -1,4 +1,4 @@
-#! @bash@/bin/sh -e
+#! @bash@/bin/bash -e
 
 export PATH=/empty
 for i in @path@; do PATH=$PATH:$i/bin; done
@@ -10,10 +10,14 @@ usage() {
 
 timeout=                # Timeout in centiseconds
 default=                # Default configuration
-target=/boot            # Target directory
+target=/boot            # Target directory, typically the ESP
 numGenerations=0        # Number of other generations to include in the menu
+copyKernels=
+symlinkBoot=
+nixStoreDevice=
+nixStoreSuffix=
 
-while getopts "t:c:d:g:n:r" opt; do
+while getopts "t:c:d:g:CLn:N:" opt; do
     case "$opt" in
         t) # U-Boot interprets '0' as infinite and negative as instant boot
             if [ "$OPTARG" -lt 0 ]; then
@@ -27,11 +31,15 @@ while getopts "t:c:d:g:n:r" opt; do
         c) default="$OPTARG" ;;
         d) target="$OPTARG" ;;
         g) numGenerations="$OPTARG" ;;
+        C) copyKernels=1 ;;
+        L) symlinkBoot=1 ;;
+        n) nixStoreDevice="$OPTARG" ;;
+        N) nixStoreSuffix="$OPTARG" ;;
         \?) usage ;;
     esac
 done
 
-[ "$timeout" = "" -o "$default" = "" ] && usage
+[[ "$timeout" = "" || "$default" = "" ]] && usage
 
 # Convert a path to a file in the Nix store such as
 # /nix/store/<hash>-<name>/file to <hash>-<name>
@@ -40,20 +48,67 @@ cleanName() {
     echo "$path" | sed -r 's|^/nix/store/([^/]+).*$|\1|'
 }
 
+# Convert a path to a file in the Nix store
+# to a path useful to the loader with the nix store unmounted
+cleanPathForLoader() {
+    local path="$1"
+    echo "$path" | sed -r "s|^/nix/store/(.*)\$|$nixStoreDevice:$nixStoreSuffix/\1|"
+}
+
 # Copy a file from the Nix store to $target/nixos.
 declare -A filesCopied
+
+if [[ -n "$symlinkBoot" ]]; then
+    copier() {
+        ln -sf "$@"
+    }
+else
+    copier() {
+        cp -r "$@"
+    }
+fi
 
 addEntry() {
     local path="$1"  # boot.json
     local tag="$2"  # Generation number or 'default'
 
     local kernelPath=$(jq -r '."org.nixos.bootspec.v1".kernel' <$path)
-    local rootDevice=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".rootDevice' <$path)
     local kernelStrip=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelStrip' <$path)
-    local kernelDevice=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelDevice' <$path)
+    local initmd=$(jq -r '."gay.mildlyfunctional.nixbsd.v1".initmd' <$path)
 
-    modulePath=$kernelDevice:$(dirname ${kernelPath#${kernelStrip}})
-    kernelName=$(basename $kernelPath)
+    rm -rf "$target/nixos/$tag"
+    makeFileAvailable() {
+        if [[ "$#" != 1 ]]; then
+            echo "Usage: makeFileAvailable file-to-copy"
+            exit 1
+        fi
+        if [[ -z "$copyKernels" ]]; then
+            cleanPathForLoader "$1"
+            return 0
+        fi
+        base="$(basename "$1")"
+        mkdir -p "$target/nixos/$tag"
+        if [[ -n "$symlinkBoot" && -e "$target/nixos/$tag/$base" && ! -h "$target/nixos/$tag/$base" ]]; then
+            echo "Refusing to overwrite non-symlinked /boot with symlinked boot"
+            exit 1
+        elif [[ -z "$symlinkBoot" && -h "$target/nixos/$tag/$base" ]]; then
+            echo "Refusing to overwrite symlinked /boot with non-symlinked boot"
+            exit 1
+        fi
+        copier "$1" "$target/nixos/$tag"
+        echo "/nixos/$tag/$base"
+    }
+
+    kernelSource="$(dirname ${kernelPath#${kernelStrip}})"
+    if [[ "$initmd" != "null" ]]; then
+        initmdLua="[\"initmd_name\"] = \"$(makeFileAvailable "$initmd")\", "
+    else
+        initmdLua=""
+    fi
+    modulePath="$(makeFileAvailable "$kernelSource")"
+    if [[ -n "$copyKernels" ]]; then
+        filesCopied["$target/nixos/$tag"]=1
+    fi
 
     cat <<EOF
 M.entries["$tag"] = {
@@ -61,8 +116,8 @@ M.entries["$tag"] = {
 	label = $(jq -r '."org.nixos.bootspec.v1".label | @json' <$path),
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
-        kernelEnvironment = {["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
-        earlyModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".earlyModules | @json' <$path | tr [] {}),
+        kernelEnvironment = { $initmdLua ["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
+        earlyModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".earlyModules | @json' <$path | tr "[]" "{}"),
 }
 M.tags[#M.tags + 1] = "$tag"
 EOF
@@ -107,27 +162,26 @@ fi
 
 echo "return M" >> $tmpFile
 
+# yes, target is often /boot. We want /boot/boot.
 targetBoot=$target/boot
 mkdir -p $targetBoot
 rm -rf $targetBoot/{lua,defaults}
-cp -r @stand@/bin/{lua,defaults} $targetBoot
-chmod +w $targetBoot/lua
+copier @stand@/bin/defaults $targetBoot
+mkdir $targetBoot/lua
+copier @stand@/bin/lua/* $targetBoot/lua
 mv $targetBoot/lua/loader.lua $targetBoot/lua/loader_orig.lua
-cp @loader_script@ $targetBoot/lua/loader.lua
+copier @loader_script@ $targetBoot/lua/loader.lua
 mv $tmpFile $targetBoot/lua/stand_config.lua
 mkdir -p $targetBoot/loader.conf.d
 
-if [ -n "@initmd@" ]; then
-cp "@initmd@" "$targetBoot/initmd"
-fi
-
 mkdir -p $target/efi/boot
-cp @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
+copier @stand@/bin/loader.efi $target/efi/boot/bootx64.efi
 
+echo "copied files: ${!filesCopied[*]}"
 for fn in $(ls -d $target/nixos/* 2>/dev/null); do
-    if ! test "${filesCopied[$fn]}" = 1; then
+    if [[ -z "${filesCopied[$fn]}" ]]; then
         echo "Removing no longer needed boot file: $fn"
-        chmod +w -- "$fn"
+        chmod -R +w -- "$fn"
         rm -rf -- "$fn"
     fi
 done

@@ -1,9 +1,5 @@
 { config, lib, ... }: {
-  imports = [ ../base/default.nix ];
-
-  nixpkgs.overlays = [
-    (import ../../overlays/freebsd-main.nix)
-  ];
+  imports = [ ../extra/default.nix ];
 
   virtualisation.vmVariant.virtualisation.diskImage = lib.mkOverride 10 null;
   virtualisation.vmVariant.virtualisation.netMountNixStore = true;

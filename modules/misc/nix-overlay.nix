@@ -1,4 +1,4 @@
-{ config, lib, lixFlake ? null, mini-tmpfiles-flake ? null, ... }:
+{ config, lib, lixFlake ? null, cppnixFlake ? null, mini-tmpfiles-flake ? null, ... }:
 with lib; {
   # TODO: @artemist remove when support is upstream
   # Also remove specialArgs and input changes in flake
@@ -38,9 +38,8 @@ with lib; {
 
   config = {
     nixpkgs.overlays =
-      lib.optional (lixFlake != null && config.nixpkgs.overrideNix)
-      lixFlake.overlays.default ++ lib.optional
-      (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles)
-      mini-tmpfiles-flake.overlays.default;
+      lib.optional (lixFlake != null && config.nixpkgs.overrideNix) lixFlake.overlays.default
+      ++ lib.optional (cppnixFlake != null && config.nixpkgs.overrideNix) cppnixFlake.overlays.default
+      ++ lib.optional (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles) mini-tmpfiles-flake.overlays.default;
   };
 }

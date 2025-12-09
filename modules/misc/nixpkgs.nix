@@ -192,8 +192,6 @@ let
       ;
       formats = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/pkgs-lib/formats.nix" {};
       substitute = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute.nix" { };
-      substituteAll = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute-all.nix" { };
-      substituteAllFiles = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute-files/substitute-all-files.nix" { };
       replaceVarsWith = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars-with.nix" { };
       replaceVars = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars.nix" { };
       makeFontsCache = {fontconfig ? self.fontconfig, fontDirectories}:

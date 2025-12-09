@@ -1,7 +1,7 @@
 {
   lib,
   stdenv,
-  substituteAll,
+  replaceVarsWith,
   installShellFiles,
   runtimeShell,
   nix,
@@ -19,25 +19,28 @@
 }:
 let
   makeProg = args:
-    substituteAll (args // {
+    replaceVarsWith {
+      inherit (args) name src;
       dir = "bin";
       isExecutable = true;
       nativeBuildInputs = [ installShellFiles ];
       postInstall = ''
         installManPage ${args.manPage}
       '';
-    });
+      replacements = lib.removeAttrs args ["name" "src" "manPage"];
+    };
 in rec {
 
   nixos-install = makeProg {
     name = "nixos-install";
     src = ./nixos-install.sh;
-    inherit runtimeShell nix;
+    inherit runtimeShell;
     hostPlatform = stdenv.hostPlatform.system;
     path = lib.makeBinPath (
       [
         jq
         nixos-enter
+        nix
       ] ++ lib.optionals stdenv.hostPlatform.isFreeBSD [
         freebsd.bin
       ] ++ lib.optionals (!stdenv.hostPlatform.isFreeBSD) [
@@ -86,7 +89,6 @@ in rec {
     src = ./nixos-enter.sh;
     inherit runtimeShell;
     hostPlatform = stdenv.hostPlatform.system;
-    path = lib.makeBinPath (lib.optionals stdenv.hostPlatform.isFreeBSD [ freebsd.bin ]);
     manPage = ./manpages/nixos-enter.8;
   };
 }

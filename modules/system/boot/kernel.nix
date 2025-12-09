@@ -89,6 +89,12 @@ in {
         All variables are key=value, so using an attrset here.
       '';
     };
+
+    boot.copyKernelToBoot = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Boot the kernel out of the boot partition instead of the nix store";
+    };
   };
 
   config = mkIf cfg.enable {

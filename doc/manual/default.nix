@@ -87,7 +87,7 @@ in rec {
     nativeBuildInputs = [ buildPackages.nixos-render-docs ];
     inputs = lib.sourceFilesBySuffices ./. [ ".md" ];
     meta.description = "The NixOS manual in HTML format";
-    allowedReferences = [ "out" ];
+    #allowedReferences = [ "out" ];
   } ''
     # Generate the HTML manual.
     dst=$out/${common.outputPath}
@@ -175,7 +175,7 @@ in rec {
     runCommand "nixos-configuration-reference-manpage" {
       nativeBuildInputs =
         [ buildPackages.installShellFiles buildPackages.nixos-render-docs ];
-      allowedReferences = [ "out" ];
+      #allowedReferences = [ "out" ];
     } ''
       # Generate manpages.
       mkdir -p $out/share/man/man5
