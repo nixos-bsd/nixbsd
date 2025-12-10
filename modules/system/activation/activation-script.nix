@@ -71,12 +71,9 @@ let
         REALINIT=1
       fi
 
-      '' + optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
-        if [[ $REALINIT == 1 ]]; then
-          exec <>/dev/console 1>&0 2>&0
-        fi
-      '' +
-      ''
+      if [[ $REALINIT == 1 ]]; then
+        exec <>/dev/console 1>&0 2>&0
+      fi
 
       _status=0
       _localstatus=0
@@ -312,5 +309,23 @@ in {
     #  #"D /var/empty 0555 root root -"
     #  #"h /var/empty - - - - +i"
     #];
+
+    system.activatableSystemBuilderCommands = ''
+      mkdir -p $out/bin
+      $CC -x c - -o $out/bin/activate-init-native <<EOF
+      #include <unistd.h>
+      int main(int argc, char** argv, char **envp) {
+
+      #ifdef __OpenBSD__
+        setsid();
+        setlogin("root");
+      #endif
+
+        execve("${pkgs.runtimeShell}", (char *[]) { "bash", "$out/bin/activate-init", argv[1], NULL }, envp);
+        return 123;
+      }
+      EOF
+      substitute ${./activate-init.sh} $out/bin/activate-init --subst-var out --subst-var-by runtimeShell ${pkgs.runtimeShell}
+    '';
   };
 }

@@ -1,0 +1,13 @@
+diff --git a/lib/basic/json.c b/lib/basic/json.c
+index c6610f1c6..fa0d670ef 100644
+--- a/lib/basic/json.c
++++ b/lib/basic/json.c
+@@ -299,7 +299,7 @@ json_parse_number(const char **p, union json_value *ret)
+ 
+ 	if (is_double) {
+ 		ret->real = ((negative ? -1.0 : 1.0) * (x + (y / shift))) *
+-			exp10((exponent_negative ? -1.0 : 1.0) * exponent);
++			pow((exponent_negative ? -1.0 : 1.0) * exponent, 10.0);
+ 		return JSON_REAL;
+ 	} else {
+ 		ret->integer = negative ? -i : i;

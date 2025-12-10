@@ -116,7 +116,7 @@ M.entries["$tag"] = {
 	label = $(jq -r '."org.nixos.bootspec.v1".label | @json' <$path),
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
-        kernelEnvironment = { $initmdLua ["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
+        kernelEnvironment = { $initmdLua $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
         earlyModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".earlyModules | @json' <$path | tr "[]" "{}"),
 }
 M.tags[#M.tags + 1] = "$tag"

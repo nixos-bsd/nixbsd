@@ -8,7 +8,7 @@ let
 
     ln -s ${config.system.build.etc}/etc $out/etc
     ln -s ${config.system.path} $out/sw
-    ln -s ${lib.getExe config.system.init} $out/init
+    ln -s ${lib.getBin config.system.init}/bin/init $out/init
 
     echo -n "${pkgs.stdenv.hostPlatform.system}" > $out/system
 
@@ -30,7 +30,7 @@ let
   # kernel, systemd units, init scripts, etc.) as well as a script
   # `switch-to-configuration' that activates the configuration and
   # makes it bootable. See `activatable-system.nix`.
-  baseSystem = (if pkgs.stdenv.hostPlatform.isOpenBSD then pkgs.stdenv else pkgs.stdenvNoCC).mkDerivation ({
+  baseSystem = pkgs.stdenv.mkDerivation ({
     name = "nixos-system-${config.system.name}";
     preferLocalBuild = true;
     allowSubstitutes = false;

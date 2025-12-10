@@ -17,7 +17,6 @@ else if hostPlatform.isOpenBSD then
     ./programs/shutdown-openbsd.nix
     ./programs/su-openbsd.nix
     ./services/ttys/getty-openbsd.nix
-    ./system/activation/top-level-openbsd.nix
     ./system/boot/loader/stand-openbsd
     ./system/boot/init/portable/openbsd.nix
   ]

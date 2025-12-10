@@ -48,7 +48,7 @@ let
           "${placeholder "out"}"
           "--arg"
           "init"
-          "${placeholder "out"}/init"
+          "${placeholder "out"}/bin/activate-init-native"
         ] + " < ${json}";
 
         # We slurp all specialisations and inject them as values, such that

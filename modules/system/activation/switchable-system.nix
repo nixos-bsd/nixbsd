@@ -44,11 +44,9 @@
         ;
 
       chmod +x $out/bin/switch-to-configuration
-      ${lib.optionalString
-      (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
-        # TODO syntax checking
-      ''}
+    ''
+    + lib.optionalString (pkgs.stdenv.hostPlatform == pkgs.stdenv.buildPlatform) ''
+      # TODO syntax checking
     '';
   };
-
 }

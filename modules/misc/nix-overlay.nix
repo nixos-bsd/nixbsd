@@ -40,6 +40,7 @@ with lib; {
     nixpkgs.overlays =
       lib.optional (lixFlake != null && config.nixpkgs.overrideNix) lixFlake.overlays.default
       ++ lib.optional (cppnixFlake != null && config.nixpkgs.overrideNix) cppnixFlake.overlays.default
-      ++ lib.optional (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles) mini-tmpfiles-flake.overlays.default;
+      ++ lib.optional (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles) mini-tmpfiles-flake.overlays.default
+      ++ [ (import ../../overlays/pkgs.nix) ];
   };
 }

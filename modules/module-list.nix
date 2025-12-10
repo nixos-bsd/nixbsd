@@ -71,6 +71,7 @@ in [
   ./services/databases/postgresql.nix
   ./services/databases/redis.nix
   ./services/web-apps/immich.nix
+  ./services/web-apps/hedgedoc.nix
   ./system/activation/activation-script.nix
   ./system/activation/bootspec.nix
   ./system/activation/switchable-system.nix

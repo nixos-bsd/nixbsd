@@ -120,6 +120,12 @@ with lib;
                 description = "Environment variables to set when running commands.";
               };
 
+              environmentFile = mkOption {
+                type = types.nullOr types.str;
+                default = null;
+                description = "Filepath from which to load environment variables";
+              };
+
               path = mkOption {
                 default = [ ];
                 type =
