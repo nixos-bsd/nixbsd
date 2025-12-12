@@ -12,11 +12,11 @@
         "nixpkgs-regression": "nixpkgs-regression"
       },
       "locked": {
-        "lastModified": 1765131401,
-        "narHash": "sha256-gK0zWdEwNUeWaIHn3qRdpkESMYvvCvPCayxp0tpRiA4=",
+        "lastModified": 1765512925,
+        "narHash": "sha256-C4AoQtGw9j5Q9EGE1o1jAwRUPr3y7wQOD88qOQz/7Es=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "60a4069acc72a58604e0f9f7feb10c0623e7212d",
+        "rev": "ca7623b63072547ddd6b321808f7062db9bfeba9",
         "type": "github"
       },
       "original": {
@@ -130,16 +130,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1765242249,
-        "narHash": "sha256-ZtyaFEItZNwX5RPoGycIPfl0nRkj9ATMNm+mpj5vo2M=",
-        "owner": "rhelmot",
+        "lastModified": 1765519655,
+        "narHash": "sha256-058P51VyT7c8C/5RvHnXtA/6dfrEiLrizMz55kVtz5E=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "d2a9726ddb215974229823de26f8f95ac156efe4",
+        "rev": "9dabdba62a9ef450d065c7b3db97289040f9b1b4",
         "type": "github"
       },
       "original": {
-        "owner": "rhelmot",
-        "ref": "beachepisode",
+        "owner": "nixos",
+        "ref": "staging",
         "repo": "nixpkgs",
         "type": "github"
       }
