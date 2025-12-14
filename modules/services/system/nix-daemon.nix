@@ -97,6 +97,7 @@ in {
 
     # Legacy configuration conversion.
     nix.settings.sandbox-fallback = false;
+    nix.settings.sandbox-shell = "/bin/sh=${lib.getExe pkgs.pkgsStatic.bash}"
 
   } (mkIf (!config.boot.isJail) {
     init.services.nix-daemon = {
