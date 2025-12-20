@@ -228,13 +228,13 @@ tem partition but the drive layout is asking for it!" else config.boot.loader.es
 
   freebsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = cfg.rootFilesystem;
-    totalSize = "10g";
+    totalSize = cfg.rootSize;
   });
 
   openbsdRootPartition = pkgs.callPackage ../../lib/make-partition-image.nix (commonRoot // {
     filesystem = "ufs";
     ufsVersion = "1";
-    totalSize = "10g";
+    totalSize = cfg.rootSize;
     contents = commonRoot.contents ++ [{
       target = "/dev/MAKEDEV";
       source = getExe pkgs.openbsd.makedev;
@@ -359,6 +359,15 @@ in {
       type = types.str;
       default = if pkgs.stdenv.hostPlatform.isOpenBSD then "ffs" else "ufs";
       description = "The partition kind to use for the image root filesystem.";
+    };
+
+    virtualisation.rootSize = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = ''
+        The size of the root disk image to generate with lowercase suffix, e.g 'g'.
+        Use null to match the contents precisely.
+      '';
     };
 
     virtualisation.rootDevice = mkOption {
