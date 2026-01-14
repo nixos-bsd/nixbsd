@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/staging";
+    nixpkgs.url = "github:nixos/nixpkgs";
     # I can't figure out how to rebase our lix fork easily. Let's use cppnix for now.
     # lix = {
     #   url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
