@@ -12,16 +12,16 @@
         "nixpkgs-regression": "nixpkgs-regression"
       },
       "locked": {
-        "lastModified": 1767672747,
-        "narHash": "sha256-MqjbAkIYgJge5QSjx2b7hivVHkAVWuquN90HV789E1M=",
+        "lastModified": 1771531533,
+        "narHash": "sha256-E6uWPzQoMpzUb+2kcrxaYsfhUXjyIAoTpI6DPtbe1Y0=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "595d3e984f91237a0ecef84567b461c26a9bf8a9",
+        "rev": "d623444c12428e69a3269d3b4b40200f2b4618fc",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "freebsd",
+        "ref": "freebsd-safe",
         "repo": "nix",
         "type": "github"
       }
