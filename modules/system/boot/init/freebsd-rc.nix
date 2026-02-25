@@ -64,7 +64,8 @@ let
       pathStr = "${makeBinPath fullPath}:${makeSearchPathOutput "bin" "sbin" fullPath}";
 
     in
-    pkgs.writeTextFile {
+    if opts.source != null then opts.source
+    else pkgs.writeTextFile {
       inherit (opts) name;
       executable = true;
       text =
@@ -183,6 +184,12 @@ in
                 # Should be a variableName, that breaks evaluating documentation
                 type = types.str;
                 description = "Name of the service, also used for rc variables.";
+              };
+
+              source = mkOption {
+                type = types.nullOr types.pathInStore;
+                description = "A file to pull in as the service declaration. If set, this will mask all other options here.";
+                default = null;
               };
 
               description = mkOption {

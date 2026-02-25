@@ -102,6 +102,6 @@ in
 
     environment.sessionVariables.LD_LIBRARY_PATH = mkIf cfg.setLdLibraryPath [ "/run/opengl-driver/lib" ];
 
-    hardware.opengl.package = mkDefault pkgs.mesa.drivers;
+    hardware.opengl.package = mkDefault pkgs.mesa;
   };
 }

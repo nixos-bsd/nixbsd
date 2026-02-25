@@ -132,6 +132,20 @@ let
         description = "Name of the interface.";
       };
 
+      wlandev = mkOption {
+        example = "iwlwifi0";
+        type = types.nullOr types.str;
+        default = null;
+        description = "If this is a wireless interface, the name of the wifi card to attach to.";
+      };
+
+      wpaSupplicantConfig = mkOption {
+        example = "/etc/wpa_supplicant.conf";
+        type = types.nullOr types.str;
+        default = null;
+        description = "If this is a wireless interface, the path to the config file to retreive credentials from.";
+      };
+
       useDHCP = mkOption {
         type = types.nullOr types.bool;
         default = null;
@@ -633,6 +647,9 @@ in {
         let
           serviceName = "network_addresses_${i.name}";
           ips = i.ipv4.addresses ++ i.ipv6.addresses;
+          upCommand = ''ifconfig "${i.name}" up'';
+          createWlanCommand = ''ifconfig "${i.name}" create wlandev "${i.wlandev}" || true'';
+          wpaSupplicantCommand = ''wpa_supplicant -B -s -i "${i.name}" -c "${i.wpaSupplicantConfig}"'';
         in nameValuePair serviceName {
           description = "Address and route configuration of ${i.name}";
           rcorderSettings = {
@@ -642,6 +659,7 @@ in {
           path = with pkgs; [
             freebsd.route
             freebsd.ifconfig
+            freebsd.wpa_supplicant
           ];
           hooks.start_cmd = ''
             startmsg -n "Setting addresses for ${i.name}"
@@ -649,7 +667,9 @@ in {
             state="/run/nixos/network/addresses/${i.name}"
             mkdir -p $(dirname "$state")
 
-            ifconfig "${i.name}" up
+            ${lib.optionalString (i.wlandev != null) createWlanCommand}
+            ${upCommand}
+            ${lib.optionalString (i.wpaSupplicantConfig != null) wpaSupplicantCommand}
 
             ${flip concatMapStrings ips (ip:
               let cidr = "${ip.address}/${toString ip.prefixLength}";

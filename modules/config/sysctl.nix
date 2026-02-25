@@ -53,6 +53,8 @@ in {
       description = "Set sysctl variables";
       startType = "oneshot";
       startCommand = [ "${sysctlBin}" "-i" "-f" "/etc/sysctl.conf" ];
+      dependencies = [ "mini-tmpfiles" ];
+      before = [ "kld" ];
     };
 
     init.services.sysctl-lastload = {

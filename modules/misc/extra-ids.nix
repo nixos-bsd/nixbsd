@@ -7,6 +7,7 @@
       audit = 391;
       operator = 392;
       _shadow = 65;
+      _video = 44;
     };
   };
 }

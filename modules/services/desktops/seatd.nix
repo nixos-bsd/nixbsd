@@ -28,7 +28,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = with pkgs; [ seatd sdnotify-wrapper ];
+    environment.systemPackages = with pkgs; [ seatd ];
     users.groups.seat = lib.mkIf (cfg.group == "seat") {};
 
     init.services.seatd = {
@@ -36,7 +36,7 @@ in
       dependencies = [ "DAEMON" ];
 
       startType = "foreground";
-      startCommand = [ "${pkgs.seatd.bin}/bin/seatd" ];
+      startCommand = [ "${pkgs.seatd.bin}/bin/seatd" "-u" cfg.user "-g" cfg.group ];
     };
   };
 }

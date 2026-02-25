@@ -677,6 +677,7 @@ in {
       root.gid = ids.gids.root;
       users.gid = ids.gids.users;
       wheel.gid = ids.gids.wheel;
+      _video.gid = ids.gids._video;
       _shadow.gid = ids.gids._shadow;
     };
 

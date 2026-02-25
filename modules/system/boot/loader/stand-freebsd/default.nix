@@ -28,7 +28,7 @@ let
   nixStoreDevice = if config.boot.copyKernelToBoot then "notused" else mkDevice nixStoreFs;
   nixStoreSuffix = if config.boot.copyKernelToBoot then "/not/used" else lib.strings.removePrefix nixStoreMount nixStorePath;
   copyKernelsArg = lib.optionalString config.boot.copyKernelToBoot "-C";
-  symlinkBootArg = lib.optionalString config.virtualisation.netMountBoot "-L";
+  symlinkBootArg = ""; #lib.optionalString config.virtualisation.netMountBoot "-L";
   builderArgs =
     "-g ${builtins.toString cfg.configurationLimit} -t ${timeoutStr} -n ${nixStoreDevice} -N '${nixStoreSuffix}' ${copyKernelsArg} ${symlinkBootArg} -c";
 in {

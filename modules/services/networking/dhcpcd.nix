@@ -212,12 +212,12 @@ in {
       ];
 
       startType = "forking";
-      pidFile = "/var/run/dhcpcd/pid";
+      pidFile = "/run/dhcpcd/pid";
       startCommand = [ "${pkgs.dhcpcd}/sbin/dhcpcd" "--quiet" "--config" (toString dhcpcdConf) ]
         ++ optional cfg.persistent "--persistent";
     };
 
-    systemd.tmpfiles.settings.dhcpcd."/var/run/dhcpcd".d = { user = "dhcpcd"; group = "dhcpcd"; mode = "0700"; };
+    systemd.tmpfiles.settings.dhcpcd."/run/dhcpcd".d = { user = "dhcpcd"; group = "dhcpcd"; mode = "0700"; };
 
     users.users.dhcpcd = {
       isSystemUser = true;

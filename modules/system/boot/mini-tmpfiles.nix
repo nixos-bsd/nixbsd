@@ -217,6 +217,7 @@ in
       "L+ /nix/var/nix/gcroots/booted-system 0755 root root - /run/booted-system"
       "d  /run/lock                          0755 root root - -"
       "d  /var/db                            0755 root root - -"
+      "L+ /var/run                           0755 root root - /run"
       #"L  /etc/mtab                          -    -    -    - ../proc/mounts"
       #"L  /var/lock                          -    -    -    - ../run/lock"
       # Boot-time cleanup

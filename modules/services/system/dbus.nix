@@ -102,7 +102,6 @@ in
       };
 
       systemd.tmpfiles.settings.dbus = {
-        "/var/run/dbus".d = {};
         "/run/dbus".d = {};
         "/var/lib/dbus".d = {};
       };

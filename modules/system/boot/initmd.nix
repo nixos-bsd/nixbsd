@@ -137,7 +137,7 @@ let
               fprintf(stderr, "nmount: %s\n", errmsg);
               return 48;
           }
-          int fd = open("/dev/ttyu0", O_RDWR);
+          int fd = open("/dev/console", O_RDWR);
           if (fd < 0) {
             return 103;
           }

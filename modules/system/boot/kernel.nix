@@ -127,5 +127,9 @@ in {
     };
 
     boot.kernelModules = [ "nullfs" "unionfs" ];
+
+    boot.kernel.sysctl."kern.module_path" = "/run/booted-system/kernel-modules/";
+
+    freebsd.rc.services.kld.source = "${pkgs.freebsd.rc.services}/etc/rc.d/kld";
   };
 }

@@ -36,12 +36,14 @@ let
   ] ++ {
     freebsd = [
       # Most provided by glibc or util-linux on Linux
+      pkgs.freebsd.autofs
       pkgs.freebsd.bin
       pkgs.freebsd.bsdlabel
       pkgs.freebsd.cap_mkdb
       pkgs.freebsd.devfs
       pkgs.freebsd.dmesg
       pkgs.freebsd.fdisk
+      pkgs.freebsd.freebsd_wordexp
       pkgs.freebsd.fsck
       pkgs.freebsd.fsck_ffs
       pkgs.freebsd.fsck_msdosfs
@@ -59,6 +61,7 @@ let
       pkgs.freebsd.ping
       pkgs.freebsd.pwd_mkdb
       pkgs.freebsd.reboot # reboot isn't setuid, shutdown is, make it a wrapper
+      pkgs.freebsd.service
       pkgs.freebsd.services_mkdb
       pkgs.freebsd.swapon
       pkgs.freebsd.sysctl
@@ -105,8 +108,10 @@ let
       "freebsd.jexec"
       "freebsd.jls"
       "freebsd.ldd"
+      "freebsd.nvmecontrol"
       "freebsd.procstat"
       "freebsd.pciconf"
+      "freebsd.wpa_supplicant"
     ];
     openbsd = [];
   }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};

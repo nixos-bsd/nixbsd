@@ -35,8 +35,8 @@
     ..
     preserve
     ..
-    run
-    ..
+#    run
+#    ..
     ..
     tmp             mode=01777
     ..
