@@ -12,16 +12,16 @@
         "nixpkgs-regression": "nixpkgs-regression"
       },
       "locked": {
-        "lastModified": 1769290493,
-        "narHash": "sha256-8sM585L35dQNRDKd9EN8pIUdRlzb/P/76RmYGSWdBwc=",
+        "lastModified": 1771531533,
+        "narHash": "sha256-E6uWPzQoMpzUb+2kcrxaYsfhUXjyIAoTpI6DPtbe1Y0=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "f431f858b2b66024855e15d0836b497f7b42f76d",
+        "rev": "d623444c12428e69a3269d3b4b40200f2b4618fc",
         "type": "github"
       },
       "original": {
         "owner": "rhelmot",
-        "ref": "freebsd",
+        "ref": "freebsd-safe",
         "repo": "nix",
         "type": "github"
       }
@@ -29,15 +29,15 @@
     "flake-compat": {
       "flake": false,
       "locked": {
-        "lastModified": 1767039857,
-        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
-        "owner": "NixOS",
+        "lastModified": 1733328505,
+        "narHash": "sha256-NeCCThCEP3eCl2l/+27kNNK7QrwZB1IJCrXfrbv5oqU=",
+        "owner": "edolstra",
         "repo": "flake-compat",
-        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
+        "rev": "ff81ac966bb2cae68946d5ed5fc4994f96d0ffec",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
+        "owner": "edolstra",
         "repo": "flake-compat",
         "type": "github"
       }
