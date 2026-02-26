@@ -66,6 +66,7 @@ in [
   ./services/fcron.nix
   ./services/networking/dhcpcd.nix
   ./services/networking/ssh/sshd.nix
+  ./services/networking/wpa_supplicant.nix
   ./services/system/nix-daemon.nix
   ./services/web-servers/nginx/default.nix
   ./services/databases/postgresql.nix

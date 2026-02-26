@@ -139,13 +139,6 @@ let
         description = "If this is a wireless interface, the name of the wifi card to attach to.";
       };
 
-      wpaSupplicantConfig = mkOption {
-        example = "/etc/wpa_supplicant.conf";
-        type = types.nullOr types.str;
-        default = null;
-        description = "If this is a wireless interface, the path to the config file to retreive credentials from.";
-      };
-
       useDHCP = mkOption {
         type = types.nullOr types.bool;
         default = null;
@@ -639,7 +632,20 @@ in {
           [
             "netdev_${dev}"
           ]
-          # TODO: figure out devd here
+        else if (count (i: i.name == dev && i.wlandev != null) interfaces > 0) then
+          [
+            "devd"
+          ]
+        else
+          [ ];
+
+      deviceReverseDependency = dev:
+        if (dev == null || dev == "lo0") then
+          [ ]
+        else if (count (i: i.name == dev && i.wlandev != null) interfaces > 0) then
+          [
+            "wpa_supplicant_all"
+          ]
         else
           [ ];
 
@@ -649,17 +655,15 @@ in {
           ips = i.ipv4.addresses ++ i.ipv6.addresses;
           upCommand = ''ifconfig "${i.name}" up'';
           createWlanCommand = ''ifconfig "${i.name}" create wlandev "${i.wlandev}" || true'';
-          wpaSupplicantCommand = ''wpa_supplicant -B -s -i "${i.name}" -c "${i.wpaSupplicantConfig}"'';
         in nameValuePair serviceName {
           description = "Address and route configuration of ${i.name}";
           rcorderSettings = {
-            BEFORE = [ "network_defaults" "NETWORKING" ];
+            BEFORE = [ "network_defaults" "NETWORKING" ] ++ deviceReverseDependency i.name;
             REQUIRE = [ "FILESYSTEMS" ] ++ deviceDependency i.name;
           };
           path = with pkgs; [
             freebsd.route
             freebsd.ifconfig
-            freebsd.wpa_supplicant
           ];
           hooks.start_cmd = ''
             startmsg -n "Setting addresses for ${i.name}"
@@ -669,7 +673,6 @@ in {
 
             ${lib.optionalString (i.wlandev != null) createWlanCommand}
             ${upCommand}
-            ${lib.optionalString (i.wpaSupplicantConfig != null) wpaSupplicantCommand}
 
             ${flip concatMapStrings ips (ip:
               let cidr = "${ip.address}/${toString ip.prefixLength}";

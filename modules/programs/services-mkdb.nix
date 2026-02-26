@@ -13,5 +13,13 @@ in {
     };
   };
 
-  config = { environment.etc.services.source = "${cfg.package}/etc/services"; };
+  config = {
+    environment.etc.services.source = "${cfg.package}/etc/services";
+
+    # while we're here...
+    environment.etc.hosts.source = "${pkgs.freebsd.libc-conf}/etc/hosts";
+    environment.etc.netconfig.source = "${pkgs.freebsd.libc-conf}/etc/netconfig";
+    environment.etc."nsswitch.conf".source = "${pkgs.freebsd.libc-conf}/etc/nsswitch.conf";
+    environment.etc.protocols.source = "${pkgs.freebsd.libc-conf}/etc/protocols";
+  };
 }
