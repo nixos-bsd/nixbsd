@@ -110,6 +110,7 @@ let
       "freebsd.ldd"
       "freebsd.nvmecontrol"
       "freebsd.procstat"
+      "freebsd.sockstat"
       "freebsd.pciconf"
       "freebsd.wpa_supplicant"
     ];

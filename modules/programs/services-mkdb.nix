@@ -21,5 +21,6 @@ in {
     environment.etc.netconfig.source = "${pkgs.freebsd.libc-conf}/etc/netconfig";
     environment.etc."nsswitch.conf".source = "${pkgs.freebsd.libc-conf}/etc/nsswitch.conf";
     environment.etc.protocols.source = "${pkgs.freebsd.libc-conf}/etc/protocols";
+    environment.etc."regdomain.xml".source = "${pkgs.freebsd.lib80211}/etc/regdomain.xml";
   };
 }

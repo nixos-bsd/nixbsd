@@ -47,6 +47,10 @@ in {
       '';
       ulpt.source = "${pkgs.freebsd.devd.etc}/etc/devd/ulpt.conf";
       zfs.source = "${pkgs.freebsd.devd.etc}/etc/devd/zfs.conf";
+      u2f.source = pkgs.fetchurl {
+        url = "https://github.com/freebsd/freebsd-ports/raw/ca7665183b5ede6266650081b4fadfb5afa6561c/security/u2f-devd/files/u2f.conf";
+        hash = "sha256-sjRxx3hGW3ZI6/Fzp3UB7c2pe8fmPLpq6G13/oef/r8=";
+      };
     };
 
     init.services.devd = {
