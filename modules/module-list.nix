@@ -68,6 +68,7 @@ in [
   ./services/networking/ssh/sshd.nix
   ./services/networking/wpa_supplicant.nix
   ./services/system/nix-daemon.nix
+  ./services/system/powerd.nix
   ./services/web-servers/nginx/default.nix
   ./services/databases/postgresql.nix
   ./services/databases/redis.nix
