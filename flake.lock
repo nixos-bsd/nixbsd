@@ -12,11 +12,11 @@
         "nixpkgs-regression": "nixpkgs-regression"
       },
       "locked": {
-        "lastModified": 1771531533,
-        "narHash": "sha256-E6uWPzQoMpzUb+2kcrxaYsfhUXjyIAoTpI6DPtbe1Y0=",
+        "lastModified": 1772170252,
+        "narHash": "sha256-RZ1dtNhGNejpXgRtzWsFhVOCP2lpPUzZ13Equ8b8f2I=",
         "owner": "rhelmot",
         "repo": "nix",
-        "rev": "d623444c12428e69a3269d3b4b40200f2b4618fc",
+        "rev": "dce7aae5c6ea74b79f8097dff43900bcf9274c88",
         "type": "github"
       },
       "original": {
