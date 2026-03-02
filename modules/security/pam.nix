@@ -452,6 +452,12 @@ let
           type = types.bool;
           description = "Whether to update {file}`/var/log/wtmp`.";
         };
+        
+        createXdg = mkOption {
+          default = false;
+          type = types.bool;
+          description = "Whether to create `XDG_RUNTIME_DIR`.";
+        };
 
         logFailures = mkOption {
           default = false;
@@ -676,6 +682,13 @@ let
               enable = cfg.updateWtmp;
               control = "required";
               modulePath = "pam_lastlog.so";
+              settings = { silent = true; };
+            }
+            {
+              name = "xdg";
+              enable = cfg.createXdg;
+              control = "required";
+              modulePath = "pam_xdg.so";
               settings = { silent = true; };
             }
             {
@@ -1316,6 +1329,7 @@ in {
         # session
         #session	optional	pam_ssh.so		want_agent
         session		required	pam_lastlog.so		no_fail
+        session		required	pam_xdg.so
 
         # password
         #password	sufficient	pam_krb5.so		no_warn try_first_pass
