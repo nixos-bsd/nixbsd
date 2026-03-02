@@ -44,6 +44,7 @@ in [
   ./config/user-class.nix
   ./config/users-groups.nix
   ./hardware/opengl.nix
+  ./hardware/bsdfan.nix
   ./installer/tools/tools.nix
   ./installer/deps.nix
   ./misc/documentation.nix
