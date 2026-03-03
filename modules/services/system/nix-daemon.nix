@@ -105,7 +105,7 @@ in {
       dependencies = [ "FILESYSTEMS" "tempfiles" ];
 
       path = with pkgs;
-        [ nixPackage ] ++ optionals cfg.distributedBuilds [ gzip ];
+        [ nixPackage ] ++ optionals cfg.distributedBuilds [ gzip openssh ];
       environment = cfg.envVars // {
         CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
       };
