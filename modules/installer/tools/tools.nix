@@ -8,6 +8,7 @@ with lib;
 let
   tools = pkgs.callPackages ./package.nix {
     nix = config.nix.package.out;
+    nixosCodeName = config.system.nixos.codeName;
     nixosVersion = config.system.nixos.version;
     nixosRevision = config.system.nixos.revision;
     configurationRevision = config.system.configurationRevision;
