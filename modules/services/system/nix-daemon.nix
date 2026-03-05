@@ -113,11 +113,6 @@ in {
       startType = "foreground";
       startCommand = [ "${nixPackage}/bin/nix-daemon" ];
 
-      # THIS IS A HACK
-      preStop = ''
-        kill -INT $(cat ''${pidfile-/dev/null}) &>/dev/null || true
-      '';
-
     };
     nix.nrBuildUsers = mkDefault
     (if cfg.settings.auto-allocate-uids or false then 0
