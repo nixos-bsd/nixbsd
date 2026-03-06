@@ -89,6 +89,7 @@ in [
   ./system/boot/mini-tmpfiles.nix
   ./system/boot/tmp.nix
   ./system/etc/etc-activation.nix
+  ./system/devfs.nix
   ./tasks/filesystems
   ./tasks/filesystems/zfs.nix
   ./tasks/network-interfaces.nix
