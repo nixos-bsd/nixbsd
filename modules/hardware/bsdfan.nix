@@ -13,6 +13,7 @@ in {
             description = "bsdfan.conf configuration file path";
             type = lib.types.pathInStore;
             default = "${cfg.package}/etc/bsdfan.conf";
+            defaultText = "The default from upstream FreeBSD";
         };
     };
     config = lib.mkIf cfg.enable {
