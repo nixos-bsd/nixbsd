@@ -46,6 +46,7 @@ in [
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./installer/deps.nix
+  ./image/images.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
