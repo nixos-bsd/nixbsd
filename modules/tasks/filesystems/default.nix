@@ -157,6 +157,9 @@ let
     escape = string:
       builtins.replaceStrings [ " " "	" ] [ "\\040" "\\011" ] string;
     fsOptions = fs: (if fs.writable then [ "rw" ] else [ "ro" ]) ++ fs.options;
+
+  filterFS = builtins.filter (fs: !(builtins.elem "loop" fs.options));
+
   in fstabFileSystems:
   { }:
   concatMapStrings (fs:
@@ -166,7 +169,7 @@ let
     + " " + escape (builtins.concatStringsSep "," (fsOptions fs))
     + " 0 "
     + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
-    + "\n") fstabFileSystems;
+    + "\n") (filterFS fstabFileSystems);
 
 in {
 
@@ -297,15 +300,33 @@ in {
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = {
-      freebsd = [ pkgs.freebsd.mount_msdosfs pkgs.freebsd.mount_nullfs ];
-      openbsd = [ pkgs.openbsd.mount_ffs pkgs.openbsd.mount_msdos ];
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+    system.fsPackages =
+      {
+        freebsd = [
+          pkgs.freebsd.mount_msdosfs
+          pkgs.freebsd.mount_nullfs
+          pkgs.freebsd.mount_cd9660
+        ];
+        openbsd = [
+          pkgs.openbsd.mount_ffs
+          pkgs.openbsd.mount_msdos
+        ];
+      }
+      .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
-    environment.systemPackages = config.system.fsPackages ++ {
-      freebsd = [ pkgs.freebsd.mount pkgs.freebsd.umount ];
-      openbsd = [ pkgs.openbsd.mount pkgs.openbsd.umount ];
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+    environment.systemPackages =
+      config.system.fsPackages
+      ++ {
+        freebsd = [
+          pkgs.freebsd.mount
+          pkgs.freebsd.umount
+        ];
+        openbsd = [
+          pkgs.openbsd.mount
+          pkgs.openbsd.umount
+        ];
+      }
+      .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.etc.fstab.text =
       let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
