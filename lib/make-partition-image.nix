@@ -14,6 +14,7 @@
   extraMtree ? null,
   extraMtreeContents ? null,
   extraMtreeContentsDest ? "/",
+  noSymlinks ? false,
 }:
 # Either both or none of {user,group} need to be set
 assert (lib.assertMsg (lib.all
@@ -101,7 +102,7 @@ let
       # Unfortunately cptofs only supports modes, not ownership, so we can't use
       # rsync's --chown option. Instead, we change the ownerships in the
       # VM script with chown.
-      rsync_flags="-a --no-o --no-g $rsync_chmod_flags"
+      rsync_flags="-a --no-o --no-g ${lib.optionalString noSymlinks "--copy-links"} $rsync_chmod_flags"
       if [[ "$source" =~ '*' ]]; then
         # If the source name contains '*', perform globbing.
         mkdir -p $root/$target
