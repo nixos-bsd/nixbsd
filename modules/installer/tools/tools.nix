@@ -9,6 +9,7 @@ let
   tools = pkgs.callPackages ./package.nix {
     nix = config.nix.package.out;
     nixosVersion = config.system.nixos.version;
+    nixosCodeName = config.system.nixos.codeName;
     nixosRevision = config.system.nixos.revision;
     configurationRevision = config.system.configurationRevision;
   };

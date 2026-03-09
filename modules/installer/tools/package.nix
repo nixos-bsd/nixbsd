@@ -76,6 +76,8 @@ in rec {
     revision = nixosRevision;
     json = builtins.toJSON ({
       inherit nixosVersion;
+    } // lib.optionalAttrs (nixosCodeName != null) {
+      inherit nixosCodeName;
     } // lib.optionalAttrs (nixosRevision != null) {
       inherit nixosRevision;
     } // lib.optionalAttrs (configurationRevision != null) {
