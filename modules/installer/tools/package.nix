@@ -12,6 +12,8 @@
   coreutils,
   gnused,
   gnugrep,
+  perl,
+  config,
   nixosVersion ? "0",
   nixosCodeName ? null,
   nixosRevision ? "nobody",
@@ -29,7 +31,25 @@ let
       '';
       replacements = lib.removeAttrs args ["name" "src" "manPage"];
     };
-in rec {
+in
+rec {
+  nixos-generate-config = makeProg {
+    name = "nixos-generate-config";
+    src = ./nixos-generate-config.pl;
+
+    perl = "${
+      perl.withPackages (p: [
+        p.FileSlurp
+        p.ConfigIniFiles
+      ])
+    }/bin/perl";
+    hostPlatformSystem = stdenv.hostPlatform.system;
+    detectvirt = "echo qemu"; # "${config.systemd.package}/bin/systemd-detect-virt";
+    inherit (config.system.nixos-generate-config) configuration;
+    # xserverEnabled = config.services.xserver.enable;
+
+    manPage = ./manpages/nixos-generate-config.8;
+  };
 
   nixos-install = makeProg {
     name = "nixos-install";
@@ -76,6 +96,8 @@ in rec {
     revision = nixosRevision;
     json = builtins.toJSON ({
       inherit nixosVersion;
+    } // lib.optionalAttrs (nixosCodeName != null) {
+      inherit nixosCodeName;
     } // lib.optionalAttrs (nixosRevision != null) {
       inherit nixosRevision;
     } // lib.optionalAttrs (configurationRevision != null) {
