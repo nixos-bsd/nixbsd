@@ -68,7 +68,7 @@
             #lixFlake = lix;
             lixFlake = null;
             cppnixFlake = cppnix;
-            mini-tmpfiles-flake = mini-tmpfiles;
+            mini-tmpfiles-overlay = mini-tmpfiles.overlays.default;
           } // (args.specialArgs or { });
         } // lib.optionalAttrs (!args ? system) { system = null; });
 
