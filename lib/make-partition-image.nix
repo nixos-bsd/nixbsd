@@ -10,10 +10,12 @@
   totalSize ? null,
   nixStorePath ? null,
   nixStoreClosure ? [],
+  nixStoreRegistration ? false,
   makeRootDirs ? false,
   extraMtree ? null,
   extraMtreeContents ? null,
   extraMtreeContentsDest ? "/",
+  noSymlinks ? false,
 }:
 # Either both or none of {user,group} need to be set
 assert (lib.assertMsg (lib.all
@@ -27,18 +29,30 @@ let
   users = map (x: x.user or "''") contents;
   groups = map (x: x.group or "''") contents;
 
-  ufsSizeFlags = if additionalSize != null then (
-    if totalSize != null then throw "Cannot specify both totalSize and additionalSize" else
-    "-b ${additionalSize}"
-  ) else if totalSize != null then (
-    "-m ${totalSize} -M ${totalSize}"
-  ) else "";
-  zfsSizeFlags = if additionalSize != null then (
-    if totalSize != null then throw "Cannot specify both totalSize and additionalSize" else
-    "-b ${additionalSize}"
-  ) else if totalSize != null then (
-    "-m ${totalSize}"
-  ) else "";
+  ufsSizeFlags =
+    if additionalSize != null then
+      (
+        if totalSize != null then
+          throw "Cannot specify both totalSize and additionalSize"
+        else
+          "-b ${additionalSize}"
+      )
+    else if totalSize != null then
+      ("-m ${totalSize} -M ${totalSize}")
+    else
+      "";
+  zfsSizeFlags =
+    if additionalSize != null then
+      (
+        if totalSize != null then
+          throw "Cannot specify both totalSize and additionalSize"
+        else
+          "-b ${additionalSize}"
+      )
+    else if totalSize != null then
+      ("-m ${totalSize}")
+    else
+      "";
   mtreeBuilder = ''
     pushd $root
     echo ' /set type=file uid=0 gid=0' >>../.mtree
@@ -101,7 +115,7 @@ let
       # Unfortunately cptofs only supports modes, not ownership, so we can't use
       # rsync's --chown option. Instead, we change the ownerships in the
       # VM script with chown.
-      rsync_flags="-a --no-o --no-g $rsync_chmod_flags"
+      rsync_flags="-a --no-o --no-g ${lib.optionalString noSymlinks "--copy-links"} $rsync_chmod_flags"
       if [[ "$source" =~ '*' ]]; then
         # If the source name contains '*', perform globbing.
         mkdir -p $root/$target
@@ -127,13 +141,17 @@ let
   rootDirMaker = lib.optionalString makeRootDirs ''
     mkdir -p $root/{etc,dev,tmp,boot,nix/store}
   '';
-  nixStoreClosurePaths = "${pkgs.closureInfo { rootPaths = nixStoreClosure; }}/store-paths";
-  nixStoreCopier = lib.optionalString (nixStorePath != null) ''
+  nixStoreClosurePaths = "${pkgs.closureInfo { rootPaths = nixStoreClosure; }}";
+  nixStoreCopier = lib.optionalString (nixStorePath != null) (''
     mkdir -p $root/${nixStorePath}
-    for f in $(cat ${nixStoreClosurePaths}); do
+    for f in $(cat ${nixStoreClosurePaths}/store-paths); do
       cp -a $f $root/${nixStorePath}
     done
-  '';
+  '' + lib.optionalString nixStoreRegistration ''
+    # Also include a manifest of the closures in a format suitable for
+    # nix-store --load-db.
+    cp ${nixStoreClosurePaths}/registration $root/${nixStorePath}/nix-path-registration
+  '');
 in pkgs.runCommand "partition-image-${label}" {
     passthru = {
       inherit filesystem label contents;
