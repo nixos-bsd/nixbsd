@@ -35,6 +35,7 @@ in [
   "${extPath}/system/activation/activatable-system.nix"
   "${extPath}/system/activation/specialisation.nix"
   "${extPath}/system/boot/loader/efi.nix"
+  "${extPath}/system/boot/loader/loader.nix"
   "${extPath}/system/etc/etc.nix"
   ./nixos-compat.nix
   ./config/resolvconf.nix
@@ -46,6 +47,7 @@ in [
   ./hardware/opengl.nix
   ./installer/tools/tools.nix
   ./installer/deps.nix
+  ./image/images.nix
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix

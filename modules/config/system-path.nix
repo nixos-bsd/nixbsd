@@ -47,6 +47,7 @@ let
       pkgs.freebsd.fsck_msdosfs
       pkgs.freebsd.geom
       pkgs.freebsd.ifconfig
+      pkgs.freebsd.netstat
       pkgs.freebsd.kldconfig
       pkgs.freebsd.kldload
       pkgs.freebsd.kldstat

@@ -64,7 +64,7 @@ if [[ -n "$symlinkBoot" ]]; then
     }
 else
     copier() {
-        cp -r "$@"
+        cp -rL "$@"
     }
 fi
 
@@ -116,7 +116,7 @@ M.entries["$tag"] = {
 	label = $(jq -r '."org.nixos.bootspec.v1".label | @json' <$path),
 	toplevel = $(jq -r '."org.nixos.bootspec.v1".toplevel | @json' <$path),
 	init = $(jq -r '."org.nixos.bootspec.v1".init | @json' <$path),
-        kernelEnvironment = { $initmdLua $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
+        kernelEnvironment = { $initmdLua ["init_script"] = $(jq -r '."org.nixos.bootspec.v1".toplevel + "/activate" | @json' <$path), $(jq -r '."gay.mildlyfunctional.nixbsd.v1".kernelEnvironment | to_entries | map("[\(.key | @json)] = \(.value | @json)") | join(", ")' <$path)},
         earlyModules = $(jq -r '."gay.mildlyfunctional.nixbsd.v1".earlyModules | @json' <$path | tr "[]" "{}"),
 }
 M.tags[#M.tags + 1] = "$tag"
@@ -173,6 +173,18 @@ mv $targetBoot/lua/loader.lua $targetBoot/lua/loader_orig.lua
 copier @loader_script@ $targetBoot/lua/loader.lua
 mv $tmpFile $targetBoot/lua/stand_config.lua
 mkdir -p $targetBoot/loader.conf.d
+
+echo "Preparing overrides files"
+for f in $(ls -d @overridesDir@/lua/* 2>/dev/null); do
+    fn=$(basename $f)
+    [[ ! -f "$targetBoot/lua/$fn" ]] || rm -- "$targetBoot/lua/$fn"
+    copier -v $f $targetBoot/lua/
+done
+
+if [[ -n "@localScript@" ]]; then
+    echo "Populating local.lua override file"
+    copier @localScript@ $targetBoot/lua/local.lua
+fi
 
 mkdir -p $target/efi/boot
 copier @stand@/bin/loader.efi $target/efi/boot/bootx64.efi

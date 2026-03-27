@@ -111,7 +111,7 @@ let
     config = finalPkgs.config;
     fetchurlBoot = finalPkgs.fetchurl;
     # hm.
-    initialPath = builtins.map (drv: finalPkgs.${drv.pname}) finalPkgs.stdenv.initialPath;
+    initialPath = builtins.map (drv: finalPkgs.${drv.pname or drv.name}) finalPkgs.stdenv.initialPath;
     extraNativeBuildInputs = builtins.map spliceLies finalPkgs.stdenv.extraNativeBuildInputs;
     extraBuildInputs = builtins.map spliceLies finalPkgs.stdenv.extraBuildInputs;
     buildPlatform = finalPkgs.stdenv.hostPlatform;
