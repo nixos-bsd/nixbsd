@@ -100,7 +100,7 @@ in
                 merge = loc: defs: (import ../../lib/eval-config.nix {
                   inherit lib;
                   extraArgs = {
-                    inherit (host) lixFlake cppnixFlake mini-tmpfiles-flake;
+                    inherit (host) cppnixFlake mini-tmpfiles-flake;
                   };
                   nixpkgsPath = config.nixpkgs;
                   modules =

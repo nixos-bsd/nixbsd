@@ -1,13 +1,6 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
-    # I can't figure out how to rebase our lix fork easily. Let's use cppnix for now.
-    # lix = {
-    #   url = "git+https://git.lix.systems/artemist/lix.git?ref=freebsd-build";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    #   # We don't need another nixpkgs clone, it won't evaluate anyway
-    #   inputs.nixpkgs-regression.follows = "nixpkgs";
-    # };
     cppnix = {
       url = "github:nixos/nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -65,8 +58,6 @@
           inherit (nixpkgs) lib;
           nixpkgsPath = nixpkgs.outPath;
           specialArgs = {
-            #lixFlake = lix;
-            lixFlake = null;
             cppnixFlake = cppnix;
             mini-tmpfiles-flake = mini-tmpfiles;
           } // (args.specialArgs or { });
