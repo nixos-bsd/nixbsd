@@ -72,7 +72,7 @@
           tools = nixpkgs.legacyPackages.${system}.callPackages ./modules/installer/tools/package.nix {};
         });
 
-      formatter = forAllSystems (system: (makePkgs system).nixfmt-rfc-style);
+      formatter = forAllSystems (system: (makePkgs system).nixfmt-tree);
 
       hydraJobs = lib.mapAttrs 
         (name: attrs: {
