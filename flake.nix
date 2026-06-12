@@ -9,7 +9,7 @@
     #   inputs.nixpkgs-regression.follows = "nixpkgs";
     # };
     cppnix = {
-      url = "github:rhelmot/nix/freebsd-safe";
+      url = "github:nixos/nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     mini-tmpfiles = {
