@@ -129,8 +129,9 @@ rec {
           --stylesheet highlightjs/mono-blue.css \
           --script ./highlightjs/highlight.pack.js \
           --script ./highlightjs/loader.js \
-          --toc-depth 1 \
-          --chunk-toc-depth 1 \
+          --script ./anchor.min.js \
+          --script ./anchor-use.js \
+          --sidebar-depth 2 \
           ./manual.md \
           $dst/${common.indexPath}
 

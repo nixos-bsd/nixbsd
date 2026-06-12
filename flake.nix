@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs";
+    nixpkgs.url = "https://channels.nixos.org/nixos-unstable-small/nixexprs.tar.xz";
     cppnix = {
       url = "github:nixos/nix";
       inputs.nixpkgs.follows = "nixpkgs";
