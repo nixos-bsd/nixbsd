@@ -123,10 +123,12 @@ let
     modules = allUserModules ++ [ { _module.check = false; } ];
   };
 
+  # Cannot use normal hostPlatform as that would cause infinite recursion,
+  # so get it directly from the pkgs
   nixbsdWithGender = nixbsdWithUserModules.extendModules {
     modules =
       import ../modules/module-list-gendered.nix nixpkgsPath
-        nixbsdWithUserModulesUnchecked.config.nixpkgs._hostPlatform;
+        nixbsdWithUserModulesUnchecked._module.args.pkgs.stdenv.hostPlatform;
   };
 
   withExtraAttrs =
