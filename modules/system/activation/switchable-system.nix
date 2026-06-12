@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
 
@@ -22,23 +27,19 @@
     # TODO localeArchive
     system.activatableSystemBuilderCommands = ''
       mkdir -p $out/bin
-      substitute ${
-        ./switch-to-configuration.sh
-      } $out/bin/switch-to-configuration \
+      substitute ${./switch-to-configuration.sh} $out/bin/switch-to-configuration \
         --subst-var out \
         --subst-var-by toplevel ''${!toplevelVar} \
         --subst-var-by coreutils "${pkgs.coreutils}" \
         --subst-var-by diffutils "${pkgs.diffutils}" \
-      '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
-        --subst-var-by rcorder "${pkgs.freebsd.rcorder}" \
-        --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
-      '' + ''
-        --subst-var-by distroId ${
-          lib.escapeShellArg config.system.nixos.distroId
-        } \
-        --subst-var-by installBootLoader ${
-          lib.escapeShellArg config.system.build.installBootLoader
-        } \
+    ''
+    + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+      --subst-var-by rcorder "${pkgs.freebsd.rcorder}" \
+      --subst-var-by pathLocale "${config.i18n.freebsdLocales}/share/locale" \
+    ''
+    + ''
+        --subst-var-by distroId ${lib.escapeShellArg config.system.nixos.distroId} \
+        --subst-var-by installBootLoader ${lib.escapeShellArg config.system.build.installBootLoader} \
         --subst-var-by bash "${pkgs.bash}" \
         --subst-var-by shell "${pkgs.bash}/bin/sh" \
         ;

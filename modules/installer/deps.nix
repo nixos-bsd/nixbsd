@@ -1,4 +1,9 @@
-{ pkgs, config, lib, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   options.system.includeInstallerDependencies = lib.mkOption {
     type = lib.types.bool;
@@ -10,13 +15,24 @@
   options.system.installerDependencies = lib.mkOption {
     type = lib.types.listOf lib.types.pathInStore;
     description = "Add dependencies to this list to bundle them in with an installer image (if system.bundleInstallerDependencies is enabled).";
-    default = [];
+    default = [ ];
   };
 
   config = lib.mkIf config.system.includeInstallerDependencies {
     system.installerDependencies =
-    with config.nixpkgs.fakeNativePkgs.stdenv; initialPath ++ extraNativeBuildInputs ++ extraBuildInputs
-    ++ [ pkgs.xorg.lndir cc cc.libc shell ] ++ config.environment.systemPackages;
-    system.extraDependencies = lib.concatMap (drv: if drv ? "outputs" then lib.map (output: drv.${output}) drv.outputs else [ drv ]) config.system.installerDependencies;
+      with config.nixpkgs.fakeNativePkgs.stdenv;
+      initialPath
+      ++ extraNativeBuildInputs
+      ++ extraBuildInputs
+      ++ [
+        pkgs.xorg.lndir
+        cc
+        cc.libc
+        shell
+      ]
+      ++ config.environment.systemPackages;
+    system.extraDependencies = lib.concatMap (
+      drv: if drv ? "outputs" then lib.map (output: drv.${output}) drv.outputs else [ drv ]
+    ) config.system.installerDependencies;
   };
 }

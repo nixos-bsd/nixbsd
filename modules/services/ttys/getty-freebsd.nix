@@ -1,12 +1,20 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib;
 let
   cfg = config.services.getty;
   gettyBin = "${cfg.package}/bin/getty";
   gettyTab = "${cfg.package}/etc/gettytab";
-in {
+in
+{
   options.services.getty = {
-    enabled = (mkEnableOption "getty") // { default = true; };
+    enabled = (mkEnableOption "getty") // {
+      default = true;
+    };
     package = mkPackageOption pkgs [ "freebsd" "getty" ] { };
   };
 

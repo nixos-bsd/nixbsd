@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   options.services.consolekit2.enable = lib.mkOption {
     type = lib.types.bool;

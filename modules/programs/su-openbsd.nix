@@ -1,7 +1,14 @@
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 with lib;
-let cfg = config.programs.su;
-in {
+let
+  cfg = config.programs.su;
+in
+{
   options = {
     programs.su = {
       enable = mkOption {

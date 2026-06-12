@@ -119,14 +119,26 @@ let
     targetPlatform = finalPkgs.stdenv.targetPlatform;
   };
   stdenvNoCC' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" (stdenvArgs // { cc = null; });
-  stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" (stdenvArgs // { cc = finalPkgs.clang; });
-  mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" { inherit lib; config = finalPkgs.config; };
+  stdenv' = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic" (
+    stdenvArgs // { cc = finalPkgs.clang; }
+  );
+  mkMkDerivation = import "${_nixbsdNixpkgsPath}/pkgs/stdenv/generic/make-derivation.nix" {
+    inherit lib;
+    config = finalPkgs.config;
+  };
   mkStdenv = stdenv: stdenv // (mkMkDerivation stdenv);
-  spliceLies = drv: drv // lib.optionalAttrs (drv?__spliced) { __spliced = drv.__spliced // (with drv.__spliced; {
-    buildBuild = hostHost;
-    buildHost = hostHost;
-    buildTarget = hostTarget;
-  }); };
+  spliceLies =
+    drv:
+    drv
+    // lib.optionalAttrs (drv ? __spliced) {
+      __spliced =
+        drv.__spliced
+        // (with drv.__spliced; {
+          buildBuild = hostHost;
+          buildHost = hostHost;
+          buildTarget = hostTarget;
+        });
+    };
   #toLieIn = [ "buildInputs" "nativeBuildInputs" "depsBuildBuild" "depsBuildHost" "depsBuildTarget" "depsHostHost" "depsHostTarget" "depsTargetTarget" ];
   #installLiesOne = func: if builtins.isFunction func then (args: let result = func (if builtins.isAttrs args then (lib.mapAttrs (name: val: if builtins.elem name toLieIn then lib.map spliceLies val else val) args) else args); in if builtins.isFunction result then installLiesOne result else result) else func;
   #trivialSet = import "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {
@@ -140,79 +152,119 @@ let
   #  shellcheck-minimal = spliceLies finalPkgs.shellcheck-minimal;
   #};
   liesScope' = finalPkgs.makeScopeWithSplicing' {
-    f = self: (builtins.removeAttrs finalPkgs [ "callScope" "newScope" "overrideScope" "packages" "callPackages" "callPackage" "__splicedPackages" ]) // {
-      pkgs = self;
-      __lying = true;
+    f =
+      self:
+      (builtins.removeAttrs finalPkgs [
+        "callScope"
+        "newScope"
+        "overrideScope"
+        "packages"
+        "callPackages"
+        "callPackage"
+        "__splicedPackages"
+      ])
+      // {
+        pkgs = self;
+        __lying = true;
 
-      # sigh.
-      __splicedPackages = self;
-      pkgsBuildBuild = self;
-      pkgsBuildHost = self;
-      pkgsBuildTarget = self;
-      pkgsHostHost = self;
-      pkgsHostTarget = self;
-      buildPackages = self;
-      pkgsTargetTarget = self;
-      targetPackages = self;
+        # sigh.
+        __splicedPackages = self;
+        pkgsBuildBuild = self;
+        pkgsBuildHost = self;
+        pkgsBuildTarget = self;
+        pkgsHostHost = self;
+        pkgsHostTarget = self;
+        buildPackages = self;
+        pkgsTargetTarget = self;
+        targetPackages = self;
 
-      stdenv = mkStdenv stdenv';
-      stdenvNoCC = mkStdenv stdenvNoCC';
-      inherit (self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" {})
-        runCommand
-        runCommandLocal
-        runCommandCC
-        runCommandWith
-        writeTextFile
-        writeText
-        writeTextDir
-        writeScript
-        writeScriptBin
-        writeShellScript
-        writeShellScriptBin
-        writeShellApplication
-        writeCBin
-        concatTextFile
-        concatText
-        concatScript
-        symlinkJoin
-        linkFarm
-        linkFarmFromDrvs
-        onlyBin
-        makeSetupHook
-        writeReferencesToFile
-        writeClosure
-        writeDirectReferencesToFile
-        writeStringReferencesToFile
-        requireFile
-        copyPathToStore
-        copyPathsToStore
-        applyPatches
-        emptyFile
-        emptyDirectory
-      ;
-      formats = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/pkgs-lib/formats.nix" {};
-      substitute = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute.nix" { };
-      replaceVarsWith = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars-with.nix" { };
-      replaceVars = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars.nix" { };
-      makeFontsCache = {fontconfig ? self.fontconfig, fontDirectories}:
-        self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/libraries/fontconfig/make-fonts-cache.nix"  {
-          inherit fontconfig fontDirectories;
+        stdenv = mkStdenv stdenv';
+        stdenvNoCC = mkStdenv stdenvNoCC';
+        inherit (self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/trivial-builders" { })
+          runCommand
+          runCommandLocal
+          runCommandCC
+          runCommandWith
+          writeTextFile
+          writeText
+          writeTextDir
+          writeScript
+          writeScriptBin
+          writeShellScript
+          writeShellScriptBin
+          writeShellApplication
+          writeCBin
+          concatTextFile
+          concatText
+          concatScript
+          symlinkJoin
+          linkFarm
+          linkFarmFromDrvs
+          onlyBin
+          makeSetupHook
+          writeReferencesToFile
+          writeClosure
+          writeDirectReferencesToFile
+          writeStringReferencesToFile
+          requireFile
+          copyPathToStore
+          copyPathsToStore
+          applyPatches
+          emptyFile
+          emptyDirectory
+          ;
+        formats = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/pkgs-lib/formats.nix" { };
+        substitute =
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/substitute/substitute.nix"
+            { };
+        replaceVarsWith =
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars-with.nix"
+            { };
+        replaceVars =
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/replace-vars/replace-vars.nix"
+            { };
+        makeFontsCache =
+          {
+            fontconfig ? self.fontconfig,
+            fontDirectories,
+          }:
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/libraries/fontconfig/make-fonts-cache.nix"
+            {
+              inherit fontconfig fontDirectories;
+            };
+        buildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/buildenv" { }; # not actually a package
+        perlBuildEnv =
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/interpreters/perl/wrapper.nix"
+            {
+              perl = finalPkgs.perl;
+              inherit (self.perlPackages) requiredPerlModules;
+              makeBinaryWrapper = self.makeBinaryWrapper;
+            };
+        perlWithPackages = f: self.perlBuildEnv.override { extraLibs = f self.perlPackages; };
+        perl = finalPkgs.perl // {
+          buildEnv = self.perlBuildEnv;
+          withPackages = self.perlWithPackages;
+          passthru = finalPkgs.perl.passthru // {
+            buildEnv = self.perlBuildEnv;
+            withPackages = self.perlWithPackages;
+          };
         };
-      buildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/build-support/buildenv" { }; # not actually a package
-      perlBuildEnv = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/development/interpreters/perl/wrapper.nix" {
-        perl = finalPkgs.perl;
-        inherit (self.perlPackages) requiredPerlModules;
-        makeBinaryWrapper = self.makeBinaryWrapper;
+        nixosOptionsDoc =
+          attrs:
+          (import "${_nixbsdNixpkgsPath}/nixos/lib/make-options-doc") (
+            {
+              inherit lib;
+              pkgs = self;
+            }
+            // attrs
+          );
+        makeBinaryWrapper =
+          self.callPackage "${_nixbsdNixpkgsPath}/pkgs/by-name/ma/makeBinaryWrapper/package.nix"
+            { cc = self.stdenv.cc; };
+        dieHook = self.makeSetupHook {
+          name = "die-hook";
+        } "${_nixbsdNixpkgsPath}/pkgs/build-support/setup-hooks/die.sh";
       };
-      perlWithPackages = f: self.perlBuildEnv.override { extraLibs = f self.perlPackages; };
-      perl = finalPkgs.perl // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; passthru = finalPkgs.perl.passthru // { buildEnv = self.perlBuildEnv; withPackages = self.perlWithPackages; }; };
-      nixosOptionsDoc = attrs:
-        (import "${_nixbsdNixpkgsPath}/nixos/lib/make-options-doc")
-        ({ inherit lib; pkgs = self; } // attrs);
-      makeBinaryWrapper = self.callPackage "${_nixbsdNixpkgsPath}/pkgs/by-name/ma/makeBinaryWrapper/package.nix" { cc = self.stdenv.cc; };
-      dieHook = self.makeSetupHook { name = "die-hook"; } "${_nixbsdNixpkgsPath}/pkgs/build-support/setup-hooks/die.sh";
-    }
-    ;
     otherSplices = with finalPkgs; {
       selfHostHost = pkgsHostHost;
       selfHostTarget = pkgsHostTarget;
@@ -374,7 +426,7 @@ in
           cfg.hostPlatform # make identical, so that `==` equality works; see https://github.com/NixOS/nixpkgs/issues/278001
         else
           elaborated;
-      defaultText = lib.literalExpression ''config.nixpkgs.hostPlatform'';
+      defaultText = lib.literalExpression "config.nixpkgs.hostPlatform";
       description = ''
         Specifies the platform on which NixOS should be built.
         By default, NixOS is built on the system where it runs, but you can

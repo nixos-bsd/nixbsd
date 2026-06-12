@@ -1,9 +1,16 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
-let cfg = config.boot.tmp;
-in {
+let
+  cfg = config.boot.tmp;
+in
+{
   options = {
     boot.tmp = {
       cleanOnBoot = mkOption {
@@ -15,7 +22,10 @@ in {
       };
 
       tmpfsSize = mkOption {
-        type = types.oneOf [ types.str types.types.ints.positive ];
+        type = types.oneOf [
+          types.str
+          types.types.ints.positive
+        ];
         default = "50%";
         description = ''
           Size of tmpfs in percentage.

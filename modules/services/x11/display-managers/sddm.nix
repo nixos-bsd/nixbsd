@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 let
@@ -70,7 +75,8 @@ let
       SessionDir = "${dmcfg.sessionData.desktops}/share/wayland-sessions";
       CompositorCommand = lib.optionalString cfg.wayland.enable cfg.wayland.compositorCommand;
     };
-  } // lib.optionalAttrs dmcfg.autoLogin.enable {
+  }
+  // lib.optionalAttrs dmcfg.autoLogin.enable {
     Autologin = {
       User = dmcfg.autoLogin.user;
       Session = autoLoginSessionName;
@@ -78,11 +84,9 @@ let
     };
   };
 
-  cfgFile =
-    iniFmt.generate "sddm.conf" (lib.recursiveUpdate defaultConfig cfg.settings);
+  cfgFile = iniFmt.generate "sddm.conf" (lib.recursiveUpdate defaultConfig cfg.settings);
 
-  autoLoginSessionName =
-    "${dmcfg.sessionData.autologinSession}.desktop";
+  autoLoginSessionName = "${dmcfg.sessionData.autologinSession}.desktop";
 
   compositorCmds = {
     kwin = concatStringsSep " " [
@@ -124,7 +128,7 @@ in
         '';
       };
 
-      package = mkPackageOption pkgs [ "qt6Packages" "sddm" ] {};
+      package = mkPackageOption pkgs [ "qt6Packages" "sddm" ] { };
 
       enableHidpi = mkOption {
         type = types.bool;

@@ -1,8 +1,16 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   cfg = config.services.fcron;
 
-  queuelen = lib.optionals (cfg.queuelen != null) ["-q" (toString cfg.queuelen)];
+  queuelen = lib.optionals (cfg.queuelen != null) [
+    "-q"
+    (toString cfg.queuelen)
+  ];
 
   fcrontab = ''
     SHELL=${pkgs.bash}/bin/bash
@@ -11,7 +19,12 @@ let
       MAILTO="${cfg.mailto}"
     ''}
     NIX_CONF_DIR=/etc/nix
-    ${lib.concatStrings (map (job: "# ${job.name}\n${lib.optionalString (job.description != "") "# ${job.description}\n"}${job.line}\n") (lib.attrValues cfg.jobs))}
+    ${lib.concatStrings (
+      map (
+        job:
+        "# ${job.name}\n${lib.optionalString (job.description != "") "# ${job.description}\n"}${job.line}\n"
+      ) (lib.attrValues cfg.jobs)
+    )}
   '';
 
   allowdeny = target: users: {
@@ -23,7 +36,9 @@ let
 in
 {
   options.services.fcron = {
-    enable = lib.mkEnableOption "fcron" // { default = true; };
+    enable = lib.mkEnableOption "fcron" // {
+      default = true;
+    };
 
     allow = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -91,129 +106,209 @@ in
               when.clock = lib.mkOption {
                 description = "Time unit constraints which must be satisfied to trigger the command.";
                 default = null;
-                type = lib.types.nullOr (lib.types.submodule (
-                  { ... }:
-                  let
-                    mkClockOption = {
-                      longname,
-                      min,
-                      max,
-                      keywords ? [],
-                      }:
-                      let
-                        basicTypes = [(lib.types.ints.between min max)]
+                type = lib.types.nullOr (
+                  lib.types.submodule (
+                    { ... }:
+                    let
+                      mkClockOption =
+                        {
+                          longname,
+                          min,
+                          max,
+                          keywords ? [ ],
+                        }:
+                        let
+                          basicTypes = [
+                            (lib.types.ints.between min max)
+                          ]
                           ++ lib.optional ((builtins.length keywords) != 0) (lib.types.enum keywords);
-                        rangeType = (lib.types.submodule ({ ... }: {
-                          options.min = lib.mkOption {
-                            type = lib.types.oneOf basicTypes;
-                          };
-                          options.max = lib.mkOption {
-                            type = lib.types.oneOf basicTypes;
-                          };
-                          options.interval = lib.mkOption {
-                            type = lib.types.nullOr (lib.types.oneOf basicTypes);
-                            default = null;
-                          };
-                          options.except = lib.mkOption {
-                            type = lib.types.either (lib.types.oneOf basicTypes) (lib.types.listOf (lib.types.oneOf basicTypes));
-                            default = [];
-                          };
-                        }));
-                      in lib.mkOption {
-                      description = "The command should be executed every <value> ${longname}";
-                      example = {
+                          rangeType = (
+                            lib.types.submodule (
+                              { ... }:
+                              {
+                                options.min = lib.mkOption {
+                                  type = lib.types.oneOf basicTypes;
+                                };
+                                options.max = lib.mkOption {
+                                  type = lib.types.oneOf basicTypes;
+                                };
+                                options.interval = lib.mkOption {
+                                  type = lib.types.nullOr (lib.types.oneOf basicTypes);
+                                  default = null;
+                                };
+                                options.except = lib.mkOption {
+                                  type = lib.types.either (lib.types.oneOf basicTypes) (
+                                    lib.types.listOf (lib.types.oneOf basicTypes)
+                                  );
+                                  default = [ ];
+                                };
+                              }
+                            )
+                          );
+                        in
+                        lib.mkOption {
+                          description = "The command should be executed every <value> ${longname}";
+                          example = {
                             min = 1;
                             max = 5;
                             interval = 2;
                             except = 3;
+                          };
+                          default = null;
+                          type = lib.types.nullOr (
+                            lib.types.oneOf (
+                              basicTypes
+                              ++ [
+                                (lib.types.listOf (lib.types.oneOf basicTypes))
+                                rangeType
+                                (lib.types.listOf rangeType)
+                              ]
+                            )
+                          );
+                        };
+                    in
+                    {
+                      options = {
+                        text = lib.mkOption {
+                          description = "Line of the following form: min hrs day-of-month month day-of-week, in which all conditions must be met to trigger the command.";
+                          type = lib.types.nullOr lib.types.str;
+                          example = "5 10 31 * 7";
+                        };
+                        min = mkClockOption {
+                          longname = "minutes";
+                          min = 0;
+                          max = 59;
+                        };
+                        hr = mkClockOption {
+                          longname = "hours";
+                          min = 0;
+                          max = 23;
+                        };
+                        dayOfMonth = mkClockOption {
+                          longname = "days of the month";
+                          min = 1;
+                          max = 31;
+                        };
+                        month = mkClockOption {
+                          longname = "months";
+                          min = 1;
+                          max = 12;
+                          keywords = [
+                            "jan"
+                            "feb"
+                            "mar"
+                            "apr"
+                            "may"
+                            "jun"
+                            "jul"
+                            "aug"
+                            "sep"
+                            "oct"
+                            "nov"
+                            "dec"
+                          ];
+                        };
+                        dayOfWeek = mkClockOption {
+                          longname = "days of the week";
+                          min = 0;
+                          max = 7;
+                          keywords = [
+                            "mon"
+                            "tue"
+                            "wed"
+                            "thu"
+                            "fri"
+                            "sat"
+                            "sun"
+                          ];
+                        };
                       };
-                      default = null;
-                        type = lib.types.nullOr (lib.types.oneOf (basicTypes ++ [
-                        (lib.types.listOf (lib.types.oneOf basicTypes))
-                        rangeType
-                        (lib.types.listOf rangeType)
-                      ]));
-                    };
-                  in
-                  {
-                    options = {
-                      text = lib.mkOption {
-                        description = "Line of the following form: min hrs day-of-month month day-of-week, in which all conditions must be met to trigger the command.";
-                        type = lib.types.nullOr lib.types.str;
-                        example = "5 10 31 * 7";
-                      };
-                      min = mkClockOption {
-                        longname = "minutes";
-                        min = 0;
-                        max = 59;
-                      };
-                      hr = mkClockOption {
-                        longname = "hours";
-                        min = 0;
-                        max = 23;
-                      };
-                      dayOfMonth = mkClockOption {
-                        longname = "days of the month";
-                        min = 1;
-                        max = 31;
-                      };
-                      month = mkClockOption {
-                        longname = "months";
-                        min = 1;
-                        max = 12;
-                        keywords = [ "jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec" ];
-                      };
-                      dayOfWeek = mkClockOption {
-                        longname = "days of the week";
-                        min = 0;
-                        max = 7;
-                        keywords = [ "mon" "tue" "wed" "thu" "fri" "sat" "sun" ];
-                      };
-                    };
-                    config = lib.mkIf (config.min != null || config.hr != null || config.dayOfMonth != null || config.month != null || config.dayOfWeek != null) {
-                      text = let
-                        processPrim = builtins.toString;
-                        processInterval = val: if val == null then "" else "/${processPrim val}";
-                        processExcept = val: if builtins.isList val then lib.concatMapStrings processExcept val else "~${processPrim val}";
-                        processRange = val: "${processPrim val.min}-${processPrim val.max}${processInterval val.interval}${processExcept val.except}";
+                      config =
+                        lib.mkIf
+                          (
+                            config.min != null
+                            || config.hr != null
+                            || config.dayOfMonth != null
+                            || config.month != null
+                            || config.dayOfWeek != null
+                          )
+                          {
+                            text =
+                              let
+                                processPrim = builtins.toString;
+                                processInterval = val: if val == null then "" else "/${processPrim val}";
+                                processExcept =
+                                  val: if builtins.isList val then lib.concatMapStrings processExcept val else "~${processPrim val}";
+                                processRange =
+                                  val:
+                                  "${processPrim val.min}-${processPrim val.max}${processInterval val.interval}${processExcept val.except}";
 
-                        processField = val: if val == null then "*"
-                          else if builtins.isInt val then "${val}"
-                          else if builtins.isList val then lib.concatMapStringsSep "," processField val
-                          else processRange val;
-                      in
-                        lib.concatMapStringsSep " " processField [config.min config.hr config.dayOfMonth config.month config.dayOfWeek];
-                    };
-                  }
-                ));
+                                processField =
+                                  val:
+                                  if val == null then
+                                    "*"
+                                  else if builtins.isInt val then
+                                    "${val}"
+                                  else if builtins.isList val then
+                                    lib.concatMapStringsSep "," processField val
+                                  else
+                                    processRange val;
+                              in
+                              lib.concatMapStringsSep " " processField [
+                                config.min
+                                config.hr
+                                config.dayOfMonth
+                                config.month
+                                config.dayOfWeek
+                              ];
+                          };
+                    }
+                  )
+                );
               };
               # TODO: % declarations
               #when.every = lib.mkOption {
               #};
               options = lib.mkOption {
-                type = lib.types.attrsOf (lib.types.oneOf [
-                  lib.types.str
-                  lib.types.int
-                  lib.types.bool
-                ]);
+                type = lib.types.attrsOf (
+                  lib.types.oneOf [
+                    lib.types.str
+                    lib.types.int
+                    lib.types.bool
+                  ]
+                );
                 description = "Options to set on the job. See fcrontab(5) for valid options.";
-                default = {};
+                default = { };
               };
               command = lib.mkOption {
                 type = lib.types.either lib.types.str (lib.types.listOf lib.types.str);
                 description = "The shell command to run.";
               };
             };
-            config = let
-              options = lib.concatStringsSep "," (lib.mapAttrsToList (opt: val: "${opt}(${if builtins.isBool val then (if val then "true" else "false") else builtins.toString val})") config.options);
-              command = if builtins.isList config.command then lib.escapeShellArgs config.command else config.command;
-            in lib.mkMerge [ (lib.mkIf (config.when.elapsed != null) {
-              line = "@${options} ${config.when.elapsed} ${command}";
-            }) (lib.mkIf (config.when.clock != null) {
-              line = "&${options} ${config.when.clock.line} ${command}";
-            }) {
-              name = lib.mkOptionDefault name;
-            }];
+            config =
+              let
+                options = lib.concatStringsSep "," (
+                  lib.mapAttrsToList (
+                    opt: val:
+                    "${opt}(${
+                      if builtins.isBool val then (if val then "true" else "false") else builtins.toString val
+                    })"
+                  ) config.options
+                );
+                command =
+                  if builtins.isList config.command then lib.escapeShellArgs config.command else config.command;
+              in
+              lib.mkMerge [
+                (lib.mkIf (config.when.elapsed != null) {
+                  line = "@${options} ${config.when.elapsed} ${command}";
+                })
+                (lib.mkIf (config.when.clock != null) {
+                  line = "&${options} ${config.when.clock.line} ${command}";
+                })
+                {
+                  name = lib.mkOptionDefault name;
+                }
+              ];
           }
         )
       );
@@ -304,7 +399,12 @@ in
       '';
 
       startType = "forking";
-      startCommand = [ "${pkgs.fcron}/sbin/fcron" "-m" (toString cfg.maxSerialJobs) ] ++ queuelen;
+      startCommand = [
+        "${pkgs.fcron}/sbin/fcron"
+        "-m"
+        (toString cfg.maxSerialJobs)
+      ]
+      ++ queuelen;
     };
   };
 }

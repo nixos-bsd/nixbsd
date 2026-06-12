@@ -4,7 +4,8 @@ let
     inherit (pkgs) overlays;
     localSystem = "x86_64-linux";
   };
-in {
+in
+{
   imports = [ ../extra/default.nix ];
 
   boot.linux.enable = true;

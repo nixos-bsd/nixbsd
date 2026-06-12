@@ -1,6 +1,8 @@
 nixpkgsPath:
-let extPath = "${nixpkgsPath}/nixos/modules";
-in [
+let
+  extPath = "${nixpkgsPath}/nixos/modules";
+in
+[
   "${extPath}/config/nix-remote-build.nix"
   "${extPath}/config/nix.nix"
   "${extPath}/config/shells-environment.nix"

@@ -150,7 +150,7 @@ in
 
       initdbArgs = mkOption {
         type = with types; listOf str;
-        default = [];
+        default = [ ];
         example = [
           "--data-checksums"
           "--allow-group-access"
@@ -588,7 +588,11 @@ in
 
       environment.PGDATA = cfg.dataDir;
 
-      path = [ cfg.finalPackage pkgs.sudo pkgs.gnugrep ];
+      path = [
+        cfg.finalPackage
+        pkgs.sudo
+        pkgs.gnugrep
+      ];
 
       preStart = ''
         if ! test -e ${cfg.dataDir}/PG_VERSION; then
@@ -610,52 +614,53 @@ in
       '';
 
       # Wait for PostgreSQL to be ready to accept connections.
-      postStart =
-        ''
-          PSQL="sudo -u postgres PGDATA="${cfg.dataDir}" psql --port=${builtins.toString cfg.settings.port}"
-        '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
-          MAINPID=$(check_pidfile $pidfile $command)
-        '' + ''
+      postStart = ''
+        PSQL="sudo -u postgres PGDATA="${cfg.dataDir}" psql --port=${builtins.toString cfg.settings.port}"
+      ''
+      + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        MAINPID=$(check_pidfile $pidfile $command)
+      ''
+      + ''
 
-          test -z "$MAINPID" && echo "Postgresql server died" && exit 1
+        test -z "$MAINPID" && echo "Postgresql server died" && exit 1
 
-          while ! $PSQL -d postgres -c "" 2> /dev/null; do
-              if ! kill -0 "$MAINPID"; then exit 1; fi
-              sleep 0.1
-          done
+        while ! $PSQL -d postgres -c "" 2> /dev/null; do
+            if ! kill -0 "$MAINPID"; then exit 1; fi
+            sleep 0.1
+        done
 
-          if test -e "${cfg.dataDir}/.first_startup"; then
-            ${optionalString (cfg.initialScript != null) ''
-              $PSQL -f "${cfg.initialScript}" -d postgres
-            ''}
-            rm -f "${cfg.dataDir}/.first_startup"
-          fi
-        ''
-        + optionalString (cfg.ensureDatabases != [ ]) ''
-          ${concatMapStrings (database: ''
-            $PSQL -tAc "SELECT 1 FROM pg_database WHERE datname = '${database}'" | grep -q 1 || $PSQL -tAc 'CREATE DATABASE "${database}"'
-          '') cfg.ensureDatabases}
-        ''
-        + ''
-          ${concatMapStrings (
-            user:
-            let
-              dbOwnershipStmt = optionalString user.ensureDBOwnership ''$PSQL -tAc 'ALTER DATABASE "${user.name}" OWNER TO "${user.name}";' '';
+        if test -e "${cfg.dataDir}/.first_startup"; then
+          ${optionalString (cfg.initialScript != null) ''
+            $PSQL -f "${cfg.initialScript}" -d postgres
+          ''}
+          rm -f "${cfg.dataDir}/.first_startup"
+        fi
+      ''
+      + optionalString (cfg.ensureDatabases != [ ]) ''
+        ${concatMapStrings (database: ''
+          $PSQL -tAc "SELECT 1 FROM pg_database WHERE datname = '${database}'" | grep -q 1 || $PSQL -tAc 'CREATE DATABASE "${database}"'
+        '') cfg.ensureDatabases}
+      ''
+      + ''
+        ${concatMapStrings (
+          user:
+          let
+            dbOwnershipStmt = optionalString user.ensureDBOwnership ''$PSQL -tAc 'ALTER DATABASE "${user.name}" OWNER TO "${user.name}";' '';
 
-              filteredClauses = filterAttrs (name: value: value != null) user.ensureClauses;
+            filteredClauses = filterAttrs (name: value: value != null) user.ensureClauses;
 
-              clauseSqlStatements = attrValues (mapAttrs (n: v: if v then n else "no${n}") filteredClauses);
+            clauseSqlStatements = attrValues (mapAttrs (n: v: if v then n else "no${n}") filteredClauses);
 
-              userClauses = ''$PSQL -tAc 'ALTER ROLE "${user.name}" ${concatStringsSep " " clauseSqlStatements}' '';
-            in
-            ''
-              $PSQL -tAc "SELECT 1 FROM pg_roles WHERE rolname='${user.name}'" | grep -q 1 || $PSQL -tAc 'CREATE USER "${user.name}"'
-              ${userClauses}
+            userClauses = ''$PSQL -tAc 'ALTER ROLE "${user.name}" ${concatStringsSep " " clauseSqlStatements}' '';
+          in
+          ''
+            $PSQL -tAc "SELECT 1 FROM pg_roles WHERE rolname='${user.name}'" | grep -q 1 || $PSQL -tAc 'CREATE USER "${user.name}"'
+            ${userClauses}
 
-              ${dbOwnershipStmt}
-            ''
-          ) cfg.ensureUsers}
-        '';
+            ${dbOwnershipStmt}
+          ''
+        ) cfg.ensureUsers}
+      '';
 
       startCommand = [ "${cfg.finalPackage}/bin/postgres" ];
       startType = "foreground";
@@ -673,7 +678,6 @@ in
       #    # Give Postgres a decent amount of time to clean up after
       #    # receiving systemd's SIGINT.
       #    TimeoutSec = 120;
-
 
       #    # Hardening
       #    CapabilityBoundingSet = [ "" ];
@@ -729,7 +733,11 @@ in
     };
 
     systemd.tmpfiles.settings.postgresql = {
-      "/var/lib/postgresql/${cfg.package.psqlSchema}".d = { user = "postgres"; group = "postgres"; mode = if groupAccessAvailable then "0750" else "0700"; };
+      "/var/lib/postgresql/${cfg.package.psqlSchema}".d = {
+        user = "postgres";
+        group = "postgres";
+        mode = if groupAccessAvailable then "0750" else "0700";
+      };
       #"/run/postgresql".d = { user = "postgres"; group = "postgres"; };
     };
   };

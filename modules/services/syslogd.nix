@@ -1,109 +1,124 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 with lib;
 let
   cfg = config.services.syslogd;
 
-  selectorSubmodule = { config, ... }: {
-    options = {
-      facility = mkOption {
-        type = types.nullOr (types.enum [
-          "auth"
-          "authpriv"
-          "console"
-          "cron"
-          "daemon"
-          "ftp"
-          "kern"
-          "lpr"
-          "mail"
-          "mark"
-          "news"
-          "ntp"
-          "security"
-          "syslog"
-          "user"
-          "uucp"
-          "local0"
-          "local1"
-          "local2"
-          "local3"
-          "local4"
-          "local5"
-          "local6"
-          "local7"
-        ]);
-        description = ''
-          The part of the system generating the message, similar to `LOG_`
-          values used in the {manpage}`syslog(3)` function.
-        '';
-        default = null;
+  selectorSubmodule =
+    { config, ... }:
+    {
+      options = {
+        facility = mkOption {
+          type = types.nullOr (
+            types.enum [
+              "auth"
+              "authpriv"
+              "console"
+              "cron"
+              "daemon"
+              "ftp"
+              "kern"
+              "lpr"
+              "mail"
+              "mark"
+              "news"
+              "ntp"
+              "security"
+              "syslog"
+              "user"
+              "uucp"
+              "local0"
+              "local1"
+              "local2"
+              "local3"
+              "local4"
+              "local5"
+              "local6"
+              "local7"
+            ]
+          );
+          description = ''
+            The part of the system generating the message, similar to `LOG_`
+            values used in the {manpage}`syslog(3)` function.
+          '';
+          default = null;
+        };
+        comparisonFlag = mkOption {
+          type = types.strMatching "!?[<=>]+";
+          default = ">=";
+          description = ''
+            How to compare the message's level with the rule's level.
+            Default is >=, meaning all messages with a level greater or
+            equal to specified will be matched;
+          '';
+        };
+        level = mkOption {
+          type = types.nullOr (
+            types.enum [
+              "emerg"
+              "alert"
+              "crit"
+              "err"
+              "warning"
+              "notice"
+              "info"
+              "debug"
+              "none"
+            ]
+          );
+          default = null;
+          description = ''
+            Message severity to compare against with compareFlag.
+            If this is null then all messages will be matched and compareFlag will be ignored.
+          '';
+        };
+        text = mkOption {
+          type = types.str;
+          example = "*.emerg";
+          description = ''
+            Full text of selector.
+          '';
+        };
       };
-      comparisonFlag = mkOption {
-        type = types.strMatching "!?[<=>]+";
-        default = ">=";
-        description = ''
-          How to compare the message's level with the rule's level.
-          Default is >=, meaning all messages with a level greater or
-          equal to specified will be matched;
-        '';
-      };
-      level = mkOption {
-        type = types.nullOr (types.enum [
-          "emerg"
-          "alert"
-          "crit"
-          "err"
-          "warning"
-          "notice"
-          "info"
-          "debug"
-          "none"
-        ]);
-        default = null;
-        description = ''
-          Message severity to compare against with compareFlag.
-          If this is null then all messages will be matched and compareFlag will be ignored.
-        '';
-      };
-      text = mkOption {
-        type = types.str;
-        example = "*.emerg";
-        description = ''
-          Full text of selector.
-        '';
+      config = {
+        text =
+          let
+            facility = if config.facility == null then "*" else config.facility;
+            comparisonFlag = if config.comparisonFlag == ">=" then "" else config.comparisonFlag;
+            level = if config.level == null then "*" else config.level;
+          in
+          mkDefault "${facility}.${comparisonFlag}${level}";
       };
     };
-    config = {
-      text = let
-        facility = if config.facility == null then "*" else config.facility;
-        comparisonFlag =
-          if config.comparisonFlag == ">=" then "" else config.comparisonFlag;
-        level = if config.level == null then "*" else config.level;
-      in mkDefault "${facility}.${comparisonFlag}${level}";
-    };
-  };
 
-  formatAction = config: actionText:
+  formatAction =
+    config: actionText:
     let
       selectors = concatMapStringsSep ";" (sel: sel.text) config.selectors;
-      programFilter = if config.includedPrograms != [ ] then
-        "!" + concatStringsSep "," config.includedPrograms
-      else if config.excludedPrograms != [ ] then
-        "!-" + concatStringsSep "," config.excludedPrograms
-      else
-        "";
-      hostFilter = if config.includedHosts != [ ] then
-        "+" + concatStringsSep "," config.includedHosts
-      else if config.excludedHosts != [ ] then
-        "-" + concatStringsSep "," config.excludedHosts
-      else
-        "";
-      propertyFilter =
-        if config.propertyFilter != null then config.propertyFilter else "";
+      programFilter =
+        if config.includedPrograms != [ ] then
+          "!" + concatStringsSep "," config.includedPrograms
+        else if config.excludedPrograms != [ ] then
+          "!-" + concatStringsSep "," config.excludedPrograms
+        else
+          "";
+      hostFilter =
+        if config.includedHosts != [ ] then
+          "+" + concatStringsSep "," config.includedHosts
+        else if config.excludedHosts != [ ] then
+          "-" + concatStringsSep "," config.excludedHosts
+        else
+          "";
+      propertyFilter = if config.propertyFilter != null then config.propertyFilter else "";
       resetProgramFilter = if programFilter == "" then "" else "!*";
       resetHostFilter = if hostFilter == "" then "" else "+*";
       resetPropertyFilter = if propertyFilter == "" then "" else ":*";
-    in ''
+    in
+    ''
       ${programFilter}
       ${hostFilter}
       ${propertyFilter}
@@ -173,89 +188,104 @@ let
     };
   };
 
-  fileActionSubmodule = { name, config, ... }: {
-    options = commonActionOptions // {
-      destination = mkOption {
-        type = types.path;
-        default = name;
-        example = "/var/log/messages";
-        description = ''
-          Destination file for matched logs.
-        '';
+  fileActionSubmodule =
+    { name, config, ... }:
+    {
+      options = commonActionOptions // {
+        destination = mkOption {
+          type = types.path;
+          default = name;
+          example = "/var/log/messages";
+          description = ''
+            Destination file for matched logs.
+          '';
+        };
+        sync = mkOption {
+          type = types.bool;
+          default = true;
+          example = false;
+          description = ''
+            Whether to sync after writing new messages.
+            Disabling this could increase performance but cause data loss.
+          '';
+        };
       };
-      sync = mkOption {
-        type = types.bool;
-        default = true;
-        example = false;
-        description = ''
-          Whether to sync after writing new messages.
-          Disabling this could increase performance but cause data loss.
-        '';
-      };
-    };
-    config = {
-      text = let sync = if config.sync then "" else "-";
-      in mkDefault (formatAction config "${sync}${config.destination}");
-    };
-  };
-  userActionSubmodule = { name, config, ... }: {
-    options = commonActionOptions // {
-      destinations = mkOption {
-        type = types.listOf types.str;
-        default = [ name ];
-        example = [ ];
-        description = ''
-          Users to send messages to.
-          Empty means "all logged in users".
-        '';
+      config = {
+        text =
+          let
+            sync = if config.sync then "" else "-";
+          in
+          mkDefault (formatAction config "${sync}${config.destination}");
       };
     };
-    config = {
-      text = let
-        users = if config.destinations == [ ] then
-          "*"
-        else
-          concatStringsSep "," config.destinations;
-      in mkDefault (formatAction config users);
-    };
-  };
-  remoteActionSubmodule = { name, config, ... }: {
-    options = commonActionOptions // {
-      destination = mkOption {
-        type = types.str;
-        default = name;
-        example = "[2001:db8::1234]:8514";
-        description = ''
-          Destination syslogd to send messages.
-          Can be an IPv4 address, IPv6 address in brackets, or hostname,
-          plus an optional port after a colon.
-        '';
+  userActionSubmodule =
+    { name, config, ... }:
+    {
+      options = commonActionOptions // {
+        destinations = mkOption {
+          type = types.listOf types.str;
+          default = [ name ];
+          example = [ ];
+          description = ''
+            Users to send messages to.
+            Empty means "all logged in users".
+          '';
+        };
+      };
+      config = {
+        text =
+          let
+            users = if config.destinations == [ ] then "*" else concatStringsSep "," config.destinations;
+          in
+          mkDefault (formatAction config users);
       };
     };
-    config = {
-      text = mkDefault (formatAction config "@${config.destination}");
-    };
-  };
-  commandActionSubmodule = { name, config, ... }: {
-    options = commonActionOptions // {
-      command = mkOption {
-        type = types.str;
-        default = name;
-        example = "exec /path/to/my/program.sh";
-        description = ''
-          Command to run when messages are recieved.
-          This is run in a subshell, so exec is recommended if that is not needed.
-          The command will run once the first message is recieved and recieve all
-          messages on stdin.
-        '';
+  remoteActionSubmodule =
+    { name, config, ... }:
+    {
+      options = commonActionOptions // {
+        destination = mkOption {
+          type = types.str;
+          default = name;
+          example = "[2001:db8::1234]:8514";
+          description = ''
+            Destination syslogd to send messages.
+            Can be an IPv4 address, IPv6 address in brackets, or hostname,
+            plus an optional port after a colon.
+          '';
+        };
+      };
+      config = {
+        text = mkDefault (formatAction config "@${config.destination}");
       };
     };
-    config = { text = mkDefault (formatAction config "|${config.command}"); };
-  };
-in {
+  commandActionSubmodule =
+    { name, config, ... }:
+    {
+      options = commonActionOptions // {
+        command = mkOption {
+          type = types.str;
+          default = name;
+          example = "exec /path/to/my/program.sh";
+          description = ''
+            Command to run when messages are recieved.
+            This is run in a subshell, so exec is recommended if that is not needed.
+            The command will run once the first message is recieved and recieve all
+            messages on stdin.
+          '';
+        };
+      };
+      config = {
+        text = mkDefault (formatAction config "|${config.command}");
+      };
+    };
+in
+{
   options = {
     services.syslogd = {
-      enable = mkEnableOption "syslogd" // { default = true; };
+      enable = mkEnableOption "syslogd" // {
+        default = true;
+      };
       package = mkOption {
         type = types.package;
         default = pkgs.freebsd.syslogd;
@@ -263,10 +293,9 @@ in {
           freebsd.syslogd package
         '';
       };
-      defaultRules =
-        mkEnableOption "default syslog rules, based on FreeBSD config" // {
-          default = true;
-        };
+      defaultRules = mkEnableOption "default syslog rules, based on FreeBSD config" // {
+        default = true;
+      };
 
       extraSockets = mkOption {
         type = types.listOf types.path;
@@ -317,28 +346,36 @@ in {
   };
   config = mkIf cfg.enable {
     # We need a file in etc for reload
-    environment.etc."syslog.conf".text = let
-      formatActions = actions:
-        concatMapStringsSep "\n" (action: action.text) (attrValues actions);
-    in ''
-      ${formatActions cfg.fileActions}
-      ${formatActions cfg.userActions}
-      ${formatActions cfg.remoteActions}
-      ${formatActions cfg.commandActions}
-    '';
+    environment.etc."syslog.conf".text =
+      let
+        formatActions = actions: concatMapStringsSep "\n" (action: action.text) (attrValues actions);
+      in
+      ''
+        ${formatActions cfg.fileActions}
+        ${formatActions cfg.userActions}
+        ${formatActions cfg.remoteActions}
+        ${formatActions cfg.commandActions}
+      '';
 
-    init.services.syslogd = let
-      socketArgs = concatMap (sock: [ "-l" sock ])
-        ([ "/var/run/log" ] ++ cfg.extraSockets);
-    in {
-      description = "System log daemon";
-      dependencies = [ "FILESYSTEMS" "newsyslog" ];
-      before = [ "SERVERS" ];
-      startType = "forking";
-      pidFile = "/var/run/syslog.pid";
-      startCommand = [ "${cfg.package}/bin/syslogd" ] ++ socketArgs ++ cfg.extraParams;
-      defaultLog.enable = false;
-    };
+    init.services.syslogd =
+      let
+        socketArgs = concatMap (sock: [
+          "-l"
+          sock
+        ]) ([ "/var/run/log" ] ++ cfg.extraSockets);
+      in
+      {
+        description = "System log daemon";
+        dependencies = [
+          "FILESYSTEMS"
+          "newsyslog"
+        ];
+        before = [ "SERVERS" ];
+        startType = "forking";
+        pidFile = "/var/run/syslog.pid";
+        startCommand = [ "${cfg.package}/bin/syslogd" ] ++ socketArgs ++ cfg.extraParams;
+        defaultLog.enable = false;
+      };
 
     # Defaults overrides syslogd path, set it back
     freebsd.rc.conf.syslogd_program = "${cfg.package}/bin/syslogd";
@@ -382,7 +419,7 @@ in {
           level = "err";
         }
       ];
-      "/var/log/security".selectors = [{ facility = "security"; }];
+      "/var/log/security".selectors = [ { facility = "security"; } ];
       "/var/log/auth.log".selectors = [
         {
           facility = "auth";
@@ -393,29 +430,33 @@ in {
           level = "info";
         }
       ];
-      "/var/log/maillog".selectors = [{
-        facility = "mail";
-        level = "info";
-      }];
-      "/var/log/cron".selectors = [{ facility = "cron"; }];
+      "/var/log/maillog".selectors = [
+        {
+          facility = "mail";
+          level = "info";
+        }
+      ];
+      "/var/log/cron".selectors = [ { facility = "cron"; } ];
       "/var/log/debug.log" = {
         excludedPrograms = [ "devd" ];
-        selectors = [{
-          comparisonFlag = "=";
-          level = "debug";
-        }];
+        selectors = [
+          {
+            comparisonFlag = "=";
+            level = "debug";
+          }
+        ];
       };
       "/var/log/daemon.log" = {
         excludedPrograms = [ "devd" ];
-        selectors = [{
-          facility = "daemon";
-          level = "info";
-        }];
+        selectors = [
+          {
+            facility = "daemon";
+            level = "info";
+          }
+        ];
       };
     };
-    services.syslogd.userActions =
-      mkIf cfg.defaultRules { "*".selectors = [{ level = "emerg"; }]; };
+    services.syslogd.userActions = mkIf cfg.defaultRules { "*".selectors = [ { level = "emerg"; } ]; };
 
   };
 }
-

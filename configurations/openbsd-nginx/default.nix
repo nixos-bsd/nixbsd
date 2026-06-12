@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   imports = [ ../openbsd-base/default.nix ];
 
   services.nginx = {

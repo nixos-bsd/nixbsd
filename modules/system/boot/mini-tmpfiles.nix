@@ -1,4 +1,10 @@
-{ config, lib, pkgs, utils, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 with lib;
 
@@ -10,7 +16,7 @@ in
   options = {
     systemd.tmpfiles.rules = mkOption {
       type = types.listOf types.str;
-      default = [];
+      default = [ ];
       example = [ "d /tmp 1777 root root 10d" ];
       description = ''
         Rules for creation, deletion and cleaning of volatile and temporary files
@@ -37,88 +43,97 @@ in
           };
         };
       };
-      default = {};
-      type = types.attrsOf (types.attrsOf (types.attrsOf (types.submodule ({ name, config, ... }: {
-        options.type = mkOption {
-          type = types.str;
-          default = name;
-          example = "d";
-          description = ''
-            The type of operation to perform on the file.
+      default = { };
+      type = types.attrsOf (
+        types.attrsOf (
+          types.attrsOf (
+            types.submodule (
+              { name, config, ... }:
+              {
+                options.type = mkOption {
+                  type = types.str;
+                  default = name;
+                  example = "d";
+                  description = ''
+                    The type of operation to perform on the file.
 
-            The type consists of a single letter and optionally one or more
-            modifier characters.
+                    The type consists of a single letter and optionally one or more
+                    modifier characters.
 
-            Please see the upstream documentation for the available types and
-            more details:
-            <https://www.freedesktop.org/software/systemd/man/tmpfiles.d>
-          '';
-        };
-        options.mode = mkOption {
-          type = types.str;
-          default = "-";
-          example = "0755";
-          description = ''
-            The file access mode to use when creating this file or directory.
-          '';
-        };
-        options.user = mkOption {
-          type = types.str;
-          default = "-";
-          example = "root";
-          description = ''
-            The user of the file.
+                    Please see the upstream documentation for the available types and
+                    more details:
+                    <https://www.freedesktop.org/software/systemd/man/tmpfiles.d>
+                  '';
+                };
+                options.mode = mkOption {
+                  type = types.str;
+                  default = "-";
+                  example = "0755";
+                  description = ''
+                    The file access mode to use when creating this file or directory.
+                  '';
+                };
+                options.user = mkOption {
+                  type = types.str;
+                  default = "-";
+                  example = "root";
+                  description = ''
+                    The user of the file.
 
-            This may either be a numeric ID or a user/group name.
+                    This may either be a numeric ID or a user/group name.
 
-            If omitted or when set to `"-"`, the user and group of the user who
-            invokes systemd-tmpfiles is used.
-          '';
-        };
-        options.group = mkOption {
-          type = types.str;
-          default = "-";
-          example = "root";
-          description = ''
-            The group of the file.
+                    If omitted or when set to `"-"`, the user and group of the user who
+                    invokes systemd-tmpfiles is used.
+                  '';
+                };
+                options.group = mkOption {
+                  type = types.str;
+                  default = "-";
+                  example = "root";
+                  description = ''
+                    The group of the file.
 
-            This may either be a numeric ID or a user/group name.
+                    This may either be a numeric ID or a user/group name.
 
-            If omitted or when set to `"-"`, the user and group of the user who
-            invokes systemd-tmpfiles is used.
-          '';
-        };
-        options.age = mkOption {
-          type = types.str;
-          default = "-";
-          example = "10d";
-          description = ''
-            Delete a file when it reaches a certain age.
+                    If omitted or when set to `"-"`, the user and group of the user who
+                    invokes systemd-tmpfiles is used.
+                  '';
+                };
+                options.age = mkOption {
+                  type = types.str;
+                  default = "-";
+                  example = "10d";
+                  description = ''
+                    Delete a file when it reaches a certain age.
 
-            If a file or directory is older than the current time minus the age
-            field, it is deleted.
+                    If a file or directory is older than the current time minus the age
+                    field, it is deleted.
 
-            If set to `"-"` no automatic clean-up is done.
-          '';
-        };
-        options.argument = mkOption {
-          type = types.str;
-          default = "";
-          example = "";
-          description = ''
-            An argument whose meaning depends on the type of operation.
+                    If set to `"-"` no automatic clean-up is done.
+                  '';
+                };
+                options.argument = mkOption {
+                  type = types.str;
+                  default = "";
+                  example = "";
+                  description = ''
+                    An argument whose meaning depends on the type of operation.
 
-            Please see the upstream documentation for the meaning of this
-            parameter in different situations:
-            <https://www.freedesktop.org/software/systemd/man/tmpfiles.d>
-          '';
-        };
-      }))));
+                    Please see the upstream documentation for the meaning of this
+                    parameter in different situations:
+                    <https://www.freedesktop.org/software/systemd/man/tmpfiles.d>
+                  '';
+                };
+              }
+            )
+          )
+        )
+      );
     };
 
     systemd.tmpfiles.packages = mkOption {
       type = types.listOf types.package;
-      default = [];
+      default = [ ];
       example = literalExpression "[ pkgs.lvm2 ]";
       apply = map getLib;
       description = ''
@@ -154,29 +169,38 @@ in
       dependencies = [ "mountcritlocal" ];
       before = [ "FILESYSTEMS" ];
       startType = "oneshot";
-      startCommand = [ "${pkgs.mini-tmpfiles}/bin/mini-tmpfiles" "--create" ];
+      startCommand = [
+        "${pkgs.mini-tmpfiles}/bin/mini-tmpfiles"
+        "--create"
+      ];
     };
 
     environment.etc = {
-      "tmpfiles.d".source = (pkgs.symlinkJoin {
-        name = "tmpfiles.d";
-        paths = map (p: p + "/lib/tmpfiles.d") cfg.packages;
-        postBuild = ''
-          for i in $(cat $pathsPath); do
-            (test -d "$i" && test $(ls "$i"/*.conf | wc -l) -ge 1) || (
-              echo "ERROR: The path '$i' from systemd.tmpfiles.packages contains no *.conf files."
-              exit 1
-            )
-          done
-        '' + concatMapStrings (name: optionalString (hasPrefix "tmpfiles.d/" name) ''
-          rm -f $out/${removePrefix "tmpfiles.d/" name}
-        '') config.system.build.etc.passthru.targets;
-      }) + "/*";
+      "tmpfiles.d".source =
+        (pkgs.symlinkJoin {
+          name = "tmpfiles.d";
+          paths = map (p: p + "/lib/tmpfiles.d") cfg.packages;
+          postBuild = ''
+            for i in $(cat $pathsPath); do
+              (test -d "$i" && test $(ls "$i"/*.conf | wc -l) -ge 1) || (
+                echo "ERROR: The path '$i' from systemd.tmpfiles.packages contains no *.conf files."
+                exit 1
+              )
+            done
+          ''
+          + concatMapStrings (
+            name:
+            optionalString (hasPrefix "tmpfiles.d/" name) ''
+              rm -f $out/${removePrefix "tmpfiles.d/" name}
+            ''
+          ) config.system.build.etc.passthru.targets;
+        })
+        + "/*";
     };
 
     systemd.tmpfiles.packages = [
       # Default tmpfiles rules provided by systemd
-      (pkgs.runCommand "systemd-default-tmpfiles" {} ''
+      (pkgs.runCommand "systemd-default-tmpfiles" { } ''
         mkdir -p $out/lib/tmpfiles.d
         cd $out/lib/tmpfiles.d
 
@@ -204,12 +228,21 @@ in
           ${concatStringsSep "\n" cfg.rules}
         '';
       })
-    ] ++ (mapAttrsToList (name: paths:
-      pkgs.writeTextDir "lib/tmpfiles.d/${name}.conf" (concatStrings (mapAttrsToList (path: types:
-        concatStrings (mapAttrsToList (_type: entry: ''
-          '${entry.type}' '${path}' '${entry.mode}' '${entry.user}' '${entry.group}' '${entry.age}' ${entry.argument}
-        '') types)
-      ) paths ))
+    ]
+    ++ (mapAttrsToList (
+      name: paths:
+      pkgs.writeTextDir "lib/tmpfiles.d/${name}.conf" (
+        concatStrings (
+          mapAttrsToList (
+            path: types:
+            concatStrings (
+              mapAttrsToList (_type: entry: ''
+                '${entry.type}' '${path}' '${entry.mode}' '${entry.user}' '${entry.group}' '${entry.age}' ${entry.argument}
+              '') types
+            )
+          ) paths
+        )
+      )
     ) cfg.settings);
 
     systemd.tmpfiles.rules = [
@@ -229,4 +262,3 @@ in
     ];
   };
 }
-

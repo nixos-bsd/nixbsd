@@ -1,4 +1,10 @@
-{ config, lib, pkgs, utils, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 with utils;
 with lib;
@@ -7,199 +13,205 @@ let
 
   randomEncryptionCoerce = enable: { inherit enable; };
 
-  randomEncryptionOpts = { ... }: {
+  randomEncryptionOpts =
+    { ... }:
+    {
 
-    options = {
+      options = {
 
-      enable = mkOption {
-        default = false;
-        type = types.bool;
-        description = ''
-          Encrypt swap device with a random key. This way you won't have a persistent swap device.
+        enable = mkOption {
+          default = false;
+          type = types.bool;
+          description = ''
+            Encrypt swap device with a random key. This way you won't have a persistent swap device.
 
-          WARNING: Don't try to hibernate when you have at least one swap partition with
-          this option enabled! We have no way to set the partition into which hibernation image
-          is saved, so if your image ends up on an encrypted one you would lose it!
+            WARNING: Don't try to hibernate when you have at least one swap partition with
+            this option enabled! We have no way to set the partition into which hibernation image
+            is saved, so if your image ends up on an encrypted one you would lose it!
 
-          WARNING #2: Do not use /dev/disk/by-uuid/… or /dev/disk/by-label/… as your swap device
-          when using randomEncryption as the UUIDs and labels will get erased on every boot when
-          the partition is encrypted. Best to use /dev/disk/by-partuuid/…
-        '';
-      };
-
-      cipher = mkOption {
-        default = "aes-xts-plain64";
-        example = "serpent-xts-plain64";
-        type = types.str;
-        description = ''
-          Use specified cipher for randomEncryption.
-
-          Hint: Run "cryptsetup benchmark" to see which one is fastest on your machine.
-        '';
-      };
-
-      keySize = mkOption {
-        default = null;
-        example = "512";
-        type = types.nullOr types.int;
-        description = ''
-          Set the encryption key size for the plain device.
-
-          If not specified, the amount of data to read from `source` will be
-          determined by cryptsetup.
-
-          See `cryptsetup-open(8)` for details.
-        '';
-      };
-
-      sectorSize = mkOption {
-        default = null;
-        example = "4096";
-        type = types.nullOr types.int;
-        description = ''
-          Set the sector size for the plain encrypted device type.
-
-          If not specified, the default sector size is determined from the
-          underlying block device.
-
-          See `cryptsetup-open(8)` for details.
-        '';
-      };
-
-      source = mkOption {
-        default = "/dev/urandom";
-        example = "/dev/random";
-        type = types.str;
-        description = ''
-          Define the source of randomness to obtain a random key for encryption.
-        '';
-      };
-
-      allowDiscards = mkOption {
-        default = false;
-        type = types.bool;
-        description = ''
-          Whether to allow TRIM requests to the underlying device. This option
-          has security implications; please read the LUKS documentation before
-          activating it.
-        '';
-      };
-    };
-
-  };
-
-  swapCfg = { config, options, ... }: {
-
-    options = {
-
-      device = mkOption {
-        example = "/dev/sda3";
-        type = types.nonEmptyStr;
-        description = "Path of the device or swap file.";
-      };
-
-      label = mkOption {
-        example = "swap";
-        type = types.str;
-        description = ''
-          Label of the device.  Can be used instead of {var}`device`.
-        '';
-      };
-
-      size = mkOption {
-        default = null;
-        example = 2048;
-        type = types.nullOr types.int;
-        description = ''
-          If this option is set, ‘device’ is interpreted as the
-          path of a swapfile that will be created automatically
-          with the indicated size (in megabytes).
-        '';
-      };
-
-      priority = mkOption {
-        default = null;
-        example = 2048;
-        type = types.nullOr types.int;
-        description = ''
-          Specify the priority of the swap device. Priority is a value between 0 and 32767.
-          Higher numbers indicate higher priority.
-          null lets the kernel choose a priority, which will show up as a negative value.
-        '';
-      };
-
-      randomEncryption = mkOption {
-        default = false;
-        example = {
-          enable = true;
-          cipher = "serpent-xts-plain64";
-          source = "/dev/random";
+            WARNING #2: Do not use /dev/disk/by-uuid/… or /dev/disk/by-label/… as your swap device
+            when using randomEncryption as the UUIDs and labels will get erased on every boot when
+            the partition is encrypted. Best to use /dev/disk/by-partuuid/…
+          '';
         };
-        type = types.coercedTo types.bool randomEncryptionCoerce
-          (types.submodule randomEncryptionOpts);
-        description = ''
-          Encrypt swap device with a random key. This way you won't have a persistent swap device.
 
-          HINT: run "cryptsetup benchmark" to test cipher performance on your machine.
+        cipher = mkOption {
+          default = "aes-xts-plain64";
+          example = "serpent-xts-plain64";
+          type = types.str;
+          description = ''
+            Use specified cipher for randomEncryption.
 
-          WARNING: Don't try to hibernate when you have at least one swap partition with
-          this option enabled! We have no way to set the partition into which hibernation image
-          is saved, so if your image ends up on an encrypted one you would lose it!
+            Hint: Run "cryptsetup benchmark" to see which one is fastest on your machine.
+          '';
+        };
 
-          WARNING #2: Do not use /dev/disk/by-uuid/… or /dev/disk/by-label/… as your swap device
-          when using randomEncryption as the UUIDs and labels will get erased on every boot when
-          the partition is encrypted. Best to use /dev/disk/by-partuuid/…
-        '';
-      };
+        keySize = mkOption {
+          default = null;
+          example = "512";
+          type = types.nullOr types.int;
+          description = ''
+            Set the encryption key size for the plain device.
 
-      discardPolicy = mkOption {
-        default = null;
-        example = "once";
-        type = types.nullOr (types.enum [ "once" "pages" "both" ]);
-        description = ''
-          Specify the discard policy for the swap device. If "once", then the
-          whole swap space is discarded at swapon invocation. If "pages",
-          asynchronous discard on freed pages is performed, before returning to
-          the available pages pool. With "both", both policies are activated.
-          See swapon(8) for more information.
-        '';
-      };
+            If not specified, the amount of data to read from `source` will be
+            determined by cryptsetup.
 
-      options = mkOption {
-        default = [ "defaults" ];
-        example = [ "nofail" ];
-        type = types.listOf types.nonEmptyStr;
-        description = ''
-          Options used to mount the swap.
-        '';
-      };
+            See `cryptsetup-open(8)` for details.
+          '';
+        };
 
-      deviceName = mkOption {
-        type = types.str;
-        internal = true;
-      };
+        sectorSize = mkOption {
+          default = null;
+          example = "4096";
+          type = types.nullOr types.int;
+          description = ''
+            Set the sector size for the plain encrypted device type.
 
-      realDevice = mkOption {
-        type = types.path;
-        internal = true;
+            If not specified, the default sector size is determined from the
+            underlying block device.
+
+            See `cryptsetup-open(8)` for details.
+          '';
+        };
+
+        source = mkOption {
+          default = "/dev/urandom";
+          example = "/dev/random";
+          type = types.str;
+          description = ''
+            Define the source of randomness to obtain a random key for encryption.
+          '';
+        };
+
+        allowDiscards = mkOption {
+          default = false;
+          type = types.bool;
+          description = ''
+            Whether to allow TRIM requests to the underlying device. This option
+            has security implications; please read the LUKS documentation before
+            activating it.
+          '';
+        };
       };
 
     };
 
-    config = {
-      device =
-        mkIf options.label.isDefined "/dev/disk/by-label/${config.label}";
-      deviceName =
-        lib.replaceStrings [ "\\" ] [ "" ] (escapeSystemdPath config.device);
-      realDevice = if config.randomEncryption.enable then
-        "/dev/mapper/${config.deviceName}"
-      else
-        config.device;
+  swapCfg =
+    { config, options, ... }:
+    {
+
+      options = {
+
+        device = mkOption {
+          example = "/dev/sda3";
+          type = types.nonEmptyStr;
+          description = "Path of the device or swap file.";
+        };
+
+        label = mkOption {
+          example = "swap";
+          type = types.str;
+          description = ''
+            Label of the device.  Can be used instead of {var}`device`.
+          '';
+        };
+
+        size = mkOption {
+          default = null;
+          example = 2048;
+          type = types.nullOr types.int;
+          description = ''
+            If this option is set, ‘device’ is interpreted as the
+            path of a swapfile that will be created automatically
+            with the indicated size (in megabytes).
+          '';
+        };
+
+        priority = mkOption {
+          default = null;
+          example = 2048;
+          type = types.nullOr types.int;
+          description = ''
+            Specify the priority of the swap device. Priority is a value between 0 and 32767.
+            Higher numbers indicate higher priority.
+            null lets the kernel choose a priority, which will show up as a negative value.
+          '';
+        };
+
+        randomEncryption = mkOption {
+          default = false;
+          example = {
+            enable = true;
+            cipher = "serpent-xts-plain64";
+            source = "/dev/random";
+          };
+          type = types.coercedTo types.bool randomEncryptionCoerce (types.submodule randomEncryptionOpts);
+          description = ''
+            Encrypt swap device with a random key. This way you won't have a persistent swap device.
+
+            HINT: run "cryptsetup benchmark" to test cipher performance on your machine.
+
+            WARNING: Don't try to hibernate when you have at least one swap partition with
+            this option enabled! We have no way to set the partition into which hibernation image
+            is saved, so if your image ends up on an encrypted one you would lose it!
+
+            WARNING #2: Do not use /dev/disk/by-uuid/… or /dev/disk/by-label/… as your swap device
+            when using randomEncryption as the UUIDs and labels will get erased on every boot when
+            the partition is encrypted. Best to use /dev/disk/by-partuuid/…
+          '';
+        };
+
+        discardPolicy = mkOption {
+          default = null;
+          example = "once";
+          type = types.nullOr (
+            types.enum [
+              "once"
+              "pages"
+              "both"
+            ]
+          );
+          description = ''
+            Specify the discard policy for the swap device. If "once", then the
+            whole swap space is discarded at swapon invocation. If "pages",
+            asynchronous discard on freed pages is performed, before returning to
+            the available pages pool. With "both", both policies are activated.
+            See swapon(8) for more information.
+          '';
+        };
+
+        options = mkOption {
+          default = [ "defaults" ];
+          example = [ "nofail" ];
+          type = types.listOf types.nonEmptyStr;
+          description = ''
+            Options used to mount the swap.
+          '';
+        };
+
+        deviceName = mkOption {
+          type = types.str;
+          internal = true;
+        };
+
+        realDevice = mkOption {
+          type = types.path;
+          internal = true;
+        };
+
+      };
+
+      config = {
+        device = mkIf options.label.isDefined "/dev/disk/by-label/${config.label}";
+        deviceName = lib.replaceStrings [ "\\" ] [ "" ] (escapeSystemdPath config.device);
+        realDevice =
+          if config.randomEncryption.enable then "/dev/mapper/${config.deviceName}" else config.device;
+      };
+
     };
 
-  };
-
-in {
+in
+{
 
   ###### interface
 
@@ -229,8 +241,8 @@ in {
 
   config = mkIf ((length config.swapDevices) != 0) {
     assertions = map (sw: {
-      assertion = sw.randomEncryption.enable
-        -> builtins.match "/dev/disk/by-(uuid|label)/.*" sw.device == null;
+      assertion =
+        sw.randomEncryption.enable -> builtins.match "/dev/disk/by-(uuid|label)/.*" sw.device == null;
       message = ''
         You cannot use swap device "${sw.device}" with randomEncryption enabled.
         The UUIDs and labels will get erased on every boot when the partition is encrypted.
@@ -238,11 +250,13 @@ in {
       '';
     }) config.swapDevices;
 
-    warnings = concatMap (sw:
+    warnings = concatMap (
+      sw:
       if sw.size != null && hasPrefix "/dev/" sw.device then
         [ "Setting the swap size of block device ${sw.device} has no effect" ]
       else
-        [ ]) config.swapDevices;
+        [ ]
+    ) config.swapDevices;
 
     #system.requiredKernelConfig = with config.lib.kernelConfig; [
     #  (isYes "SWAP")

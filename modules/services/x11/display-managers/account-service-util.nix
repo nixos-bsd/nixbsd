@@ -1,14 +1,15 @@
-{ accountsservice
-, stdenv
-, buildPackages
-, glib
-, gobject-introspection
-, python3
-, wrapGAppsNoGuiHook
-, lib
-, withIntrospection ?
+{
+  accountsservice,
+  stdenv,
+  buildPackages,
+  glib,
+  gobject-introspection,
+  python3,
+  wrapGAppsNoGuiHook,
+  lib,
+  withIntrospection ?
     lib.meta.availableOn stdenv.hostPlatform gobject-introspection
-    && stdenv.hostPlatform.emulatorAvailable buildPackages
+    && stdenv.hostPlatform.emulatorAvailable buildPackages,
 }:
 
 python3.pkgs.buildPythonApplication {
@@ -24,7 +25,8 @@ python3.pkgs.buildPythonApplication {
 
   nativeBuildInputs = [
     wrapGAppsNoGuiHook
-  ] ++ lib.optionals withIntrospection [
+  ]
+  ++ lib.optionals withIntrospection [
     gobject-introspection
   ];
 

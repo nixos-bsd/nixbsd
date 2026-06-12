@@ -54,13 +54,13 @@ let
 in
 let
   squashFS = import ../lib/make-partition-image.nix {
-    inherit 
-      pkgs 
-      lib 
+    inherit
+      pkgs
+      lib
 
       storeRegistration
       label
-    ;
+      ;
 
     filesystem = "ufs";
     nixStorePath = "/nix/store";
@@ -68,14 +68,17 @@ let
     makeRootDirs = true;
   };
 
-  compressedSquashFS = pkgs.runCommand "${squashFS.name}.uzip" {
-      nativeBuildInputs = with pkgs.freebsd; [ mkuzip ];
-    } ''
-      exit 1 
-      # mkUzip does not compile for moment
-      mkuzip -A ${lib.replaceStrings ["-Xcompression-level"] ["-C"] squashfsCompression}
-      # ln -s ${squashFS} $out
-    '';
+  compressedSquashFS =
+    pkgs.runCommand "${squashFS.name}.uzip"
+      {
+        nativeBuildInputs = with pkgs.freebsd; [ mkuzip ];
+      }
+      ''
+        exit 1 
+        # mkUzip does not compile for moment
+        mkuzip -A ${lib.replaceStrings [ "-Xcompression-level" ] [ "-C" ] squashfsCompression}
+        # ln -s ${squashFS} $out
+      '';
 
   contents =
     contents'
@@ -207,15 +210,18 @@ let
   );
   nixStoreClosurePaths = closureInfo { rootPaths = storeContents; };
 
-  nixStoreCopier = lib.optionalString (storeContents != [ ]) (''
-    for f in $(cat ${nixStoreClosurePaths}/store-paths); do
-      cp -a $f $root/nix/store
-    done
-  '' + lib.optionalString storeRegistration ''
-    # Also include a manifest of the closures in a format suitable for
-    # nix-store --load-db.
-    cp ${nixStoreClosurePaths}/registration $root/nix/store/nix-path-registration
-  '');
+  nixStoreCopier = lib.optionalString (storeContents != [ ]) (
+    ''
+      for f in $(cat ${nixStoreClosurePaths}/store-paths); do
+        cp -a $f $root/nix/store
+      done
+    ''
+    + lib.optionalString storeRegistration ''
+      # Also include a manifest of the closures in a format suitable for
+      # nix-store --load-db.
+      cp ${nixStoreClosurePaths}/registration $root/nix/store/nix-path-registration
+    ''
+  );
 
   compressStep = lib.optionalString compressImage ''
     xz -zc -T0 --verbose $out > $realOut

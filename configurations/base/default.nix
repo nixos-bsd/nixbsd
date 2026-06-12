@@ -1,4 +1,5 @@
-{ config, lib, ... }: {
+{ config, lib, ... }:
+{
   nixpkgs.hostPlatform = "x86_64-freebsd";
 
   users.users.root.initialPassword = "toor";

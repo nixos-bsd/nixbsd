@@ -1,9 +1,13 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   imports = [ ../base/default.nix ];
 
   nix.settings = {
     trusted-users = [ "@wheel" ];
-    experimental-features = [ "nix-command" "flakes" ];
+    experimental-features = [
+      "nix-command"
+      "flakes"
+    ];
   };
 
   environment.systemPackages = with pkgs; [

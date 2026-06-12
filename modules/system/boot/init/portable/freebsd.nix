@@ -27,12 +27,14 @@ let
           cfg.user
           "-P"
           "/run/${cfg.name}.pid"
-        ] ++ lib.optionals (!cfg.defaultLog.enable) [
+        ]
+        ++ lib.optionals (!cfg.defaultLog.enable) [
           "-S"
-        ] ++ [
+        ]
+        ++ [
           "--"
-        ] ++ cfg.startCommand
-        ;
+        ]
+        ++ cfg.startCommand;
 
         pidfile = "/run/${cfg.name}.pid";
       }

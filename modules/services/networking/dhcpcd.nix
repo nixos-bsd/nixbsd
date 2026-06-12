@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -8,14 +13,16 @@ let
 
   interfaces = attrValues config.networking.interfaces;
 
-  enableDHCP = config.networking.dhcpcd.enable
+  enableDHCP =
+    config.networking.dhcpcd.enable
     && (config.networking.useDHCP || any (i: i.useDHCP == true) interfaces);
 
   # Don't start dhcpcd on explicitly configured interfaces or on
   # interfaces that are part of a bridge, bond or sit device.
   ignoredInterfaces = config.networking.dhcpcd.denyInterfaces;
 
-  arrayAppendOrNull = a1: a2:
+  arrayAppendOrNull =
+    a1: a2:
     if a1 == null && a2 == null then
       null
     else if a1 == null then
@@ -27,19 +34,21 @@ let
 
   # If dhcp is disabled but explicit interfaces are enabled,
   # we need to provide dhcp just for those interfaces.
-  allowInterfaces = arrayAppendOrNull cfg.allowInterfaces
-    (if !config.networking.useDHCP && enableDHCP then
+  allowInterfaces = arrayAppendOrNull cfg.allowInterfaces (
+    if !config.networking.useDHCP && enableDHCP then
       map (i: i.name) (filter (i: i.useDHCP == true) interfaces)
     else
-      null);
+      null
+  );
 
-  staticIPv6Addresses =
-    map (i: i.name) (filter (i: i.ipv6.addresses != [ ]) interfaces);
+  staticIPv6Addresses = map (i: i.name) (filter (i: i.ipv6.addresses != [ ]) interfaces);
 
-  noIPv6rs = concatStringsSep "\n" (map (name: ''
-    interface ${name}
-    noipv6rs
-  '') staticIPv6Addresses);
+  noIPv6rs = concatStringsSep "\n" (
+    map (name: ''
+      interface ${name}
+      noipv6rs
+    '') staticIPv6Addresses
+  );
 
   # Config file adapted from the one that ships with dhcpcd.
   dhcpcdConf = pkgs.writeText "dhcpcd.conf" ''
@@ -58,28 +67,27 @@ let
     # the DHCP server, but it should not be run by default.
     nohook lookup-hostname
 
-    denyinterfaces ${
-      toString ignoredInterfaces
-    } lo* peth* vif* tap* tun* virbr* vnet* vboxnet* sit*
+    denyinterfaces ${toString ignoredInterfaces} lo* peth* vif* tap* tun* virbr* vnet* vboxnet* sit*
 
     # Use the list of allowed interfaces if specified
-    ${optionalString (allowInterfaces != null)
-    "allowinterfaces ${toString allowInterfaces}"}
+    ${optionalString (allowInterfaces != null) "allowinterfaces ${toString allowInterfaces}"}
 
     # Immediately fork to background if specified, otherwise wait for IP address to be assigned
-    ${{
-      background = "background";
-      any = "waitip";
-      ipv4 = "waitip 4";
-      ipv6 = "waitip 6";
-      both = ''
-        waitip 4
-        waitip 6'';
-      if-carrier-up = "";
-    }.${cfg.wait}}
+    ${
+      {
+        background = "background";
+        any = "waitip";
+        ipv4 = "waitip 4";
+        ipv6 = "waitip 6";
+        both = ''
+          waitip 4
+          waitip 6'';
+        if-carrier-up = "";
+      }
+      .${cfg.wait}
+    }
           
-    ${optionalString (cfg.IPv6rs == null && staticIPv6Addresses != [ ])
-    noIPv6rs}
+    ${optionalString (cfg.IPv6rs == null && staticIPv6Addresses != [ ]) noIPv6rs}
     ${optionalString (cfg.IPv6rs == false) ''
       noipv6rs
     ''}
@@ -102,7 +110,8 @@ let
     ${cfg.runHook}
   '';
 
-in {
+in
+{
 
   ###### interface
 
@@ -172,8 +181,7 @@ in {
     networking.dhcpcd.runHook = mkOption {
       type = types.lines;
       default = "";
-      example =
-        "if [[ $reason =~ BOUND ]]; then echo $interface: Routers are $new_routers - were $old_routers; fi";
+      example = "if [[ $reason =~ BOUND ]]; then echo $interface: Routers are $new_routers - were $old_routers; fi";
       description = ''
         Shell code that will be run after all other hooks. See
         `man dhcpcd-run-hooks` for details on what is possible.
@@ -181,8 +189,14 @@ in {
     };
 
     networking.dhcpcd.wait = mkOption {
-      type =
-        types.enum [ "background" "any" "ipv4" "ipv6" "both" "if-carrier-up" ];
+      type = types.enum [
+        "background"
+        "any"
+        "ipv4"
+        "ipv6"
+        "both"
+        "if-carrier-up"
+      ];
       default = "any";
       description = ''
         This option specifies when the dhcpcd service will fork to background.
@@ -203,7 +217,10 @@ in {
   config = mkIf enableDHCP {
     init.services.dhcpcd = {
       description = "DHCP Client";
-      dependencies = [ "FILESYSTEMS" "network_defaults" ];
+      dependencies = [
+        "FILESYSTEMS"
+        "network_defaults"
+      ];
       before = [ "NETWORKING" ];
 
       path = [
@@ -213,11 +230,20 @@ in {
 
       startType = "forking";
       pidFile = "/var/run/dhcpcd/pid";
-      startCommand = [ "${pkgs.dhcpcd}/sbin/dhcpcd" "--quiet" "--config" (toString dhcpcdConf) ]
-        ++ optional cfg.persistent "--persistent";
+      startCommand = [
+        "${pkgs.dhcpcd}/sbin/dhcpcd"
+        "--quiet"
+        "--config"
+        (toString dhcpcdConf)
+      ]
+      ++ optional cfg.persistent "--persistent";
     };
 
-    systemd.tmpfiles.settings.dhcpcd."/var/run/dhcpcd".d = { user = "dhcpcd"; group = "dhcpcd"; mode = "0700"; };
+    systemd.tmpfiles.settings.dhcpcd."/var/run/dhcpcd".d = {
+      user = "dhcpcd";
+      group = "dhcpcd";
+      mode = "0700";
+    };
 
     users.users.dhcpcd = {
       isSystemUser = true;

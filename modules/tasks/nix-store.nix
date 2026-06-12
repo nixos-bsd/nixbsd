@@ -1,9 +1,15 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib;
 let
   cfg = config.readOnlyNixStore;
   flag = tag: item: builtins.trace "flag ${builtins.toString tag}: ${builtins.toString item}" item;
-in {
+in
+{
   options.readOnlyNixStore = {
     enable = mkEnableOption "Mount the nix store read-only";
     readOnlySource = mkOption {
@@ -36,7 +42,11 @@ in {
       };
       "/nix/store" = mkIf (cfg.readOnlySource != "/nix/store") {
         fsType = if cfg.writableLayer == null then "nullfs" else "unionfs";
-        device = if cfg.writableLayer == null then cfg.readOnlySource else "${cfg.writableLayer}:${cfg.readOnlySource}";
+        device =
+          if cfg.writableLayer == null then
+            cfg.readOnlySource
+          else
+            "${cfg.writableLayer}:${cfg.readOnlySource}";
         depends = [ cfg.readOnlySource ] ++ lib.optionals (cfg.writableLayer != null) [ cfg.writableLayer ];
       };
     };

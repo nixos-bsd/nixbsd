@@ -5,11 +5,11 @@
   label,
   filesystem,
   ufsVersion ? "2",
-  contents ? [],
+  contents ? [ ],
   additionalSize ? null,
   totalSize ? null,
   nixStorePath ? null,
-  nixStoreClosure ? [],
+  nixStoreClosure ? [ ],
   nixStoreRegistration ? false,
   makeRootDirs ? false,
   extraMtree ? null,
@@ -18,10 +18,11 @@
   noSymlinks ? false,
 }:
 # Either both or none of {user,group} need to be set
-assert (lib.assertMsg (lib.all
-  (attrs: ((attrs.user or null) == null) == ((attrs.group or null) == null))
-  contents)
-  "Contents of the disk image should set none of {user, group} or both at the same time.");
+assert (
+  lib.assertMsg (lib.all (
+    attrs: ((attrs.user or null) == null) == ((attrs.group or null) == null)
+  ) contents) "Contents of the disk image should set none of {user, group} or both at the same time."
+);
 let
   sources = map (x: x.source) contents;
   targets = map (x: x.target) contents;
@@ -83,18 +84,25 @@ let
     ${mtreeBuilder}
     ${pkgs.buildPackages.freebsd.makefs}/bin/makefs ${zfsSizeFlags} -t zfs -o poolname=${label} -o bootfs=${label} -o rootpath=/ -F $root/../.mtree $out $root
   '';
-  fatSizeFlags = if additionalSize != null then throw "Cannot specify additionalSize for FAT filesystem" else
-    if totalSize != null then "-o create_size=${totalSize}" else throw "Must specify totalSize for FAT filesystem";
+  fatSizeFlags =
+    if additionalSize != null then
+      throw "Cannot specify additionalSize for FAT filesystem"
+    else if totalSize != null then
+      "-o create_size=${totalSize}"
+    else
+      throw "Must specify totalSize for FAT filesystem";
   fatBuilder = ''
     ${pkgs.buildPackages.freebsd.makefs}/bin/makefs -t msdos -o fat_type=16 -o volume_label=${label} ${fatSizeFlags} $out $root
   '';
-  builder = {
-    "zfs" = zfsBuilder;
-    "ufs" = ufsBuilder;
-    "fat" = fatBuilder;
-    "efi" = fatBuilder;
-  }.${filesystem} or (throw "Unknown filesystem type ${filesystem}");
-  contentsCopier = lib.optionalString (contents != []) ''
+  builder =
+    {
+      "zfs" = zfsBuilder;
+      "ufs" = ufsBuilder;
+      "fat" = fatBuilder;
+      "efi" = fatBuilder;
+    }
+    .${filesystem} or (throw "Unknown filesystem type ${filesystem}");
+  contentsCopier = lib.optionalString (contents != [ ]) ''
     set -f
     sources_=(${lib.concatStringsSep " " sources})
     targets_=(${lib.concatStringsSep " " targets})
@@ -142,30 +150,39 @@ let
     mkdir -p $root/{etc,dev,tmp,boot,nix/store}
   '';
   nixStoreClosurePaths = "${pkgs.closureInfo { rootPaths = nixStoreClosure; }}";
-  nixStoreCopier = lib.optionalString (nixStorePath != null) (''
-    mkdir -p $root/${nixStorePath}
-    for f in $(cat ${nixStoreClosurePaths}/store-paths); do
-      cp -a $f $root/${nixStorePath}
-    done
-  '' + lib.optionalString nixStoreRegistration ''
-    # Also include a manifest of the closures in a format suitable for
-    # nix-store --load-db.
-    cp ${nixStoreClosurePaths}/registration $root/${nixStorePath}/nix-path-registration
-  '');
-in pkgs.runCommand "partition-image-${label}" {
+  nixStoreCopier = lib.optionalString (nixStorePath != null) (
+    ''
+      mkdir -p $root/${nixStorePath}
+      for f in $(cat ${nixStoreClosurePaths}/store-paths); do
+        cp -a $f $root/${nixStorePath}
+      done
+    ''
+    + lib.optionalString nixStoreRegistration ''
+      # Also include a manifest of the closures in a format suitable for
+      # nix-store --load-db.
+      cp ${nixStoreClosurePaths}/registration $root/${nixStorePath}/nix-path-registration
+    ''
+  );
+in
+pkgs.runCommand "partition-image-${label}"
+  {
     passthru = {
       inherit filesystem label contents;
       tooLargeIntermediate = true;
     };
-    nativeBuildInputs = [ pkgs.freebsd.makefs pkgs.rsync ];
-  } ''
-  root=$PWD/root
-  mkdir -p $root
+    nativeBuildInputs = [
+      pkgs.freebsd.makefs
+      pkgs.rsync
+    ];
+  }
+  ''
+    root=$PWD/root
+    mkdir -p $root
 
-  touch $out
-  ${rootDirMaker}
-  ${contentsCopier}
-  ${nixStoreCopier}
-  ${builder}
+    touch $out
+    ${rootDirMaker}
+    ${contentsCopier}
+    ${nixStoreCopier}
+    ${builder}
 
-''
+  ''

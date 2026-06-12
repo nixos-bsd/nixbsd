@@ -1,6 +1,11 @@
 # /etc files related to networking, such as /etc/services.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -13,15 +18,19 @@ let
     # a collision with an apparently unrelated environment
     # variable with the same name exported by dhcpcd.
     interface_order='lo lo[0-9]*'
-  '' + optionalString (length cfg.extraOptions > 0) ''
+  ''
+  + optionalString (length cfg.extraOptions > 0) ''
     # Options as described in resolv.conf(5)
     resolv_conf_options='${concatStringsSep " " cfg.extraOptions}'
-  '' + optionalString cfg.useLocalResolver ''
+  ''
+  + optionalString cfg.useLocalResolver ''
     # This hosts runs a full-blown DNS resolver.
     name_servers='127.0.0.1'
-  '' + cfg.extraConfig;
+  ''
+  + cfg.extraConfig;
 
-in {
+in
+{
   options = {
 
     networking.resolvconf = {
@@ -29,8 +38,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = !(config.environment.etc ? "resolv.conf");
-        defaultText =
-          literalExpression ''!(config.environment.etc ? "resolv.conf")'';
+        defaultText = literalExpression ''!(config.environment.etc ? "resolv.conf")'';
         description = ''
           Whether DNS configuration is managed by resolvconf.
         '';
@@ -62,7 +70,10 @@ in {
       extraOptions = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        example = [ "ndots:1" "rotate" ];
+        example = [
+          "ndots:1"
+          "rotate"
+        ];
         description = ''
           Set the options in {file}`/etc/resolv.conf`.
         '';
@@ -82,14 +93,16 @@ in {
 
   config = mkMerge [
     {
-      environment.etc."resolvconf.conf".text = if !cfg.enable then
-      # Force-stop any attempts to use resolvconf
-      ''
-        echo "resolvconf is disabled on this system but was used anyway:" >&2
-        echo "$0 $*" >&2
-        exit 1
-      '' else
-        configText;
+      environment.etc."resolvconf.conf".text =
+        if !cfg.enable then
+          # Force-stop any attempts to use resolvconf
+          ''
+            echo "resolvconf is disabled on this system but was used anyway:" >&2
+            echo "$0 $*" >&2
+            exit 1
+          ''
+        else
+          configText;
     }
     (mkIf cfg.enable { environment.systemPackages = [ cfg.package ]; })
   ];

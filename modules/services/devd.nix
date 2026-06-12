@@ -1,4 +1,10 @@
-{ config, lib, utils, pkgs, ... }:
+{
+  config,
+  lib,
+  utils,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -6,9 +12,12 @@ let
 
   cfg = config.services.devd;
 
-in {
+in
+{
   options.services.devd = {
-    enable = mkEnableOption "devd service" // { default = true; };
+    enable = mkEnableOption "devd service" // {
+      default = true;
+    };
   };
 
   config = mkIf cfg.enable {
@@ -37,4 +46,3 @@ in {
     };
   };
 }
-

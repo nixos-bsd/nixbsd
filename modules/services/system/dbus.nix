@@ -1,6 +1,11 @@
 # D-Bus configuration and system bus daemon.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
 
@@ -15,7 +20,12 @@ let
     serviceDirectories = cfg.packages;
   };
 
-  inherit (lib) mkOption mkIf mkMerge types;
+  inherit (lib)
+    mkOption
+    mkIf
+    mkMerge
+    types
+    ;
 
 in
 
@@ -35,7 +45,10 @@ in
       };
 
       implementation = mkOption {
-        type = types.enum [ "dbus" "broker" ];
+        type = types.enum [
+          "dbus"
+          "broker"
+        ];
         default = "dbus";
         description = ''
           The implementation to use for the message bus defined by the D-Bus specification.
@@ -90,9 +103,15 @@ in
       ];
 
       init.services.dbus = {
-        dependencies = ["DAEMON" "ldconfig"];
+        dependencies = [
+          "DAEMON"
+          "ldconfig"
+        ];
         startType = "forking";
-        startCommand = [ "${pkgs.dbus}/bin/dbus-daemon" "--system" ];
+        startCommand = [
+          "${pkgs.dbus}/bin/dbus-daemon"
+          "--system"
+        ];
         preStart = ''
           if ! ps -p $(cat ${pidfile}) >/dev/null 2>&1; then
             rm -f ${pidfile}
@@ -102,9 +121,9 @@ in
       };
 
       systemd.tmpfiles.settings.dbus = {
-        "/var/run/dbus".d = {};
-        "/run/dbus".d = {};
-        "/var/lib/dbus".d = {};
+        "/var/run/dbus".d = { };
+        "/run/dbus".d = { };
+        "/var/lib/dbus".d = { };
       };
     }
 

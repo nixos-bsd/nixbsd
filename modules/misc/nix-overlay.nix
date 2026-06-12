@@ -1,5 +1,12 @@
-{ config, lib, cppnixFlake ? null, mini-tmpfiles-flake ? null, ... }:
-with lib; {
+{
+  config,
+  lib,
+  cppnixFlake ? null,
+  mini-tmpfiles-flake ? null,
+  ...
+}:
+with lib;
+{
   # TODO: @artemist remove when support is upstream
   # Also remove specialArgs and input changes in flake
   options = {
@@ -39,7 +46,9 @@ with lib; {
   config = {
     nixpkgs.overlays =
       lib.optional (cppnixFlake != null && config.nixpkgs.overrideNix) cppnixFlake.overlays.internal
-      ++ lib.optional (mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles) mini-tmpfiles-flake.overlays.default
+      ++ lib.optional (
+        mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles
+      ) mini-tmpfiles-flake.overlays.default
       ++ [ (import ../../overlays/pkgs.nix) ];
   };
 }

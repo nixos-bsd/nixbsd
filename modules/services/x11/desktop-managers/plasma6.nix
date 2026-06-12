@@ -147,26 +147,24 @@ in
           systemsettings
           kcmutils
         ];
-        optionalPackages =
-          [
-            #plasma-browser-integration
-            konsole
-            (lib.getBin qttools) # Expose qdbus in PATH
-            ark
-            #elisa  # nixbsd: needs vlc to build (doable)
-            gwenview
-            #okular  # discount needs native
-            kate
-            #khelpcenter
-            dolphin
-            baloo-widgets # baloo information in Dolphin
-            dolphin-plugins
-            spectacle
-            ffmpegthumbs
-            krdp
-            #xwaylandvideobridge # exposes Wayland windows to X11 screen capture
-          ]
-          ;
+        optionalPackages = [
+          #plasma-browser-integration
+          konsole
+          (lib.getBin qttools) # Expose qdbus in PATH
+          ark
+          #elisa  # nixbsd: needs vlc to build (doable)
+          gwenview
+          #okular  # discount needs native
+          kate
+          #khelpcenter
+          dolphin
+          baloo-widgets # baloo information in Dolphin
+          dolphin-plugins
+          spectacle
+          ffmpegthumbs
+          krdp
+          #xwaylandvideobridge # exposes Wayland windows to X11 screen capture
+        ];
       in
       requiredPackages
       ++ utils.removePackagesByName optionalPackages config.environment.plasma6.excludePackages
@@ -188,23 +186,23 @@ in
         )
         kio-extras-kf5
       ]
-      # Optional and hardware support features
-      #++ lib.optionals config.hardware.bluetooth.enable [
-      #  bluedevil
-      #  bluez-qt
-      #  pkgs.openobex
-      #  pkgs.obexftp
-      #]
-      #++ lib.optional config.networking.networkmanager.enable plasma-nm
-      #++ lib.optional config.services.pulseaudio.enable plasma-pa
-      #++ lib.optional config.services.pipewire.pulse.enable plasma-pa
-      #++ lib.optional config.powerManagement.enable powerdevil
-      #++ lib.optional config.services.printing.enable print-manager
-      #++ lib.optional config.services.colord.enable colord-kde
-      #++ lib.optional config.services.hardware.bolt.enable plasma-thunderbolt
-      #++ lib.optional config.services.samba.enable kdenetwork-filesharing
-      #++ lib.optional config.services.xserver.wacom.enable wacomtablet
-      ;
+    # Optional and hardware support features
+    #++ lib.optionals config.hardware.bluetooth.enable [
+    #  bluedevil
+    #  bluez-qt
+    #  pkgs.openobex
+    #  pkgs.obexftp
+    #]
+    #++ lib.optional config.networking.networkmanager.enable plasma-nm
+    #++ lib.optional config.services.pulseaudio.enable plasma-pa
+    #++ lib.optional config.services.pipewire.pulse.enable plasma-pa
+    #++ lib.optional config.powerManagement.enable powerdevil
+    #++ lib.optional config.services.printing.enable print-manager
+    #++ lib.optional config.services.colord.enable colord-kde
+    #++ lib.optional config.services.hardware.bolt.enable plasma-thunderbolt
+    #++ lib.optional config.services.samba.enable kdenetwork-filesharing
+    #++ lib.optional config.services.xserver.wacom.enable wacomtablet
+    ;
 
     environment.pathsToLink = [
       # FIXME: modules should link subdirs of `/share` rather than relying on this

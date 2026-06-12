@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -18,8 +23,7 @@ let
 
     ${optionalString (!config.boot.isJail && config.boot.bootspec.enable) ''
       ${config.boot.bootspec.writer}
-      ${optionalString config.boot.bootspec.enableValidation ''
-        ${config.boot.bootspec.validator} "$out/${config.boot.bootspec.filename}"''}
+      ${optionalString config.boot.bootspec.enableValidation ''${config.boot.bootspec.validator} "$out/${config.boot.bootspec.filename}"''}
     ''}
 
     ${config.system.extraSystemBuilderCmds}
@@ -30,34 +34,37 @@ let
   # kernel, systemd units, init scripts, etc.) as well as a script
   # `switch-to-configuration' that activates the configuration and
   # makes it bootable. See `activatable-system.nix`.
-  baseSystem = pkgs.stdenv.mkDerivation ({
-    name = "nixos-system-${config.system.name}";
-    preferLocalBuild = true;
-    allowSubstitutes = false;
-    passAsFile = [ "extraDependencies" ];
-    buildCommand = systemBuilder;
+  baseSystem = pkgs.stdenv.mkDerivation (
+    {
+      name = "nixos-system-${config.system.name}";
+      preferLocalBuild = true;
+      allowSubstitutes = false;
+      passAsFile = [ "extraDependencies" ];
+      buildCommand = systemBuilder;
 
-    inherit (config.system) extraDependencies;
-  } // config.system.systemBuilderArgs);
+      inherit (config.system) extraDependencies;
+    }
+    // config.system.systemBuilderArgs
+  );
 
   # Handle assertions and warnings
 
-  failedAssertions =
-    map (x: x.message) (filter (x: !x.assertion) config.assertions);
+  failedAssertions = map (x: x.message) (filter (x: !x.assertion) config.assertions);
 
-  baseSystemAssertWarn = if failedAssertions != [ ] then
-    throw ''
+  baseSystemAssertWarn =
+    if failedAssertions != [ ] then
+      throw ''
 
-      Failed assertions:
-      ${concatStringsSep "\n" (map (x: "- ${x}") failedAssertions)}''
-  else
-    showWarnings config.warnings baseSystem;
+        Failed assertions:
+        ${concatStringsSep "\n" (map (x: "- ${x}") failedAssertions)}''
+    else
+      showWarnings config.warnings baseSystem;
 
   # Replace runtime dependencies
-  system = foldr ({ oldDependency, newDependency }:
-    drv:
-    pkgs.replaceDependency { inherit oldDependency newDependency drv; })
-    baseSystemAssertWarn config.system.replaceRuntimeDependencies;
+  system = foldr (
+    { oldDependency, newDependency }:
+    drv: pkgs.replaceDependency { inherit oldDependency newDependency drv; }
+  ) baseSystemAssertWarn config.system.replaceRuntimeDependencies;
 
   systemWithBuildDeps = system.overrideAttrs (o: {
     systemBuildClosure = pkgs.closureInfo { rootPaths = [ system.drvPath ]; };
@@ -66,7 +73,8 @@ let
     '';
   });
 
-in {
+in
+{
   options = {
     system.boot.loader.id = mkOption {
       internal = true;
@@ -135,10 +143,12 @@ in {
 
     system.init = mkOption {
       type = types.package;
-      default = {
-        freebsd = pkgs.pkgsStatic.freebsd.init;
-        openbsd = pkgs.pkgsStatic.openbsd.init;
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = pkgs.pkgsStatic.freebsd.init;
+          openbsd = pkgs.pkgsStatic.openbsd.init;
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       description = ''
         Package that contains the `init` executable. This is a binary that runs rc, not rc itself.
       '';
@@ -171,23 +181,30 @@ in {
 
     system.replaceRuntimeDependencies = mkOption {
       default = [ ];
-      example = lib.literalExpression
-        "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
-      type = types.listOf (types.submodule ({ ... }: {
-        options.original = mkOption {
-          type = types.package;
-          description = "The original package to override.";
-        };
+      example = lib.literalExpression "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
+      type = types.listOf (
+        types.submodule (
+          { ... }:
+          {
+            options.original = mkOption {
+              type = types.package;
+              description = "The original package to override.";
+            };
 
-        options.replacement = mkOption {
-          type = types.package;
-          description = "The replacement package.";
-        };
-      }));
-      apply = map ({ original, replacement, ... }: {
-        oldDependency = original;
-        newDependency = replacement;
-      });
+            options.replacement = mkOption {
+              type = types.package;
+              description = "The replacement package.";
+            };
+          }
+        )
+      );
+      apply = map (
+        { original, replacement, ... }:
+        {
+          oldDependency = original;
+          newDependency = replacement;
+        }
+      );
       description = ''
         List of packages to override without doing a full rebuild.
         The original derivation and replacement derivation must have the same
@@ -197,10 +214,7 @@ in {
 
     system.name = mkOption {
       type = types.str;
-      default = if config.networking.hostName == "" then
-        "unnamed"
-      else
-        config.networking.hostName;
+      default = if config.networking.hostName == "" then "unnamed" else config.networking.hostName;
       defaultText = literalExpression ''
         if config.networking.hostName == ""
         then "unnamed"
@@ -238,15 +252,14 @@ in {
   };
 
   config = {
-    system.extraSystemBuilderCmds =
-      optionalString (config.system.forbiddenDependenciesRegex != "") ''
-        if [[ $forbiddenDependenciesRegex != "" && -n $closureInfo ]]; then
-          if forbiddenPaths="$(grep -E -- "$forbiddenDependenciesRegex" $closureInfo/store-paths)"; then
-            echo -e "System closure $out contains the following disallowed paths:\n$forbiddenPaths"
-            exit 1
-          fi
+    system.extraSystemBuilderCmds = optionalString (config.system.forbiddenDependenciesRegex != "") ''
+      if [[ $forbiddenDependenciesRegex != "" && -n $closureInfo ]]; then
+        if forbiddenPaths="$(grep -E -- "$forbiddenDependenciesRegex" $closureInfo/store-paths)"; then
+          echo -e "System closure $out contains the following disallowed paths:\n$forbiddenPaths"
+          exit 1
         fi
-      '';
+      fi
+    '';
 
     system.systemBuilderArgs = {
       # Not actually used in the builder. `passedChecks` is just here to create
@@ -257,7 +270,8 @@ in {
       # to the system closure, which defeats the purpose of the `system.checks`
       # option, as opposed to `system.extraDependencies`.
       passedChecks = concatStringsSep " " config.system.checks;
-    } // lib.optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
+    }
+    // lib.optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
       inherit (config.system) forbiddenDependenciesRegex;
       closureInfo = pkgs.closureInfo {
         rootPaths = [
@@ -270,10 +284,8 @@ in {
       };
     };
 
-    system.build.toplevel = if config.system.includeBuildDependencies then
-      systemWithBuildDeps
-    else
-      system;
+    system.build.toplevel =
+      if config.system.includeBuildDependencies then systemWithBuildDeps else system;
 
   };
 

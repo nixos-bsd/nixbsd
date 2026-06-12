@@ -67,47 +67,53 @@ let
     pkgs.writeTextFile {
       inherit (opts) name;
       executable = true;
-      text =
+      text = ''
+        #!${pkgs.runtimeShell}
+      ''
+      + concatStrings (
+        mapAttrsToList (name: value: ''
+          # ${name}: ${concatStringsSep " " value}
+        '') opts.rcorderSettings
+      )
+      + lib.optionalString (opts.description != null) ''
+        #  ${opts.description}
+      ''
+      + lib.optionalString (!opts.dummy) (
         ''
-          #!${pkgs.runtimeShell}
+
+          export PATH=${escapeShellArg pathStr}
+          ${lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (k: v: "export ${k}=\"${formatScriptLiteral v}\"") config.init.environment
+          )}
+
+          . /etc/rc.subr
         ''
-        + concatStrings (
-          mapAttrsToList (name: value: ''
-            # ${name}: ${concatStringsSep " " value}
-          '') opts.rcorderSettings
+        + concatStringsSep "\n" (
+          mapAttrsToList (
+            name: value:
+            "${name}=\"${formatScriptLiteral value}${
+              optionalString (
+                name == "command_args" && opts.defaultLog.enable
+              ) " &>>/var/log/${opts.defaultLog.name}.log"
+            }\""
+          ) (notNull opts.shellVariables)
         )
-        + lib.optionalString (opts.description != null) ''
-          #  ${opts.description}
+        + "\n"
+        + concatStrings (
+          mapAttrsToList (func_name: value: ''
+            ${opts.name}_${func_name}() {
+              ${value}
+            }
+          '') (notNull opts.hooks)
+        )
+        + ''
+
+          ${opts.extraConfig}
+
+          load_rc_config ${opts.name}
+          run_rc_command "$1"
         ''
-        + lib.optionalString (!opts.dummy) (
-          ''
-
-            export PATH=${escapeShellArg pathStr}
-            ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "export ${k}=\"${formatScriptLiteral v}\"") config.init.environment)}
-
-            . /etc/rc.subr
-          ''
-          + concatStringsSep "\n" (
-            mapAttrsToList (name: value: "${name}=\"${formatScriptLiteral value}${optionalString (name == "command_args" && opts.defaultLog.enable) " &>>/var/log/${opts.defaultLog.name}.log"}\"") (
-              notNull opts.shellVariables
-            )
-          )
-          + "\n"
-          + concatStrings (
-            mapAttrsToList (func_name: value: ''
-              ${opts.name}_${func_name}() {
-                ${value}
-              }
-            '') (notNull opts.hooks)
-          )
-          + ''
-
-            ${opts.extraConfig}
-
-            load_rc_config ${opts.name}
-            run_rc_command "$1"
-          ''
-        );
+      );
     };
 
   makeRcDir =

@@ -1,16 +1,25 @@
-{ config, lib, pkgs, utils, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 with lib;
 with utils;
 
 let
 
-  addCheckDesc = desc: elemType: check:
-    types.addCheck elemType check // {
+  addCheckDesc =
+    desc: elemType: check:
+    types.addCheck elemType check
+    // {
       description = "${elemType.description} (with check: ${desc})";
     };
 
-  isNonEmpty = s:
+  isNonEmpty =
+    s:
     (builtins.match ''
       [ 	
       ]*'' s) == null;
@@ -18,157 +27,183 @@ let
 
   fileSystems' = toposort fsBefore (attrValues config.fileSystems);
 
-  fileSystems = if fileSystems'
-  ? result then # use topologically sorted fileSystems everywhere
-    fileSystems'.result
-  else # the assertion below will catch this,
-  # but we fall back to the original order
-  # anyway so that other modules could check
-  # their assertions too
-    (attrValues config.fileSystems);
+  fileSystems =
+    if fileSystems' ? result then # use topologically sorted fileSystems everywhere
+      fileSystems'.result
+    # the assertion below will catch this,
+    else
+      # but we fall back to the original order
+      # anyway so that other modules could check
+      # their assertions too
+      (attrValues config.fileSystems);
 
-  specialFSTypes =
-    [ "devfs" "procfs" "sysfs" "tmpfs" "ramfs" "devtmpfs" "devpts" "fdescfs" ];
+  specialFSTypes = [
+    "devfs"
+    "procfs"
+    "sysfs"
+    "tmpfs"
+    "ramfs"
+    "devtmpfs"
+    "devpts"
+    "fdescfs"
+  ];
 
-  nonEmptyWithoutTrailingSlash =
-    addCheckDesc "non-empty without trailing slash" types.str
-    (s: isNonEmpty s && (builtins.match ".+/" s) == null);
+  nonEmptyWithoutTrailingSlash = addCheckDesc "non-empty without trailing slash" types.str (
+    s: isNonEmpty s && (builtins.match ".+/" s) == null
+  );
 
-  coreFileSystemOpts = { name, config, ... }: {
-    options = {
-      mountPoint = mkOption {
-        example = "/mnt/usb";
-        type = nonEmptyWithoutTrailingSlash;
-        description = "Location of the mounted file system.";
+  coreFileSystemOpts =
+    { name, config, ... }:
+    {
+      options = {
+        mountPoint = mkOption {
+          example = "/mnt/usb";
+          type = nonEmptyWithoutTrailingSlash;
+          description = "Location of the mounted file system.";
+        };
+
+        device = mkOption {
+          default = null;
+          example = "/dev/ada0p1";
+          type = types.nullOr nonEmptyStr;
+          description = "Location of the device.";
+        };
+
+        fsType = mkOption {
+          default = "auto";
+          example = "ext3";
+          type = nonEmptyStr;
+          description = "Type of the file system.";
+        };
+
+        options = mkOption {
+          default = [ ];
+          example = [ "data=journal" ];
+          description = "Options used to mount the file system.";
+          type = types.listOf nonEmptyStr;
+        };
+
+        depends = mkOption {
+          default = [ ];
+          example = [ "/persist" ];
+          type = types.listOf nonEmptyWithoutTrailingSlash;
+          description = ''
+            List of paths that should be mounted before this one. This filesystem's
+            {option}`device` and {option}`mountPoint` are always
+            checked and do not need to be included explicitly. If a path is added
+            to this list, any other filesystem whose mount point is a parent of
+            the path will be mounted before this filesystem. The paths do not need
+            to actually be the {option}`mountPoint` of some other filesystem.
+          '';
+        };
+
+        neededForBoot = mkOption {
+          default = false;
+          type = types.bool;
+          description = "The filesystem must be mounted for boot to proceed";
+        };
+
+        writable = mkOption {
+          default = true;
+          example = false;
+          type = types.bool;
+          description = "Mount the filesystem as read/write.";
+        };
       };
 
-      device = mkOption {
-        default = null;
-        example = "/dev/ada0p1";
-        type = types.nullOr nonEmptyStr;
-        description = "Location of the device.";
+      config = {
+        mountPoint = mkDefault name;
+        device = mkIf (elem config.fsType specialFSTypes) (mkDefault config.fsType);
       };
 
-      fsType = mkOption {
-        default = "auto";
-        example = "ext3";
-        type = nonEmptyStr;
-        description = "Type of the file system.";
-      };
-
-      options = mkOption {
-        default = [ ];
-        example = [ "data=journal" ];
-        description = "Options used to mount the file system.";
-        type = types.listOf nonEmptyStr;
-      };
-
-      depends = mkOption {
-        default = [ ];
-        example = [ "/persist" ];
-        type = types.listOf nonEmptyWithoutTrailingSlash;
-        description = ''
-          List of paths that should be mounted before this one. This filesystem's
-          {option}`device` and {option}`mountPoint` are always
-          checked and do not need to be included explicitly. If a path is added
-          to this list, any other filesystem whose mount point is a parent of
-          the path will be mounted before this filesystem. The paths do not need
-          to actually be the {option}`mountPoint` of some other filesystem.
-        '';
-      };
-
-      neededForBoot = mkOption {
-        default = false;
-        type = types.bool;
-        description = "The filesystem must be mounted for boot to proceed";
-      };
-
-      writable = mkOption {
-        default = true;
-        example = false;
-        type = types.bool;
-        description = "Mount the filesystem as read/write.";
-      };
     };
 
-    config = {
-      mountPoint = mkDefault name;
-      device =
-        mkIf (elem config.fsType specialFSTypes) (mkDefault config.fsType);
-    };
+  fileSystemOpts =
+    { config, ... }:
+    {
+      options = {
+        label = mkOption {
+          default = null;
+          example = "root-partition";
+          type = types.nullOr nonEmptyStr;
+          description = "Label of the device (if any).";
+        };
 
-  };
-
-  fileSystemOpts = { config, ... }: {
-    options = {
-      label = mkOption {
-        default = null;
-        example = "root-partition";
-        type = types.nullOr nonEmptyStr;
-        description = "Label of the device (if any).";
-      };
-
-      noCheck = mkOption {
-        default = false;
-        type = types.bool;
-        description = "Disable running fsck on this filesystem.";
+        noCheck = mkOption {
+          default = false;
+          type = types.bool;
+          description = "Disable running fsck on this filesystem.";
+        };
       };
     };
-  };
 
   # Makes sequence of `specialMount device mountPoint options fsType` commands.
   # `systemMount` should be defined in the sourcing script.
-  makeSpecialMounts = mounts:
-    pkgs.writeText "mounts.sh" (concatMapStringsSep "\n" (mount: ''
-      specialMount "${mount.device}" "${mount.mountPoint}" "${
-        concatStringsSep "," mount.options
-      }" "${mount.fsType}"
-    '') mounts);
+  makeSpecialMounts =
+    mounts:
+    pkgs.writeText "mounts.sh" (
+      concatMapStringsSep "\n" (mount: ''
+        specialMount "${mount.device}" "${mount.mountPoint}" "${concatStringsSep "," mount.options}" "${mount.fsType}"
+      '') mounts
+    );
 
-  makeFstabEntries = let
-    fsToSkipCheck = [
-      "none"
-      "auto"
-      "overlay"
-      "iso9660"
-      "bindfs"
-      "udf"
-      "btrfs"
-      "zfs"
-      "tmpfs"
-      "bcachefs"
-      "nfs"
-      "nfs4"
-      "nilfs2"
-      "vboxsf"
-      "squashfs"
-      "glusterfs"
-      "apfs"
-      "9p"
-      "cifs"
-      "prl_fs"
-      "vmhgfs"
-    ];
-    isBindMount = fs: builtins.elem "bind" fs.options;
-    skipCheck = fs:
-      fs.noCheck || fs.device == "none" || builtins.elem fs.fsType fsToSkipCheck
-      || isBindMount fs;
-    # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
-    escape = string:
-      builtins.replaceStrings [ " " "	" ] [ "\\040" "\\011" ] string;
-    fsOptions = fs: (if fs.writable then [ "rw" ] else [ "ro" ]) ++ fs.options;
-  in fstabFileSystems:
-  { }:
-  concatMapStrings (fs:
-    escape fs.device
-    + " " + escape fs.mountPoint
-    + " " + fs.fsType
-    + " " + escape (builtins.concatStringsSep "," (fsOptions fs))
-    + " 0 "
-    + (if skipCheck fs then "0" else if fs.mountPoint == "/" then "1" else "2")
-    + "\n") fstabFileSystems;
+  makeFstabEntries =
+    let
+      fsToSkipCheck = [
+        "none"
+        "auto"
+        "overlay"
+        "iso9660"
+        "bindfs"
+        "udf"
+        "btrfs"
+        "zfs"
+        "tmpfs"
+        "bcachefs"
+        "nfs"
+        "nfs4"
+        "nilfs2"
+        "vboxsf"
+        "squashfs"
+        "glusterfs"
+        "apfs"
+        "9p"
+        "cifs"
+        "prl_fs"
+        "vmhgfs"
+      ];
+      isBindMount = fs: builtins.elem "bind" fs.options;
+      skipCheck =
+        fs: fs.noCheck || fs.device == "none" || builtins.elem fs.fsType fsToSkipCheck || isBindMount fs;
+      # https://wiki.archlinux.org/index.php/fstab#Filepath_spaces
+      escape = string: builtins.replaceStrings [ " " "	" ] [ "\\040" "\\011" ] string;
+      fsOptions = fs: (if fs.writable then [ "rw" ] else [ "ro" ]) ++ fs.options;
+    in
+    fstabFileSystems:
+    { }:
+    concatMapStrings (
+      fs:
+      escape fs.device
+      + " "
+      + escape fs.mountPoint
+      + " "
+      + fs.fsType
+      + " "
+      + escape (builtins.concatStringsSep "," (fsOptions fs))
+      + " 0 "
+      + (
+        if skipCheck fs then
+          "0"
+        else if fs.mountPoint == "/" then
+          "1"
+        else
+          "2"
+      )
+      + "\n"
+    ) fstabFileSystems;
 
-in {
+in
+{
 
   ###### interface
 
@@ -187,8 +222,12 @@ in {
           "/bigdisk".label = "bigdisk";
         }
       '';
-      type =
-        types.attrsOf (types.submodule [ coreFileSystemOpts fileSystemOpts ]);
+      type = types.attrsOf (
+        types.submodule [
+          coreFileSystemOpts
+          fileSystemOpts
+        ]
+      );
       description = ''
         The file systems to be mounted.  It must include an entry for
         the root directory (`mountPoint = "/"`).  Each
@@ -209,8 +248,7 @@ in {
     system.fsPackages = mkOption {
       internal = true;
       default = [ ];
-      description =
-        "Packages supplying file system mounters and checkers.";
+      description = "Packages supplying file system mounters and checkers.";
     };
 
     boot.supportedFilesystems = mkOption {
@@ -240,10 +278,12 @@ in {
     };
 
     boot.devShmSize = mkOption {
-      default = {
-        freebsd = "50%";
-        openbsd = "512m";
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = "50%";
+          openbsd = "512m";
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       example = "256m";
       type = types.str;
       description = ''
@@ -253,10 +293,12 @@ in {
     };
 
     boot.runSize = mkOption {
-      default = {
-        freebsd = "25%";
-        openbsd = "256m";
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = "25%";
+          openbsd = "256m";
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       example = "256m";
       type = types.str;
       description = ''
@@ -278,38 +320,60 @@ in {
 
   config = {
 
-    assertions = let ls = sep: concatMapStringsSep sep (x: x.mountPoint);
-    in [{
-      assertion = !(fileSystems' ? cycle);
-      message =
-        "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${
-          ls " -> " fileSystems'.cycle
-        } loops to ${ls ", " fileSystems'.loops}";
-    }];
+    assertions =
+      let
+        ls = sep: concatMapStringsSep sep (x: x.mountPoint);
+      in
+      [
+        {
+          assertion = !(fileSystems' ? cycle);
+          message = "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${ls " -> " fileSystems'.cycle} loops to ${ls ", " fileSystems'.loops}";
+        }
+      ];
 
     fileSystems."/".neededForBoot = true;
 
     # Export for use in other modules
     system.build.fileSystems = fileSystems;
-    system.build.earlyMountScript = makeSpecialMounts
-      (toposort fsBefore (attrValues config.boot.specialFileSystems)).result;
+    system.build.earlyMountScript = makeSpecialMounts (toposort fsBefore (
+      attrValues config.boot.specialFileSystems
+    )).result;
 
     boot.supportedFilesystems = map (fs: fs.fsType) fileSystems;
 
     # Add the mount helpers to the system path so that `mount' can find them.
-    system.fsPackages = {
-      freebsd = [ pkgs.freebsd.mount_msdosfs pkgs.freebsd.mount_nullfs ];
-      openbsd = [ pkgs.openbsd.mount_ffs pkgs.openbsd.mount_msdos ];
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+    system.fsPackages =
+      {
+        freebsd = [
+          pkgs.freebsd.mount_msdosfs
+          pkgs.freebsd.mount_nullfs
+        ];
+        openbsd = [
+          pkgs.openbsd.mount_ffs
+          pkgs.openbsd.mount_msdos
+        ];
+      }
+      .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
-    environment.systemPackages = config.system.fsPackages ++ {
-      freebsd = [ pkgs.freebsd.mount pkgs.freebsd.umount ];
-      openbsd = [ pkgs.openbsd.mount pkgs.openbsd.umount ];
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+    environment.systemPackages =
+      config.system.fsPackages
+      ++ {
+        freebsd = [
+          pkgs.freebsd.mount
+          pkgs.freebsd.umount
+        ];
+        openbsd = [
+          pkgs.openbsd.mount
+          pkgs.openbsd.umount
+        ];
+      }
+      .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
 
     environment.etc.fstab.text =
-      let swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
-      in ''
+      let
+        swapOptions = sw: concatStringsSep "," ([ "sw" ] ++ sw.options);
+      in
+      ''
         # This is a generated file.  Do not edit!
         # To make changes, rebuild your system.
         #
@@ -329,15 +393,30 @@ in {
     boot.specialFileSystems = {
       "/run" = {
         fsType = "tmpfs";
-        options = [ "nosuid" ] ++ {
-          freebsd = [ "mode=0755" "size=${config.boot.runSize}" ];
-          openbsd = [ "-m0755" "-s${config.boot.runSize}" ];
-        }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+        options = [
+          "nosuid"
+        ]
+        ++ {
+          freebsd = [
+            "mode=0755"
+            "size=${config.boot.runSize}"
+          ];
+          openbsd = [
+            "-m0755"
+            "-s${config.boot.runSize}"
+          ];
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       };
-    } // (optionalAttrs (config.boot.mountProcfs) {
+    }
+    // (optionalAttrs (config.boot.mountProcfs) {
       "/proc" = {
         fsType = "procfs";
-        options = [ "nosuid" "noexec" "nodev" ];
+        options = [
+          "nosuid"
+          "noexec"
+          "nodev"
+        ];
       };
     });
 
@@ -346,12 +425,24 @@ in {
       rcorderSettings = {
         REQUIRE = [ "root" ];
         BEFORE = [ "FILESYSTEMS" ];
-        KEYWORD = [ "shutdown" "nojail" "noswitch" ];
+        KEYWORD = [
+          "shutdown"
+          "nojail"
+          "noswitch"
+        ];
       };
-      path = with pkgs; [ findutils gnugrep ] ++ config.system.fsPackages ++ {
-        freebsd = [ freebsd.mount ];
-        openbsd = [ openbsd.mount ];
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      path =
+        with pkgs;
+        [
+          findutils
+          gnugrep
+        ]
+        ++ config.system.fsPackages
+        ++ {
+          freebsd = [ freebsd.mount ];
+          openbsd = [ openbsd.mount ];
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       bsdUtils = true;
 
       hooks = {

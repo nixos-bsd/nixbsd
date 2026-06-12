@@ -18,7 +18,8 @@
   configurationRevision ? "never",
 }:
 let
-  makeProg = args:
+  makeProg =
+    args:
     replaceVarsWith {
       inherit (args) name src;
       dir = "bin";
@@ -27,9 +28,14 @@ let
       postInstall = ''
         installManPage ${args.manPage}
       '';
-      replacements = lib.removeAttrs args ["name" "src" "manPage"];
+      replacements = lib.removeAttrs args [
+        "name"
+        "src"
+        "manPage"
+      ];
     };
-in rec {
+in
+rec {
 
   nixos-install = makeProg {
     name = "nixos-install";
@@ -41,13 +47,17 @@ in rec {
         jq
         nixos-enter
         nix
-      ] ++ lib.optionals stdenv.hostPlatform.isFreeBSD [
+      ]
+      ++ lib.optionals stdenv.hostPlatform.isFreeBSD [
         freebsd.bin
-      ] ++ lib.optionals (!stdenv.hostPlatform.isFreeBSD) [
+      ]
+      ++ lib.optionals (!stdenv.hostPlatform.isFreeBSD) [
         socat
-      ] ++ lib.optionals stdenv.hostPlatform.isOpenBSD [
+      ]
+      ++ lib.optionals stdenv.hostPlatform.isOpenBSD [
         openbsd.mknod
-      ]);
+      ]
+    );
     manPage = ./manpages/nixos-install.8;
     makedev = if stdenv.hostPlatform.isOpenBSD then lib.getExe openbsd.makedev else "MAKEDEV";
   };
@@ -56,14 +66,17 @@ in rec {
     name = "nixos-rebuild";
     src = ./nixos-rebuild.sh;
     inherit runtimeShell nix;
-    path = lib.makeBinPath ([
-      coreutils
-      gnused
-      gnugrep
-      jq
-    ] ++ lib.optionals stdenv.hostPlatform.isFreeBSD [
-      freebsd.bin
-    ]);
+    path = lib.makeBinPath (
+      [
+        coreutils
+        gnused
+        gnugrep
+        jq
+      ]
+      ++ lib.optionals stdenv.hostPlatform.isFreeBSD [
+        freebsd.bin
+      ]
+    );
     manPage = ./manpages/nixos-rebuild.8;
   };
 
@@ -74,13 +87,17 @@ in rec {
     version = nixosVersion;
     codeName = nixosCodeName;
     revision = nixosRevision;
-    json = builtins.toJSON ({
-      inherit nixosVersion;
-    } // lib.optionalAttrs (nixosRevision != null) {
-      inherit nixosRevision;
-    } // lib.optionalAttrs (configurationRevision != null) {
-      inherit configurationRevision;
-    });
+    json = builtins.toJSON (
+      {
+        inherit nixosVersion;
+      }
+      // lib.optionalAttrs (nixosRevision != null) {
+        inherit nixosRevision;
+      }
+      // lib.optionalAttrs (configurationRevision != null) {
+        inherit configurationRevision;
+      }
+    );
     manPage = ./manpages/nixos-version.8;
   };
 

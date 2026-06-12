@@ -233,10 +233,10 @@ in
           ALTER EXTENSION vectors UPDATE;
         '';
       in
-        ''
-          PSQL="sudo -u postgres PGDATA="${config.services.postgresql.dataDir}" psql --port=${builtins.toString config.services.postgresql.settings.port}"
-          $PSQL -d "${cfg.database.name}" -f "${sqlFile}"
-        '';
+      ''
+        PSQL="sudo -u postgres PGDATA="${config.services.postgresql.dataDir}" psql --port=${builtins.toString config.services.postgresql.settings.port}"
+        $PSQL -d "${cfg.database.name}" -f "${sqlFile}"
+      '';
 
     services.redis.servers = mkIf cfg.redis.enable {
       immich = {
@@ -290,8 +290,14 @@ in
     };
 
     systemd.tmpfiles.settings.immich = {
-      "${cfg.mediaLocation}".d = { user = cfg.user; mode = "0700"; };
-      "/var/cache/immich".d = { user = cfg.user; mode = "0700"; };
+      "${cfg.mediaLocation}".d = {
+        user = cfg.user;
+        mode = "0700";
+      };
+      "/var/cache/immich".d = {
+        user = cfg.user;
+        mode = "0700";
+      };
     };
 
     init.services.immich-server = {

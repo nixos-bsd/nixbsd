@@ -1,4 +1,10 @@
-{ config, lib, pkgs, utils, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 with lib;
 
@@ -36,7 +42,7 @@ in
     };
 
     environment.xfce.excludePackages = mkOption {
-      default = [];
+      default = [ ];
       example = literalExpression "[ pkgs.xfce.xfce4-volumed-pulse ]";
       type = types.listOf types.package;
       description = "Which packages XFCE should exclude from the default environment";
@@ -44,40 +50,43 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = utils.removePackagesByName (with pkgs // pkgs.xfce; [
-      glib # for gsettings
-      gtk3.out # gtk-update-icon-cache
+    environment.systemPackages = utils.removePackagesByName (
+      with pkgs // pkgs.xfce;
+      [
+        glib # for gsettings
+        gtk3.out # gtk-update-icon-cache
 
-      gnome-themes-extra
-      adwaita-icon-theme
-      hicolor-icon-theme
-      tango-icon-theme
-      xfce4-icon-theme
+        gnome-themes-extra
+        adwaita-icon-theme
+        hicolor-icon-theme
+        tango-icon-theme
+        xfce4-icon-theme
 
-      desktop-file-utils
-      shared-mime-info # for update-mime-database
+        desktop-file-utils
+        shared-mime-info # for update-mime-database
 
-      # For a polkit authentication agent
-      polkit_gnome
+        # For a polkit authentication agent
+        polkit_gnome
 
-      # Needed by Xfce's xinitrc script
-      xdg-user-dirs # Update user dirs as described in https://freedesktop.org/wiki/Software/xdg-user-dirs/
+        # Needed by Xfce's xinitrc script
+        xdg-user-dirs # Update user dirs as described in https://freedesktop.org/wiki/Software/xdg-user-dirs/
 
-      exo
-      garcon
-      libxfce4ui
+        exo
+        garcon
+        libxfce4ui
 
-      mousepad
-      parole
-      ristretto
-      xfce4-appfinder
-      xfce4-notifyd
-      xfce4-screenshooter
-      xfce4-session
-      xfce4-settings
-      xfce4-taskmanager
-      xfce4-terminal
-    ] # TODO: NetworkManager doesn't belong here
+        mousepad
+        parole
+        ristretto
+        xfce4-appfinder
+        xfce4-notifyd
+        xfce4-screenshooter
+        xfce4-session
+        xfce4-settings
+        xfce4-taskmanager
+        xfce4-terminal
+      ]
+      # TODO: NetworkManager doesn't belong here
       #++ optional config.networking.networkmanager.enable networkmanagerapplet
       #++ optional config.powerManagement.enable xfce4-power-manager
       #++ optionals config.hardware.pulseaudio.enable [
@@ -90,10 +99,13 @@ in
       ++ optionals cfg.enableXfwm [
         xfwm4
         xfwm4-themes
-      ] ++ optionals (!cfg.noDesktop) [
+      ]
+      ++ optionals (!cfg.noDesktop) [
         xfce4-panel
         xfdesktop
-      ] ++ optional cfg.enableScreensaver xfce4-screensaver) excludePackages;
+      ]
+      ++ optional cfg.enableScreensaver xfce4-screensaver
+    ) excludePackages;
 
     programs.xfconf.enable = true;
     programs.thunar.enable = true;
@@ -105,15 +117,17 @@ in
       "/share/gtksourceview-4.0"
     ];
 
-    services.xserver.desktopManager.session = [{
-      name = "xfce";
-      desktopNames = [ "XFCE" ];
-      bgSupport = true;
-      start = ''
-        ${pkgs.runtimeShell} ${pkgs.xfce.xfce4-session.xinitrc} &
-        waitPID=$!
-      '';
-    }];
+    services.xserver.desktopManager.session = [
+      {
+        name = "xfce";
+        desktopNames = [ "XFCE" ];
+        bgSupport = true;
+        start = ''
+          ${pkgs.runtimeShell} ${pkgs.xfce.xfce4-session.xinitrc} &
+          waitPID=$!
+        '';
+      }
+    ];
 
     services.xserver.updateDbusEnvironment = true;
     #services.xserver.gdk-pixbuf.modulePackages = [ pkgs.librsvg ];

@@ -1,6 +1,11 @@
 # AccountsService daemon.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -25,7 +30,6 @@ with lib;
 
   };
 
-
   ###### implementation
 
   config = mkIf config.services.accounts-daemon.enable {
@@ -38,7 +42,7 @@ with lib;
     services.dbus.packages = [ pkgs.accountsservice ];
 
     init.services.accounts-daemon = {
-      dependencies = ["dbus"];
+      dependencies = [ "dbus" ];
       description = "Accounts Service";
       startCommand = [ "${pkgs.accountsservice}/libexec/accounts-daemon" ];
       startType = "foreground";
@@ -46,7 +50,8 @@ with lib;
       # Accounts daemon looks for dbus interfaces in $XDG_DATA_DIRS/accountsservice
       environment = {
         XDG_DATA_DIRS = "${config.system.path}/share";
-      } // optionalAttrs (!config.users.mutableUsers) {
+      }
+      // optionalAttrs (!config.users.mutableUsers) {
         NIXOS_USERS_PURE = "true";
       };
     };

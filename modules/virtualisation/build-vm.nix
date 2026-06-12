@@ -1,11 +1,17 @@
-{ config, extendModules, lib, ... }:
+{
+  config,
+  extendModules,
+  lib,
+  ...
+}:
 let
 
   inherit (lib) mkOption;
 
   vmVariant = extendModules { modules = [ ./qemu-vm.nix ]; };
 
-in {
+in
+{
   options = {
     virtualisation.vmVariant = mkOption {
       description = ''
@@ -20,8 +26,7 @@ in {
   config = {
     system.build = {
       vm = lib.mkDefault config.virtualisation.vmVariant.system.build.vm;
-      systemImage =
-        lib.mkDefault config.virtualisation.vmVariant.system.build.systemImage;
+      systemImage = lib.mkDefault config.virtualisation.vmVariant.system.build.systemImage;
     };
   };
 

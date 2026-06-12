@@ -1,4 +1,9 @@
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 
 {
   options.programs.passwd.enable = lib.mkEnableOption "the utility for changing passwords" // {

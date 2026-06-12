@@ -1,7 +1,14 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib;
-let cfg = config.programs.services-mkdb;
-in {
+let
+  cfg = config.programs.services-mkdb;
+in
+{
   options = {
     programs.services-mkdb.package = mkOption {
       type = types.package;
@@ -13,5 +20,7 @@ in {
     };
   };
 
-  config = { environment.etc.services.source = "${cfg.package}/etc/services"; };
+  config = {
+    environment.etc.services.source = "${cfg.package}/etc/services";
+  };
 }

@@ -1,6 +1,9 @@
-{ ... }: {
+{ ... }:
+{
   config = {
-    ids.uids = { daemon = 390; };
+    ids.uids = {
+      daemon = 390;
+    };
 
     ids.gids = {
       daemon = 390;

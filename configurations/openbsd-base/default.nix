@@ -1,4 +1,9 @@
-{ pkgs, lib, config, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  ...
+}:
 {
   nixpkgs.hostPlatform = "x86_64-openbsd";
   nixpkgs.overlays = [

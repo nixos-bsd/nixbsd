@@ -7,7 +7,13 @@
 # (e.g., KDE, Gnome or a plain xterm), and optionally the *window
 # manager* (e.g. kwin or twm).
 
-{ config, lib, options, pkgs, ... }:
+{
+  config,
+  lib,
+  options,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -52,110 +58,112 @@ let
   #'';
 
   # file provided by services.xserver.displayManager.sessionData.wrapper
-  xsessionWrapper = pkgs.writeScript "xsession-wrapper"
-    ''
-      #! ${pkgs.bash}/bin/bash
+  xsessionWrapper = pkgs.writeScript "xsession-wrapper" ''
+    #! ${pkgs.bash}/bin/bash
 
-      # Shared environment setup for graphical sessions.
+    # Shared environment setup for graphical sessions.
 
-      . /etc/profile
-      if test -f ~/.profile; then
-          source ~/.profile
-      fi
+    . /etc/profile
+    if test -f ~/.profile; then
+        source ~/.profile
+    fi
 
-      cd "$HOME"
+    cd "$HOME"
 
-      # Allow the user to execute commands at the beginning of the X session.
-      if test -f ~/.xprofile; then
-          source ~/.xprofile
-      fi
+    # Allow the user to execute commands at the beginning of the X session.
+    if test -f ~/.xprofile; then
+        source ~/.xprofile
+    fi
 
-      ${optionalString cfg.displayManager.job.logToFile ''
-        exec &> >(tee ~/.xsession-errors)
-      ''}
+    ${optionalString cfg.displayManager.job.logToFile ''
+      exec &> >(tee ~/.xsession-errors)
+    ''}
 
-      # Load X defaults. This should probably be safe on wayland too.
-      ${xorg.xrdb}/bin/xrdb -merge ${xresourcesXft}
-      if test -e ~/.Xresources; then
-          ${xorg.xrdb}/bin/xrdb -merge ~/.Xresources
-      elif test -e ~/.Xdefaults; then
-          ${xorg.xrdb}/bin/xrdb -merge ~/.Xdefaults
-      fi
+    # Load X defaults. This should probably be safe on wayland too.
+    ${xorg.xrdb}/bin/xrdb -merge ${xresourcesXft}
+    if test -e ~/.Xresources; then
+        ${xorg.xrdb}/bin/xrdb -merge ~/.Xresources
+    elif test -e ~/.Xdefaults; then
+        ${xorg.xrdb}/bin/xrdb -merge ~/.Xdefaults
+    fi
 
-      # Import environment variables into the systemd user environment.
-      #''${optionalString (cfg.displayManager.importedVariables != []) (
-      #  "/run/current-system/systemd/bin/systemctl --user import-environment "
-      #    + toString (unique cfg.displayManager.importedVariables)
-      #)}
+    # Import environment variables into the systemd user environment.
+    #''${optionalString (cfg.displayManager.importedVariables != []) (
+    #  "/run/current-system/systemd/bin/systemctl --user import-environment "
+    #    + toString (unique cfg.displayManager.importedVariables)
+    #)}
 
-      # Speed up application start by 50-150ms according to
-      # https://kdemonkey.blogspot.com/2008/04/magic-trick.html
-      compose_cache="''${XCOMPOSECACHE:-$HOME/.compose-cache}"
-      mkdir -p "$compose_cache"
-      # To avoid accidentally deleting a wrongly set up XCOMPOSECACHE directory,
-      # defensively try to delete cache *files* only, following the file format specified in
-      # https://gitlab.freedesktop.org/xorg/lib/libx11/-/blob/master/modules/im/ximcp/imLcIm.c#L353-358
-      # sprintf (*res, "%s/%c%d_%03x_%08x_%08x", dir, _XimGetMyEndian(), XIM_CACHE_VERSION, (unsigned int)sizeof (DefTree), hash, hash2);
-      ${pkgs.findutils}/bin/find "$compose_cache" -maxdepth 1 -regextype posix-extended -regex '.*/[Bl][0-9]+_[0-9a-f]{3}_[0-9a-f]{8}_[0-9a-f]{8}' -delete
-      unset compose_cache
+    # Speed up application start by 50-150ms according to
+    # https://kdemonkey.blogspot.com/2008/04/magic-trick.html
+    compose_cache="''${XCOMPOSECACHE:-$HOME/.compose-cache}"
+    mkdir -p "$compose_cache"
+    # To avoid accidentally deleting a wrongly set up XCOMPOSECACHE directory,
+    # defensively try to delete cache *files* only, following the file format specified in
+    # https://gitlab.freedesktop.org/xorg/lib/libx11/-/blob/master/modules/im/ximcp/imLcIm.c#L353-358
+    # sprintf (*res, "%s/%c%d_%03x_%08x_%08x", dir, _XimGetMyEndian(), XIM_CACHE_VERSION, (unsigned int)sizeof (DefTree), hash, hash2);
+    ${pkgs.findutils}/bin/find "$compose_cache" -maxdepth 1 -regextype posix-extended -regex '.*/[Bl][0-9]+_[0-9a-f]{3}_[0-9a-f]{8}_[0-9a-f]{8}' -delete
+    unset compose_cache
 
-      # Work around KDE errors when a user first logs in and
-      # .local/share doesn't exist yet.
-      mkdir -p "''${XDG_DATA_HOME:-$HOME/.local/share}"
+    # Work around KDE errors when a user first logs in and
+    # .local/share doesn't exist yet.
+    mkdir -p "''${XDG_DATA_HOME:-$HOME/.local/share}"
 
-      unset _DID_SYSTEMD_CAT
+    unset _DID_SYSTEMD_CAT
 
-      ${cfg.displayManager.sessionCommands}
+    ${cfg.displayManager.sessionCommands}
 
-      #''${fakeSession "start"}
+    #''${fakeSession "start"}
 
-      # Allow the user to setup a custom session type.
-      if test -x ~/.xsession; then
-          eval exec ~/.xsession "$@"
-      fi
+    # Allow the user to setup a custom session type.
+    if test -x ~/.xsession; then
+        eval exec ~/.xsession "$@"
+    fi
 
-      if test "$1"; then
-          # Run the supplied session command. Remove any double quotes with eval.
-          eval exec "$@"
-      else
-          # TODO: Do we need this? Should not the session always exist?
-          echo "error: unknown session $1" 1>&2
-          exit 1
-      fi
-    '';
+    if test "$1"; then
+        # Run the supplied session command. Remove any double quotes with eval.
+        eval exec "$@"
+    else
+        # TODO: Do we need this? Should not the session always exist?
+        echo "error: unknown session $1" 1>&2
+        exit 1
+    fi
+  '';
 
-  installedSessions = pkgs.runCommand "desktops"
-    { # trivial derivation
-      preferLocalBuild = true;
-      allowSubstitutes = false;
-    }
-    ''
-      mkdir -p "$out/share/"{xsessions,wayland-sessions}
+  installedSessions =
+    pkgs.runCommand "desktops"
+      {
+        # trivial derivation
+        preferLocalBuild = true;
+        allowSubstitutes = false;
+      }
+      ''
+        mkdir -p "$out/share/"{xsessions,wayland-sessions}
 
-      ${concatMapStrings (pkg: ''
-        for n in ${concatStringsSep " " pkg.providedSessions}; do
-          if ! test -f ${pkg}/share/wayland-sessions/$n.desktop -o \
-                    -f ${pkg}/share/xsessions/$n.desktop; then
-            echo "Couldn't find provided session name, $n.desktop, in session package ${pkg.name}:"
-            echo "  ${pkg}"
-            return 1
+        ${concatMapStrings (pkg: ''
+          for n in ${concatStringsSep " " pkg.providedSessions}; do
+            if ! test -f ${pkg}/share/wayland-sessions/$n.desktop -o \
+                      -f ${pkg}/share/xsessions/$n.desktop; then
+              echo "Couldn't find provided session name, $n.desktop, in session package ${pkg.name}:"
+              echo "  ${pkg}"
+              return 1
+            fi
+          done
+
+          if test -d ${pkg}/share/xsessions; then
+            ${pkgs.buildPackages.xorg.lndir}/bin/lndir ${pkg}/share/xsessions $out/share/xsessions
           fi
-        done
-
-        if test -d ${pkg}/share/xsessions; then
-          ${pkgs.buildPackages.xorg.lndir}/bin/lndir ${pkg}/share/xsessions $out/share/xsessions
-        fi
-        if test -d ${pkg}/share/wayland-sessions; then
-          ${pkgs.buildPackages.xorg.lndir}/bin/lndir ${pkg}/share/wayland-sessions $out/share/wayland-sessions
-        fi
-      '') cfg.displayManager.sessionPackages}
-    '';
+          if test -d ${pkg}/share/wayland-sessions; then
+            ${pkgs.buildPackages.xorg.lndir}/bin/lndir ${pkg}/share/wayland-sessions $out/share/wayland-sessions
+          fi
+        '') cfg.displayManager.sessionPackages}
+      '';
 
   # fallback default for cases when only default wm is set
   dmFallbackDefault = if dmDefault != null then dmDefault else "none";
   wmDefault = cfg.windowManager.default;
 
-  defaultSessionFromLegacyOptions = dmFallbackDefault + optionalString (wmDefault != null && wmDefault != "none") "+${wmDefault}";
+  defaultSessionFromLegacyOptions =
+    dmFallbackDefault + optionalString (wmDefault != null && wmDefault != "none") "+${wmDefault}";
 
 in
 
@@ -178,8 +186,13 @@ in
 
       xserverArgs = mkOption {
         type = types.listOf types.str;
-        default = [];
-        example = [ "-ac" "-logverbose" "-verbose" "-nolisten tcp" ];
+        default = [ ];
+        example = [
+          "-ac"
+          "-logverbose"
+          "-verbose"
+          "-nolisten tcp"
+        ];
         description = "List of arguments for the X server.";
       };
 
@@ -197,10 +210,9 @@ in
       sessionCommands = mkOption {
         type = types.lines;
         default = "";
-        example =
-          ''
-            xmessage "Hello World!" &
-          '';
+        example = ''
+          xmessage "Hello World!" &
+        '';
         description = ''
           Shell commands executed just before the window or desktop manager is
           started. These commands are not currently sourced for Wayland sessions.
@@ -216,40 +228,50 @@ in
       };
 
       sessionPackages = mkOption {
-        type = with types; listOf (package // {
-          description = "package with provided sessions";
-          check = p: assertMsg
-            (package.check p && p ? providedSessions
-            && p.providedSessions != [] && all isString p.providedSessions)
-            ''
-              Package, '${p.name}', did not specify any session names, as strings, in
-              'passthru.providedSessions'. This is required when used as a session package.
+        type =
+          with types;
+          listOf (
+            package
+            // {
+              description = "package with provided sessions";
+              check =
+                p:
+                assertMsg
+                  (
+                    package.check p
+                    && p ? providedSessions
+                    && p.providedSessions != [ ]
+                    && all isString p.providedSessions
+                  )
+                  ''
+                    Package, '${p.name}', did not specify any session names, as strings, in
+                    'passthru.providedSessions'. This is required when used as a session package.
 
-              The session names can be looked up in:
-                ${p}/share/xsessions
-                ${p}/share/wayland-sessions
-           '';
-        });
-        default = [];
+                    The session names can be looked up in:
+                      ${p}/share/xsessions
+                      ${p}/share/wayland-sessions
+                  '';
+            }
+          );
+        default = [ ];
         description = ''
           A list of packages containing x11 or wayland session files to be passed to the display manager.
         '';
       };
 
       session = mkOption {
-        default = [];
+        default = [ ];
         type = types.listOf types.attrs;
-        example = literalExpression
-          ''
-            [ { manage = "desktop";
-                name = "xterm";
-                start = '''
-                  ''${pkgs.xterm}/bin/xterm -ls &
-                  waitPID=$!
-                ''';
-              }
-            ]
-          '';
+        example = literalExpression ''
+          [ { manage = "desktop";
+              name = "xterm";
+              start = '''
+                ''${pkgs.xterm}/bin/xterm -ls &
+                waitPID=$!
+              ''';
+            }
+          ]
+        '';
         description = ''
           List of sessions supported with the command used to start each
           session.  Each session script can set the
@@ -269,7 +291,7 @@ in
       sessionData = mkOption {
         description = "Data exported for display managers’ convenience";
         internal = true;
-        default = {};
+        default = { };
         apply = val: {
           wrapper = xsessionWrapper;
           desktops = installedSessions;
@@ -278,7 +300,7 @@ in
           autologinSession =
             if cfg.displayManager.defaultSession != null then
               cfg.displayManager.defaultSession
-            else if cfg.displayManager.sessionData.sessionNames != [] then
+            else if cfg.displayManager.sessionData.sessionNames != [ ] then
               head cfg.displayManager.sessionData.sessionNames
             else
               null;
@@ -286,15 +308,19 @@ in
       };
 
       defaultSession = mkOption {
-        type = with types; nullOr str // {
-          description = "session name";
-          check = d:
-            assertMsg (d != null -> (str.check d && elem d cfg.displayManager.sessionData.sessionNames)) ''
+        type =
+          with types;
+          nullOr str
+          // {
+            description = "session name";
+            check =
+              d:
+              assertMsg (d != null -> (str.check d && elem d cfg.displayManager.sessionData.sessionNames)) ''
                 Default graphical session, '${d}', not found.
                 Valid names for 'services.xserver.displayManager.defaultSession' are:
                   ${concatStringsSep "\n  " cfg.displayManager.sessionData.sessionNames}
               '';
-        };
+          };
         defaultText = literalMD ''
           Taken from display manager settings or window manager settings, if either is set.
         '';
@@ -331,7 +357,7 @@ in
 
         environment = mkOption {
           type = types.attrsOf types.unspecified;
-          default = {};
+          default = { };
           description = "Additional environment variables needed by the display manager.";
         };
 
@@ -357,28 +383,31 @@ in
 
       # Configuration for automatic login. Common for all DM.
       autoLogin = mkOption {
-        type = types.submodule ({ config, options, ... }: {
-          options = {
-            enable = mkOption {
-              type = types.bool;
-              default = config.user != null;
-              defaultText = literalExpression "config.${options.user} != null";
-              description = ''
-                Automatically log in as {option}`autoLogin.user`.
-              '';
-            };
+        type = types.submodule (
+          { config, options, ... }:
+          {
+            options = {
+              enable = mkOption {
+                type = types.bool;
+                default = config.user != null;
+                defaultText = literalExpression "config.${options.user} != null";
+                description = ''
+                  Automatically log in as {option}`autoLogin.user`.
+                '';
+              };
 
-            user = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = ''
-                User to be used for the automatic login.
-              '';
+              user = mkOption {
+                type = types.nullOr types.str;
+                default = null;
+                description = ''
+                  User to be used for the automatic login.
+                '';
+              };
             };
-          };
-        });
+          }
+        );
 
-        default = {};
+        default = { };
         description = ''
           Auto login configuration attrset.
         '';
@@ -390,7 +419,8 @@ in
 
   config = {
     assertions = [
-      { assertion = cfg.displayManager.autoLogin.enable -> cfg.displayManager.autoLogin.user != null;
+      {
+        assertion = cfg.displayManager.autoLogin.enable -> cfg.displayManager.autoLogin.user != null;
         message = ''
           services.xserver.displayManager.autoLogin.enable requires services.xserver.displayManager.autoLogin.user to be set
         '';
@@ -424,62 +454,69 @@ in
         wms = filter (s: s.manage == "window") cfg.displayManager.session;
 
         # Script responsible for starting the window manager and the desktop manager.
-        xsession = dm: wm: pkgs.writeScript "xsession" ''
-          #! ${pkgs.bash}/bin/bash
+        xsession =
+          dm: wm:
+          pkgs.writeScript "xsession" ''
+            #! ${pkgs.bash}/bin/bash
 
-          # Legacy session script used to construct .desktop files from
-          # `services.xserver.displayManager.session` entries. Called from
-          # `sessionWrapper`.
+            # Legacy session script used to construct .desktop files from
+            # `services.xserver.displayManager.session` entries. Called from
+            # `sessionWrapper`.
 
-          # Start the window manager.
-          ${wm.start}
+            # Start the window manager.
+            ${wm.start}
 
-          # Start the desktop manager.
-          ${dm.start}
+            # Start the desktop manager.
+            ${dm.start}
 
-          ${optionalString cfg.updateDbusEnvironment ''
-            ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
-          ''}
+            ${optionalString cfg.updateDbusEnvironment ''
+              ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
+            ''}
 
-          test -n "$waitPID" && wait "$waitPID"
+            test -n "$waitPID" && wait "$waitPID"
 
-          #''${fakeSession "stop"}
+            #''${fakeSession "stop"}
 
-          exit 0
-        '';
+            exit 0
+          '';
       in
-        # We will generate every possible pair of WM and DM.
-        concatLists (
-            builtins.map
-            ({dm, wm}: let
+      # We will generate every possible pair of WM and DM.
+      concatLists (
+        builtins.map
+          (
+            { dm, wm }:
+            let
               sessionName = "${dm.name}${optionalString (wm.name != "none") ("+" + wm.name)}";
               script = xsession dm wm;
-              desktopNames = if dm ? desktopNames
-                             then concatStringsSep ";" dm.desktopNames
-                             else sessionName;
+              desktopNames = if dm ? desktopNames then concatStringsSep ";" dm.desktopNames else sessionName;
             in
-              optional (dm.name != "none" || wm.name != "none")
-                (pkgs.writeTextFile {
-                  name = "${sessionName}-xsession";
-                  destination = "/share/xsessions/${sessionName}.desktop";
-                  # Desktop Entry Specification:
-                  # - https://standards.freedesktop.org/desktop-entry-spec/latest/
-                  # - https://standards.freedesktop.org/desktop-entry-spec/latest/ar01s06.html
-                  text = ''
-                    [Desktop Entry]
-                    Version=1.0
-                    Type=XSession
-                    TryExec=${script}
-                    Exec=${script}
-                    Name=${sessionName}
-                    DesktopNames=${desktopNames}
-                  '';
-                } // {
-                  providedSessions = [ sessionName ];
-                })
+            optional (dm.name != "none" || wm.name != "none") (
+              pkgs.writeTextFile {
+                name = "${sessionName}-xsession";
+                destination = "/share/xsessions/${sessionName}.desktop";
+                # Desktop Entry Specification:
+                # - https://standards.freedesktop.org/desktop-entry-spec/latest/
+                # - https://standards.freedesktop.org/desktop-entry-spec/latest/ar01s06.html
+                text = ''
+                  [Desktop Entry]
+                  Version=1.0
+                  Type=XSession
+                  TryExec=${script}
+                  Exec=${script}
+                  Name=${sessionName}
+                  DesktopNames=${desktopNames}
+                '';
+              }
+              // {
+                providedSessions = [ sessionName ];
+              }
             )
-            (cartesianProduct { dm = dms; wm = wms; })
-          );
+          )
+          (cartesianProduct {
+            dm = dms;
+            wm = wms;
+          })
+      );
 
     # Make xsessions and wayland sessions available in XDG_DATA_DIRS
     # as some programs have behavior that depends on them being present

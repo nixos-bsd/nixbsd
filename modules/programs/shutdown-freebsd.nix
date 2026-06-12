@@ -1,7 +1,14 @@
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 with lib;
-let cfg = config.programs.shutdown;
-in {
+let
+  cfg = config.programs.shutdown;
+in
+{
   options = {
     programs.shutdown = {
       enable = mkOption {

@@ -1,29 +1,38 @@
 # generate the script used to activate the configuration.
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
 let
   fsckY = if config.system.boot.autoFsck then "-y" else "";
-  tosyslog = (pkgs.runCommandCC "tosyslog" {} ''
-    mkdir -p $out/bin
-    $CC -x c - -o $out/bin/tosyslog <<EOF
-    #include <stdio.h>
-    #include <syslog.h>
+  tosyslog = (
+    pkgs.runCommandCC "tosyslog" { } ''
+      mkdir -p $out/bin
+      $CC -x c - -o $out/bin/tosyslog <<EOF
+      #include <stdio.h>
+      #include <syslog.h>
 
-    int main(int argc, char **argv) {
-        openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
-        char buffer[1024];
-        while (fgets(buffer, sizeof(buffer), stdin)) {
-            syslog(LOG_ALERT, "%s", buffer);
-        }
-        return 0;
-    }
-    EOF
-  '');
+      int main(int argc, char **argv) {
+          openlog(argc < 2 ? "init" : argv[1], LOG_CONS|LOG_ODELAY, LOG_AUTH);
+          char buffer[1024];
+          while (fgets(buffer, sizeof(buffer), stdin)) {
+              syslog(LOG_ALERT, "%s", buffer);
+          }
+          return 0;
+      }
+      EOF
+    ''
+  );
 
-  addAttributeName = mapAttrs (a: v:
-    v // {
+  addAttributeName = mapAttrs (
+    a: v:
+    v
+    // {
       text = ''
         #### Activation script snippet ${a}:
         _localstatus=0
@@ -33,15 +42,15 @@ let
           printf "Activation script snippet '%s' failed (%s)\n" "${a}" "$_localstatus"
         fi
       '';
-    });
+    }
+  );
 
-  systemActivationScript = set: onlyDry:
+  systemActivationScript =
+    set: onlyDry:
     let
-      set' = mapAttrs (_: v:
-        if isString v then
-          (noDepEntry v) // { supportsDryActivation = false; }
-        else
-          v) set;
+      set' = mapAttrs (
+        _: v: if isString v then (noDepEntry v) // { supportsDryActivation = false; } else v
+      ) set;
       withHeadlines = addAttributeName set';
       # When building a dry activation script, this replaces all activation scripts
       # that do not support dry mode with a comment that does nothing. Filtering these
@@ -49,15 +58,18 @@ let
       # does not work because when an activation script that supports dry mode depends on
       # an activation script that does not, the dependency cannot be resolved and the eval
       # fails.
-      withDrySnippets = mapAttrs (a: v:
+      withDrySnippets = mapAttrs (
+        a: v:
         if onlyDry && !v.supportsDryActivation then
-          v // {
-            text =
-              "#### Activation script snippet ${a} does not support dry activation.";
+          v
+          // {
+            text = "#### Activation script snippet ${a} does not support dry activation.";
           }
         else
-          v) withHeadlines;
-    in ''
+          v
+      ) withHeadlines;
+    in
+    ''
       #!${pkgs.runtimeShell}
 
       systemConfig='@out@'
@@ -82,54 +94,64 @@ let
       # Ensure a consistent umask.
       umask 0022
 
-      '' + optionalString (!config.boot.isJail) (''
-      # Early mounts
-      specialMount() {
-        SRC="$1"
-        DST="$2"
-        OPT="$3"
-        TYP="$4"
-        test "$TYP" = tmpfs && SRC=tmpfs && NOFSCK=1
-        test "$TYP" = devfs && SRC=devfs && NOFSCK=1
-        test "$TYP" = zfs && NOFSCK=1
-        mount | grep "$SRC on $DST" &>/dev/null && return 0
+    ''
+    + optionalString (!config.boot.isJail) (
+      ''
+        # Early mounts
+        specialMount() {
+          SRC="$1"
+          DST="$2"
+          OPT="$3"
+          TYP="$4"
+          test "$TYP" = tmpfs && SRC=tmpfs && NOFSCK=1
+          test "$TYP" = devfs && SRC=devfs && NOFSCK=1
+          test "$TYP" = zfs && NOFSCK=1
+          mount | grep "$SRC on $DST" &>/dev/null && return 0
 
-        mkdir -m 0755 -p "$DST"
-        if [[ -z "$NOFSCK" ]]; then
-          fsck -C ${fsckY} "$SRC"
-        fi
-        mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
-      }
-      if [[ $REALINIT == 1 ]]; then
-      '' + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
+          mkdir -m 0755 -p "$DST"
+          if [[ -z "$NOFSCK" ]]; then
+            fsck -C ${fsckY} "$SRC"
+          fi
+          mount -o "$OPT" -t "$TYP" "$SRC" "$DST"
+        }
+        if [[ $REALINIT == 1 ]]; then
+      ''
+      + lib.optionalString pkgs.stdenv.hostPlatform.isOpenBSD ''
         # TODO: Support other root paths
         fsck -C ${fsckY} /dev/sd0a
         mount -u -w /dev/sd0a /
-      '' + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
-        ${lib.optionalString (config.fileSystems."/".fsType != "zfs" && config.fileSystems."/".fsType != "tmpfs") "fsck -C ${fsckY} /"}
+      ''
+      + lib.optionalString pkgs.stdenv.hostPlatform.isFreeBSD ''
+        ${lib.optionalString (
+          config.fileSystems."/".fsType != "zfs" && config.fileSystems."/".fsType != "tmpfs"
+        ) "fsck -C ${fsckY} /"}
         mount -u -w /
-      '' + ''
-        source ${config.system.build.earlyMountScript}
-      fi
+      ''
+      + ''
+          source ${config.system.build.earlyMountScript}
+        fi
 
-      if (( _localstatus != 0 )); then
-        printf "Early mounts failed (%s)\n" "$_localstatus"
-      fi
-      _localstatus=0
+        if (( _localstatus != 0 )); then
+          printf "Early mounts failed (%s)\n" "$_localstatus"
+        fi
+        _localstatus=0
 
-      ${config.boot.postMountCommands}
-      if (( _localstatus != 0 )); then
-        printf "Post-mount commands failed (%s)\n" "$_localstatus"
-      fi
-      _localstatus=0
-      '') + ''
+        ${config.boot.postMountCommands}
+        if (( _localstatus != 0 )); then
+          printf "Post-mount commands failed (%s)\n" "$_localstatus"
+        fi
+        _localstatus=0
+      ''
+    )
+    + ''
 
       mkdir -p /etc /dev /var /run /nix /tmp
       chmod 777 /tmp
 
       ${textClosureMap id (withDrySnippets) (attrNames withDrySnippets)}
 
-    '' + optionalString (!onlyDry) ''
+    ''
+    + optionalString (!onlyDry) ''
       # Make this configuration the current configuration.
       # The readlink is there to ensure that when $systemConfig = /system
       # (which is a symlink to the store), /run/current-system is still
@@ -146,49 +168,55 @@ let
       fi
     '';
 
-  path = with pkgs;
-    map getBin ([
-      coreutils
-      findutils
-      getent
-      gnugrep
-    ] ++ {
-      freebsd = [
-        freebsd.mount
-        freebsd.fsck
-        freebsd.fsck_ffs
-        freebsd.fsck_msdosfs
-        freebsd.nscd
-        freebsd.pwd_mkdb
-      ];
-      openbsd = [
-        openbsd.mount
-        openbsd.mount_ffs
-        openbsd.mount_tmpfs
-        openbsd.pwd_mkdb
-        openbsd.fsck
-        openbsd.fsck_ffs
-        openbsd.fsck_msdos
-        bash
-        tosyslog
-      ];
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name});
+  path =
+    with pkgs;
+    map getBin (
+      [
+        coreutils
+        findutils
+        getent
+        gnugrep
+      ]
+      ++ {
+        freebsd = [
+          freebsd.mount
+          freebsd.fsck
+          freebsd.fsck_ffs
+          freebsd.fsck_msdosfs
+          freebsd.nscd
+          freebsd.pwd_mkdb
+        ];
+        openbsd = [
+          openbsd.mount
+          openbsd.mount_ffs
+          openbsd.mount_tmpfs
+          openbsd.pwd_mkdb
+          openbsd.fsck
+          openbsd.fsck_ffs
+          openbsd.fsck_msdos
+          bash
+          tosyslog
+        ];
+      }
+      .${pkgs.stdenv.hostPlatform.parsed.kernel.name}
+    );
 
-  scriptType = withDry:
+  scriptType =
+    withDry:
     with types;
     let
       scriptOptions = {
         deps = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description =
-            "List of dependencies. The script will run after these.";
+          description = "List of dependencies. The script will run after these.";
         };
         text = mkOption {
           type = types.lines;
           description = "The content of the script.";
         };
-      } // optionalAttrs withDry {
+      }
+      // optionalAttrs withDry {
         supportsDryActivation = mkOption {
           type = types.bool;
           default = false;
@@ -202,9 +230,13 @@ let
           '';
         };
       };
-    in either str (submodule { options = scriptOptions; });
+    in
+    either str (submodule {
+      options = scriptOptions;
+    });
 
-in {
+in
+{
   options = {
 
     system.activationScripts = mkOption {
@@ -236,12 +268,10 @@ in {
     };
 
     system.dryActivationScript = mkOption {
-      description = 
-        "The shell script that is to be run when dry-activating a system.";
+      description = "The shell script that is to be run when dry-activating a system.";
       readOnly = true;
       internal = true;
-      default = systemActivationScript
-        (removeAttrs config.system.activationScripts [ "script" ]) true;
+      default = systemActivationScript (removeAttrs config.system.activationScripts [ "script" ]) true;
       defaultText = literalMD "generated activation script";
     };
 
@@ -262,8 +292,7 @@ in {
       # "; true" => make the `$out` argument from switch-to-configuration.pl
       #             go to `true` instead of `echo`, hiding the useless path
       #             from the log.
-      default =
-        "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
+      default = "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
       description = ''
         A program that writes a bootloader installation script to the path passed in the first command line argument.
 
@@ -293,15 +322,18 @@ in {
     system.activationScripts.var = ""; # obsolete
 
     system.activationScripts.usrbinenv =
-      if config.environment.usrbinenv != null then ''
-        mkdir -p /usr/bin
-        chmod 0755 /usr/bin
-        ln -sfn ${config.environment.usrbinenv} /usr/bin/.env.tmp
-        mv /usr/bin/.env.tmp /usr/bin/env # atomically replace /usr/bin/env
-      '' else ''
-        rm -f /usr/bin/env
-        rmdir --ignore-fail-on-non-empty /usr/bin /usr
-      '';
+      if config.environment.usrbinenv != null then
+        ''
+          mkdir -p /usr/bin
+          chmod 0755 /usr/bin
+          ln -sfn ${config.environment.usrbinenv} /usr/bin/.env.tmp
+          mv /usr/bin/.env.tmp /usr/bin/env # atomically replace /usr/bin/env
+        ''
+      else
+        ''
+          rm -f /usr/bin/env
+          rmdir --ignore-fail-on-non-empty /usr/bin /usr
+        '';
 
     #systemd.tmpfiles.rules = [
     #  #"d /nix/var/nix/gcroots -"

@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -56,12 +61,18 @@ with lib;
 
       supportedLocales = mkOption {
         type = types.listOf types.str;
-        default = unique (builtins.map (l:
-          (replaceStrings [ "utf8" "utf-8" "UTF8" ] [ "UTF-8" "UTF-8" "UTF-8" ]
-            l) + "/UTF-8")
-          ([ "C.UTF-8" "en_US.UTF-8" config.i18n.defaultLocale ] ++ (attrValues
-            (filterAttrs (n: v: n != "LANGUAGE")
-              config.i18n.extraLocaleSettings))));
+        default = unique (
+          builtins.map
+            (l: (replaceStrings [ "utf8" "utf-8" "UTF8" ] [ "UTF-8" "UTF-8" "UTF-8" ] l) + "/UTF-8")
+            (
+              [
+                "C.UTF-8"
+                "en_US.UTF-8"
+                config.i18n.defaultLocale
+              ]
+              ++ (attrValues (filterAttrs (n: v: n != "LANGUAGE") config.i18n.extraLocaleSettings))
+            )
+        );
         defaultText = literalExpression ''
           unique
             (builtins.map (l: (replaceStrings [ "utf8" "utf-8" "UTF8" ] [ "UTF-8" "UTF-8" "UTF-8" ] l) + "/UTF-8") (
@@ -72,8 +83,11 @@ with lib;
               ] ++ (attrValues (filterAttrs (n: v: n != "LANGUAGE") config.i18n.extraLocaleSettings))
             ))
         '';
-        example =
-          [ "en_US.UTF-8/UTF-8" "nl_NL.UTF-8/UTF-8" "nl_NL/ISO-8859-1" ];
+        example = [
+          "en_US.UTF-8/UTF-8"
+          "nl_NL.UTF-8/UTF-8"
+          "nl_NL/ISO-8859-1"
+        ];
         description = ''
           List of locales that the system should support.  The value
           `"all"` means that all locales supported by
@@ -88,21 +102,33 @@ with lib;
 
   ###### implementation
 
-  config = let allLocaleVars = {
-      LANG = config.i18n.defaultLocale;
-      # These are now hardcoded
-      #PATH_LOCALE = "/run/current-system/sw/share/locale";
-      #PATH_I18NMODULE = "/run/current-system/sw/lib/i18n";
-      MM_CHARSET = let parts = splitString "." config.i18n.defaultLocale;
-      in if length parts < 2 then "UTF-8" else elemAt parts 1;
-    } // config.i18n.extraLocaleSettings; in {
+  config =
+    let
+      allLocaleVars = {
+        LANG = config.i18n.defaultLocale;
+        # These are now hardcoded
+        #PATH_LOCALE = "/run/current-system/sw/share/locale";
+        #PATH_I18NMODULE = "/run/current-system/sw/lib/i18n";
+        MM_CHARSET =
+          let
+            parts = splitString "." config.i18n.defaultLocale;
+          in
+          if length parts < 2 then "UTF-8" else elemAt parts 1;
+      }
+      // config.i18n.extraLocaleSettings;
+    in
+    {
 
-    environment.systemPackages =
-      optional (config.i18n.supportedLocales != [ ]) config.i18n.freebsdLocales;
+      environment.systemPackages = optional (
+        config.i18n.supportedLocales != [ ]
+      ) config.i18n.freebsdLocales;
 
-    environment.pathsToLink = [ "/share/locale" "/share/i18n" ];
+      environment.pathsToLink = [
+        "/share/locale"
+        "/share/i18n"
+      ];
 
-    environment.sessionVariables = allLocaleVars;
-    init.environment = allLocaleVars;
-  };
+      environment.sessionVariables = allLocaleVars;
+      init.environment = allLocaleVars;
+    };
 }

@@ -3,82 +3,103 @@
 # Changes to the structure of the document, or the semantics of the values should go through an RFC.
 #
 # See: https://github.com/NixOS/rfcs/pull/125
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 let
   cfg = config.boot.bootspec;
-  children = lib.mapAttrs
-    (childName: childConfig: childConfig.configuration.system.build.toplevel)
-    config.specialisation;
+  children = lib.mapAttrs (
+    childName: childConfig: childConfig.configuration.system.build.toplevel
+  ) config.specialisation;
   schemas = {
     v1 = rec {
       filename = "boot.json";
-      json = pkgs.writeText filename (builtins.toJSON
-        # Merge extensions first to not let them shadow NixOS bootspec data.
-        (cfg.extensions // {
-          "org.nixos.bootspec.v1" = {
-            system = pkgs.stdenv.hostPlatform.system;
-            kernel = config.boot.kernel.imagePath;
-            kernelParams = [ ];
-            label =
-              "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
-          };
-          "gay.mildlyfunctional.nixbsd.v1" = {
-            inherit (config.boot) kernelEnvironment;
-            earlyModules = config.boot.kernelModules;
-            initmd = if config.boot.initmd.enable then config.boot.initmd.image else null;
-          };
-        }));
+      json = pkgs.writeText filename (
+        builtins.toJSON
+          # Merge extensions first to not let them shadow NixOS bootspec data.
+          (
+            cfg.extensions
+            // {
+              "org.nixos.bootspec.v1" = {
+                system = pkgs.stdenv.hostPlatform.system;
+                kernel = config.boot.kernel.imagePath;
+                kernelParams = [ ];
+                label = "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (${pkgs.freebsd.versionData.version})";
+              };
+              "gay.mildlyfunctional.nixbsd.v1" = {
+                inherit (config.boot) kernelEnvironment;
+                earlyModules = config.boot.kernelModules;
+                initmd = if config.boot.initmd.enable then config.boot.initmd.image else null;
+              };
+            }
+          )
+      );
 
-      generator = let
-        # NOTE: Be careful to not introduce excess newlines at the end of the
-        # injectors, as that may affect the pipes and redirects.
+      generator =
+        let
+          # NOTE: Be careful to not introduce excess newlines at the end of the
+          # injectors, as that may affect the pipes and redirects.
 
-        # Inject toplevel and init into the bootspec.
-        # This can only be done here because we *cannot* depend on $out
-        # referring to the toplevel, except by living in the toplevel itself.
-        toplevelInjector = lib.escapeShellArgs [
-          "${pkgs.buildPackages.jq}/bin/jq"
-          ''
-            ."org.nixos.bootspec.v1".toplevel = $toplevel |
-            ."org.nixos.bootspec.v1".init = $init
-          ''
-          "--sort-keys"
-          "--arg"
-          "toplevel"
-          "${placeholder "out"}"
-          "--arg"
-          "init"
-          "${placeholder "out"}/bin/activate-init-native"
-        ] + " < ${json}";
-
-        # We slurp all specialisations and inject them as values, such that
-        # `.specialisations.${name}` embeds the specialisation's bootspec
-        # document.
-        specialisationInjector = let
-          specialisationLoader = (lib.mapAttrsToList (childName: childToplevel:
+          # Inject toplevel and init into the bootspec.
+          # This can only be done here because we *cannot* depend on $out
+          # referring to the toplevel, except by living in the toplevel itself.
+          toplevelInjector =
             lib.escapeShellArgs [
-              "--slurpfile"
-              childName
-              "${childToplevel}/${filename}"
-            ]) children);
-        in lib.escapeShellArgs [
-          "${pkgs.buildPackages.jq}/bin/jq"
-          "--sort-keys"
-          ''
-            ."org.nixos.specialisation.v1" = ($ARGS.named | map_values(. | first))''
-        ] + " ${lib.concatStringsSep " " specialisationLoader}";
-      in "${toplevelInjector} | ${specialisationInjector} > $out/${filename}";
+              "${pkgs.buildPackages.jq}/bin/jq"
+              ''
+                ."org.nixos.bootspec.v1".toplevel = $toplevel |
+                ."org.nixos.bootspec.v1".init = $init
+              ''
+              "--sort-keys"
+              "--arg"
+              "toplevel"
+              "${placeholder "out"}"
+              "--arg"
+              "init"
+              "${placeholder "out"}/bin/activate-init-native"
+            ]
+            + " < ${json}";
+
+          # We slurp all specialisations and inject them as values, such that
+          # `.specialisations.${name}` embeds the specialisation's bootspec
+          # document.
+          specialisationInjector =
+            let
+              specialisationLoader = (
+                lib.mapAttrsToList (
+                  childName: childToplevel:
+                  lib.escapeShellArgs [
+                    "--slurpfile"
+                    childName
+                    "${childToplevel}/${filename}"
+                  ]
+                ) children
+              );
+            in
+            lib.escapeShellArgs [
+              "${pkgs.buildPackages.jq}/bin/jq"
+              "--sort-keys"
+              ''."org.nixos.specialisation.v1" = ($ARGS.named | map_values(. | first))''
+            ]
+            + " ${lib.concatStringsSep " " specialisationLoader}";
+        in
+        "${toplevelInjector} | ${specialisationInjector} > $out/${filename}";
 
       validator = pkgs.writeCueValidator ./bootspec.cue {
-        document =
-          "Document"; # Universal validator for any version as long the schema is correctly set.
+        document = "Document"; # Universal validator for any version as long the schema is correctly set.
       };
     };
   };
-in {
+in
+{
   options.boot.bootspec = {
-    enable = lib.mkEnableOption (
-      "the generation of RFC-0125 bootspec in $system/boot.json, e.g. /run/current-system/boot.json")
+    enable =
+      lib.mkEnableOption (
+        "the generation of RFC-0125 bootspec in $system/boot.json, e.g. /run/current-system/boot.json"
+      )
       // {
         default = true;
         internal = true;
@@ -91,8 +112,7 @@ in {
 
     extensions = lib.mkOption {
       # NOTE(RaitoBezarius): this is not enough to validate: extensions."osRelease" = drv; those are picked up by cue validation.
-      type = lib.types.attrsOf
-        lib.types.anything; # <namespace>: { ...namespace-specific fields }
+      type = lib.types.attrsOf lib.types.anything; # <namespace>: { ...namespace-specific fields }
       default = { };
       description = ''
         User-defined data that extends the bootspec document.
@@ -125,7 +145,7 @@ in {
 
   options.boot.kernelModules = lib.mkOption {
     type = lib.types.listOf lib.types.str;
-    default = [];
+    default = [ ];
     description = "Names of kernel modules to load before the kernel boots.";
   };
 }

@@ -1,4 +1,9 @@
-{ lib, pkgs, config, ... }:
+{
+  lib,
+  pkgs,
+  config,
+  ...
+}:
 
 {
   options.programs.su.enable = lib.mkEnableOption "the utility for user hotswap" // {

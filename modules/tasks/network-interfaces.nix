@@ -1,4 +1,11 @@
-{ config, options, lib, pkgs, utils, ... }:
+{
+  config,
+  options,
+  lib,
+  pkgs,
+  utils,
+  ...
+}:
 
 with lib;
 with utils;
@@ -10,22 +17,21 @@ let
   interfaces = attrValues cfg.interfaces;
   hasVirtuals = any (i: i.virtual) interfaces;
 
-  addrOpts = v:
-    assert v == 4 || v == 6; {
+  addrOpts =
+    v:
+    assert v == 4 || v == 6;
+    {
       options = {
         address = mkOption {
           type = types.str;
           description = ''
-            IPv${
-              toString v
-            } address of the interface. Leave empty to configure the
+            IPv${toString v} address of the interface. Leave empty to configure the
             interface using DHCP.
           '';
         };
 
         prefixLength = mkOption {
-          type = types.addCheck types.int
-            (n: n >= 0 && n <= (if v == 4 then 32 else 128));
+          type = types.addCheck types.int (n: n >= 0 && n <= (if v == 4 then 32 else 128));
           description = ''
             Subnet mask of the interface, specified as the number of
             bits in the prefix (`${if v == 4 then "24" else "64"}`).
@@ -42,8 +48,7 @@ let
       };
 
       prefixLength = mkOption {
-        type = types.addCheck types.int
-          (n: n >= 0 && n <= (if v == 4 then 32 else 128));
+        type = types.addCheck types.int (n: n >= 0 && n <= (if v == 4 then 32 else 128));
         description = ''
           Subnet mask of the network, specified as the number of
           bits in the prefix (`${if v == 4 then "24" else "64"}`).
@@ -59,7 +64,10 @@ let
       flags = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        example = [ "xresolve" "nostatic" ];
+        example = [
+          "xresolve"
+          "nostatic"
+        ];
         description = ''
           Route flags, as can be seen in {manpage}`route(8)`.
           These do not contain a value, just a flag. This is
@@ -84,7 +92,9 @@ let
       lockedModifiers = mkOption {
         type = types.attrsOf types.str;
         default = { };
-        example = { mtu = "1492"; };
+        example = {
+          mtu = "1492";
+        };
         description = ''
           Route modifiers that may not be changed by the kernel automatically.
           Most are listed in {manpage}`route(8)`, though some, like `weight`
@@ -96,191 +106,201 @@ let
 
   gatewayCoerce = address: { inherit address; };
 
-  gatewayOpts = { ... }: {
+  gatewayOpts =
+    { ... }:
+    {
 
-    options = {
+      options = {
 
-      address = mkOption {
-        type = types.str;
-        description = "The default gateway address.";
-      };
+        address = mkOption {
+          type = types.str;
+          description = "The default gateway address.";
+        };
 
-      interface = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        example = "enp0s3";
-        description = "The default gateway interface.";
-      };
+        interface = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          example = "enp0s3";
+          description = "The default gateway interface.";
+        };
 
-      metric = mkOption {
-        type = types.nullOr types.int;
-        default = null;
-        example = 42;
-        description = "The default gateway metric/preference.";
+        metric = mkOption {
+          type = types.nullOr types.int;
+          default = null;
+          example = 42;
+          description = "The default gateway metric/preference.";
+        };
+
       };
 
     };
 
-  };
+  interfaceOpts =
+    { name, ... }:
+    {
 
-  interfaceOpts = { name, ... }: {
+      options = {
+        name = mkOption {
+          example = "eth0";
+          type = types.str;
+          description = "Name of the interface.";
+        };
 
-    options = {
-      name = mkOption {
-        example = "eth0";
-        type = types.str;
-        description = "Name of the interface.";
+        useDHCP = mkOption {
+          type = types.nullOr types.bool;
+          default = null;
+          description = ''
+            Whether this interface should be configured with DHCP. Overrides the
+            default set by {option}`networking.useDHCP`. If `null` (the default),
+            DHCP is enabled if the interface has no IPv4 addresses configured
+            with {option}`networking.interfaces.<name>.ipv4.addresses`, and
+            disabled otherwise.
+          '';
+        };
+
+        ipv4.addresses = mkOption {
+          default = [ ];
+          example = [
+            {
+              address = "10.0.0.1";
+              prefixLength = 16;
+            }
+            {
+              address = "192.168.1.1";
+              prefixLength = 24;
+            }
+          ];
+          type = with types; listOf (submodule (addrOpts 4));
+          description = ''
+            List of IPv4 addresses that will be statically assigned to the interface.
+          '';
+        };
+
+        ipv6.addresses = mkOption {
+          default = [ ];
+          example = [
+            {
+              address = "fdfd:b3f0:482::1";
+              prefixLength = 48;
+            }
+            {
+              address = "2001:1470:fffd:2098::e006";
+              prefixLength = 64;
+            }
+          ];
+          type = with types; listOf (submodule (addrOpts 6));
+          description = ''
+            List of IPv6 addresses that will be statically assigned to the interface.
+          '';
+        };
+
+        ipv4.routes = mkOption {
+          default = [ ];
+          example = [
+            {
+              address = "10.0.0.0";
+              prefixLength = 16;
+            }
+            {
+              address = "192.168.2.0";
+              prefixLength = 24;
+              via = "192.168.1.1";
+            }
+          ];
+          type = with types; listOf (submodule (routeOpts 4));
+          description = ''
+            List of extra IPv4 static routes that will be assigned to the interface.
+
+            ::: {.warning}
+            If the route type is the default `unicast`, then the scope
+            is set differently depending on the value of {option}`networking.useNetworkd`:
+            the script-based backend sets it to `link`, while networkd sets
+            it to `global`.
+            :::
+
+            If you want consistency between the two implementations,
+            set the scope of the route manually with
+            `networking.interfaces.eth0.ipv4.routes = [{ options.scope = "global"; }]`
+            for example.
+          '';
+        };
+
+        ipv6.routes = mkOption {
+          default = [ ];
+          example = [
+            {
+              address = "fdfd:b3f0::";
+              prefixLength = 48;
+            }
+            {
+              address = "2001:1470:fffd:2098::";
+              prefixLength = 64;
+              via = "fdfd:b3f0::1";
+            }
+          ];
+          type = with types; listOf (submodule (routeOpts 6));
+          description = ''
+            List of extra IPv6 static routes that will be assigned to the interface.
+          '';
+        };
+
+        macAddress = mkOption {
+          default = null;
+          example = "00:11:22:33:44:55";
+          type = types.nullOr (types.str);
+          description = ''
+            MAC address of the interface. Leave empty to use the default.
+          '';
+        };
+
+        mtu = mkOption {
+          default = null;
+          example = 9000;
+          type = types.nullOr types.int;
+          description = ''
+            MTU size for packets leaving the interface. Leave empty to use the default.
+          '';
+        };
+
+        virtual = mkOption {
+          default = false;
+          type = types.bool;
+          description = ''
+            Whether this interface is virtual and should be created by tunctl.
+            This is mainly useful for creating bridges between a host and a virtual
+            network such as VPN or a virtual machine.
+          '';
+        };
+
+        virtualOwner = mkOption {
+          default = "root";
+          type = types.str;
+          description = ''
+            In case of a virtual device, the user who owns it.
+          '';
+        };
+
+        virtualType = mkOption {
+          default = if hasPrefix "tun" name then "tun" else "tap";
+          defaultText = literalExpression ''if hasPrefix "tun" name then "tun" else "tap"'';
+          type =
+            with types;
+            enum [
+              "tun"
+              "tap"
+            ];
+          description = ''
+            The type of interface to create.
+            The default is TUN for an interface name starting
+            with "tun", otherwise TAP.
+          '';
+        };
       };
 
-      useDHCP = mkOption {
-        type = types.nullOr types.bool;
-        default = null;
-        description = ''
-          Whether this interface should be configured with DHCP. Overrides the
-          default set by {option}`networking.useDHCP`. If `null` (the default),
-          DHCP is enabled if the interface has no IPv4 addresses configured
-          with {option}`networking.interfaces.<name>.ipv4.addresses`, and
-          disabled otherwise.
-        '';
-      };
-
-      ipv4.addresses = mkOption {
-        default = [ ];
-        example = [
-          {
-            address = "10.0.0.1";
-            prefixLength = 16;
-          }
-          {
-            address = "192.168.1.1";
-            prefixLength = 24;
-          }
-        ];
-        type = with types; listOf (submodule (addrOpts 4));
-        description = ''
-          List of IPv4 addresses that will be statically assigned to the interface.
-        '';
-      };
-
-      ipv6.addresses = mkOption {
-        default = [ ];
-        example = [
-          {
-            address = "fdfd:b3f0:482::1";
-            prefixLength = 48;
-          }
-          {
-            address = "2001:1470:fffd:2098::e006";
-            prefixLength = 64;
-          }
-        ];
-        type = with types; listOf (submodule (addrOpts 6));
-        description = ''
-          List of IPv6 addresses that will be statically assigned to the interface.
-        '';
-      };
-
-      ipv4.routes = mkOption {
-        default = [ ];
-        example = [
-          {
-            address = "10.0.0.0";
-            prefixLength = 16;
-          }
-          {
-            address = "192.168.2.0";
-            prefixLength = 24;
-            via = "192.168.1.1";
-          }
-        ];
-        type = with types; listOf (submodule (routeOpts 4));
-        description = ''
-          List of extra IPv4 static routes that will be assigned to the interface.
-
-          ::: {.warning}
-          If the route type is the default `unicast`, then the scope
-          is set differently depending on the value of {option}`networking.useNetworkd`:
-          the script-based backend sets it to `link`, while networkd sets
-          it to `global`.
-          :::
-
-          If you want consistency between the two implementations,
-          set the scope of the route manually with
-          `networking.interfaces.eth0.ipv4.routes = [{ options.scope = "global"; }]`
-          for example.
-        '';
-      };
-
-      ipv6.routes = mkOption {
-        default = [ ];
-        example = [
-          {
-            address = "fdfd:b3f0::";
-            prefixLength = 48;
-          }
-          {
-            address = "2001:1470:fffd:2098::";
-            prefixLength = 64;
-            via = "fdfd:b3f0::1";
-          }
-        ];
-        type = with types; listOf (submodule (routeOpts 6));
-        description = ''
-          List of extra IPv6 static routes that will be assigned to the interface.
-        '';
-      };
-
-      macAddress = mkOption {
-        default = null;
-        example = "00:11:22:33:44:55";
-        type = types.nullOr (types.str);
-        description = ''
-          MAC address of the interface. Leave empty to use the default.
-        '';
-      };
-
-      mtu = mkOption {
-        default = null;
-        example = 9000;
-        type = types.nullOr types.int;
-        description = ''
-          MTU size for packets leaving the interface. Leave empty to use the default.
-        '';
-      };
-
-      virtual = mkOption {
-        default = false;
-        type = types.bool;
-        description = ''
-          Whether this interface is virtual and should be created by tunctl.
-          This is mainly useful for creating bridges between a host and a virtual
-          network such as VPN or a virtual machine.
-        '';
-      };
-
-      virtualOwner = mkOption {
-        default = "root";
-        type = types.str;
-        description = ''
-          In case of a virtual device, the user who owns it.
-        '';
-      };
-
-      virtualType = mkOption {
-        default = if hasPrefix "tun" name then "tun" else "tap";
-        defaultText =
-          literalExpression ''if hasPrefix "tun" name then "tun" else "tap"'';
-        type = with types; enum [ "tun" "tap" ];
-        description = ''
-          The type of interface to create.
-          The default is TUN for an interface name starting
-          with "tun", otherwise TAP.
-        '';
+      config = {
+        name = mkDefault name;
       };
     };
-
-    config = { name = mkDefault name; };
-  };
 
   hexChars = stringToCharacters "0123456789abcdef";
 
@@ -295,30 +315,34 @@ let
     enabled = {
       use_tempaddr = "1";
       prefer_tempaddr = "0";
-      description =
-        "generate IPv6 temporary addresses but still use EUI-64 addresses as source addresses";
+      description = "generate IPv6 temporary addresses but still use EUI-64 addresses as source addresses";
     };
     default = {
       use_tempaddr = "1";
       prefer_tempaddr = "1";
-      description =
-        "generate IPv6 temporary addresses and use these as source addresses in routing";
+      description = "generate IPv6 temporary addresses and use these as source addresses in routing";
     };
   };
-  tempaddrDoc = concatStringsSep "\n" (mapAttrsToList
-    (name: { description, ... }: ''- `"${name}"` to ${description};'')
-    tempaddrValues);
+  tempaddrDoc = concatStringsSep "\n" (
+    mapAttrsToList (name: { description, ... }: ''- `"${name}"` to ${description};'') tempaddrValues
+  );
 
   hostidFile = pkgs.runCommand "gen-hostid" { preferLocalBuild = true; } ''
     hi="${cfg.hostId}"
-    ${if pkgs.stdenv.isBigEndian then ''
-      echo -ne "\x''${hi:0:2}\x''${hi:2:2}\x''${hi:4:2}\x''${hi:6:2}" > $out
-    '' else ''
-      echo -ne "\x''${hi:6:2}\x''${hi:4:2}\x''${hi:2:2}\x''${hi:0:2}" > $out
-    ''}
+    ${
+      if pkgs.stdenv.isBigEndian then
+        ''
+          echo -ne "\x''${hi:0:2}\x''${hi:2:2}\x''${hi:4:2}\x''${hi:6:2}" > $out
+        ''
+      else
+        ''
+          echo -ne "\x''${hi:6:2}\x''${hi:4:2}\x''${hi:2:2}\x''${hi:0:2}" > $out
+        ''
+    }
   '';
 
-in {
+in
+{
 
   ###### interface
 
@@ -331,8 +355,7 @@ in {
       # e.g. "man 5 hostname") and require valid DNS labels (recommended
       # syntax). Note: We also allow underscores for compatibility/legacy
       # reasons (as undocumented feature):
-      type =
-        types.strMatching "^$|^[[:alnum:]]([[:alnum:]_-]{0,61}[[:alnum:]])?$";
+      type = types.strMatching "^$|^[[:alnum:]]([[:alnum:]_-]{0,61}[[:alnum:]])?$";
       description = ''
         The name of the machine. Leave it empty if you want to obtain it from a
         DHCP server (if using DHCP). The hostname must be a valid DNS label (see
@@ -356,15 +379,15 @@ in {
     networking.fqdn = mkOption {
       readOnly = true;
       type = types.str;
-      default = if (cfg.hostName != "" && cfg.domain != null) then
-        "${cfg.hostName}.${cfg.domain}"
-      else
-        throw ''
-          The FQDN is required but cannot be determined. Please make sure that
-          both networking.hostName and networking.domain are set properly.
-        '';
-      defaultText =
-        literalExpression ''"''${networking.hostName}.''${networking.domain}"'';
+      default =
+        if (cfg.hostName != "" && cfg.domain != null) then
+          "${cfg.hostName}.${cfg.domain}"
+        else
+          throw ''
+            The FQDN is required but cannot be determined. Please make sure that
+            both networking.hostName and networking.domain are set properly.
+          '';
+      defaultText = literalExpression ''"''${networking.hostName}.''${networking.domain}"'';
       description = ''
         The fully qualified domain name (FQDN) of this host. It is the result
         of combining `networking.hostName` and `networking.domain.` Using this
@@ -428,8 +451,7 @@ in {
         address = "131.211.84.1";
         interface = "enp3s0";
       };
-      type = types.nullOr
-        (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
+      type = types.nullOr (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
       description = ''
         The default gateway. It can be left empty if it is auto-detected through DHCP.
         It can be specified as a string or an option set along with a network interface.
@@ -442,8 +464,7 @@ in {
         address = "2001:4d0:1e04:895::1";
         interface = "enp3s0";
       };
-      type = types.nullOr
-        (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
+      type = types.nullOr (types.coercedTo types.str gatewayCoerce (types.submodule gatewayOpts));
       description = ''
         The default ipv6 gateway. It can be left empty if it is auto-detected through DHCP.
         It can be specified as a string or an option set along with a network interface.
@@ -463,7 +484,10 @@ in {
     networking.nameservers = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      example = [ "130.161.158.4" "130.161.33.17" ];
+      example = [
+        "130.161.158.4"
+        "130.161.33.17"
+      ];
       description = ''
         The list of nameservers.  It can be left empty if it is auto-detected through DHCP.
       '';
@@ -471,7 +495,10 @@ in {
 
     networking.search = mkOption {
       default = [ ];
-      example = [ "example.com" "home.arpa" ];
+      example = [
+        "example.com"
+        "home.arpa"
+      ];
       type = types.listOf types.str;
       description = ''
         The list of search paths used when resolving domain names.
@@ -502,10 +529,12 @@ in {
     networking.interfaces = mkOption {
       default = { };
       example = {
-        eth0.ipv4.addresses = [{
-          address = "131.211.84.78";
-          prefixLength = 25;
-        }];
+        eth0.ipv4.addresses = [
+          {
+            address = "131.211.84.78";
+            prefixLength = 25;
+          }
+        ];
       };
       description = ''
         The configuration for each network interface.
@@ -543,163 +572,202 @@ in {
   ###### implementation
 
   config = {
-    assertions = (forEach interfaces (i: {
-      assertion = (i.virtual && i.virtualType == "tun") -> i.macAddress == null;
-      message = ''
-        Setting a MAC Address for tun device ${i.name} isn't supported.
-      '';
-    })) ++ [{
-      assertion = cfg.hostId == null
-        || (stringLength cfg.hostId == 8 && isHexString cfg.hostId);
-      message = "Invalid value given to the networking.hostId option.";
-    }];
+    assertions =
+      (forEach interfaces (i: {
+        assertion = (i.virtual && i.virtualType == "tun") -> i.macAddress == null;
+        message = ''
+          Setting a MAC Address for tun device ${i.name} isn't supported.
+        '';
+      }))
+      ++ [
+        {
+          assertion = cfg.hostId == null || (stringLength cfg.hostId == 8 && isHexString cfg.hostId);
+          message = "Invalid value given to the networking.hostId option.";
+        }
+      ];
 
     # loopback isn't setup or given an IPv4 address by default.
     # Interface is given an IPv6 address once marked up
     networking.interfaces.lo0 = {
-      ipv4.addresses = [{
-        address = "127.0.0.1";
-        prefixLength = 8;
-      }];
+      ipv4.addresses = [
+        {
+          address = "127.0.0.1";
+          prefixLength = 8;
+        }
+      ];
     };
 
     # Hostname/hostid stuff
     environment.etc.hostid = mkIf (cfg.hostId != null) { source = hostidFile; };
-    environment.etc.hostname =
-      mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
+    environment.etc.hostname = mkIf (cfg.hostName != "") { text = cfg.hostName + "\n"; };
 
     init.services.hostname = mkIf pkgs.stdenv.hostPlatform.isFreeBSD {
-        before = [ "NETWORKING" ];
-        startType = "oneshot";
-        startCommand = [ "${pkgs.freebsd.bin}/bin/hostname" cfg.fqdnOrHostName ];
+      before = [ "NETWORKING" ];
+      startType = "oneshot";
+      startCommand = [
+        "${pkgs.freebsd.bin}/bin/hostname"
+        cfg.fqdnOrHostName
+      ];
     };
 
-    freebsd.rc.services = let
-      networkDefaults = let
-        formatDefaultGateway = proto: default:
+    freebsd.rc.services =
+      let
+        networkDefaults =
           let
-            parts = [ "${pkgs.freebsd.route}/bin/route" "-${proto}" "-n" "add" "default" default.address ]
-              ++ optionals (default.interface != null) [
-                "-ifp"
-                default.interface
-              ] ++ optionals (default.metric != null) [
-                "-weight"
-                (toString default.metric)
-              ];
-          in ''
-            route -${proto} -n -q delete default
-            ${concatStringsSep " " parts}
-          '';
-      in {
-        description = "Setup defualt routes and DNS settings";
-        rcorderSettings.BEFORE = [ "NETWORKING" ];
-        hooks.start_cmd = ''
-          ${optionalString config.networking.resolvconf.enable ''
-            # Set the static DNS configuration, if given.
-            ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
-            ${optionalString (cfg.nameservers != [ ] && cfg.domain != null) ''
-              domain ${cfg.domain}
-            ''}
-            ${optionalString (cfg.search != [ ])
-            ("search " + concatStringsSep " " cfg.search)}
-            ${flip concatMapStrings cfg.nameservers (ns: ''
-              nameserver ${ns}
-            '')}
-            EOF
-          ''}
-
-          # Set the default gateway.
-          ${optionalString
-          (cfg.defaultGateway != null && cfg.defaultGateway.address != "")
-          (formatDefaultGateway "4" cfg.defaultGateway)}
-          ${optionalString
-          (cfg.defaultGateway6 != null && cfg.defaultGateway6.address != "")
-          (formatDefaultGateway "6" cfg.defaultGateway6)}
-        '';
-      };
-
-      deviceDependency = dev:
-        if (dev == null || dev == "lo0") then
-          [ ]
-        else if (count (i: i.name == dev && i.virtual) interfaces > 0) then
-          [
-            "netdev_${dev}"
-          ]
-          # TODO: figure out devd here
-        else
-          [ ];
-
-      configureAddrs = i:
-        let
-          serviceName = "network_addresses_${i.name}";
-          ips = i.ipv4.addresses ++ i.ipv6.addresses;
-        in nameValuePair serviceName {
-          description = "Address and route configuration of ${i.name}";
-          rcorderSettings = {
-            BEFORE = [ "network_defaults" "NETWORKING" ];
-            REQUIRE = [ "FILESYSTEMS" ] ++ deviceDependency i.name;
-          };
-          path = with pkgs; [
-            freebsd.route
-            freebsd.ifconfig
-          ];
-          hooks.start_cmd = ''
-            startmsg -n "Setting addresses for ${i.name}"
-
-            state="/run/nixos/network/addresses/${i.name}"
-            mkdir -p $(dirname "$state")
-
-            ifconfig "${i.name}" up
-
-            ${flip concatMapStrings ips (ip:
-              let cidr = "${ip.address}/${toString ip.prefixLength}";
-              in ''
-                echo "${cidr}" >> $state
-                echo -n "adding address ${cidr}... "
-                if out=$(ifconfig "${i.name}" "${cidr}" alias 2>&1); then
-                  echo "done"
-                else
-                  echo "'ifconfig "${i.name}""${cidr}" alias' failed: $out"
-                  exit 1
-                fi
-              '')}
-
-            ${flip concatMapStrings (i.ipv4.routes ++ i.ipv6.routes) (route:
+            formatDefaultGateway =
+              proto: default:
               let
-                cidr = escapeShellArg
-                  "${route.address}/${toString route.prefixLength}";
-                gateway = escapeShellArg
-                  (if route.via == null then i.name else route.via);
-                flags = map (f: "-${f}")
-                  (optional (route.via == null) "iface" ++ route.flags);
-                modifiers = concatLists (mapAttrsToList (k: v: [ "-${k}" v ])
-                  ({ ifp = i.name; } // route.modifiers));
-                lockedModifiers = concatLists
-                  (mapAttrsToList (k: v: [ "-${k}" v ]) route.lockedModifiers);
-                options = escapeShellArgs (flags ++ modifiers
-                  ++ optional (lockedModifiers != [ ]) "-lockrest"
-                  ++ lockedModifiers);
-              in ''
-                echo "${cidr}" >> $state
-                echo -n "adding route ${cidr}... "
-                if out=$(route add ${options} ${cidr} ${gateway} 2>&1); then
-                  echo "done"
-                elif ! echo "$out" | grep "File exists" >/dev/null 2>&1; then
-                  echo "'route add ${options} ${cidr} ${gateway}' failed: $out"
-                  exit 1
-                fi
-              '')}
-          '';
-        };
-    in mkIf pkgs.stdenv.hostPlatform.isFreeBSD ({
-      network_defaults = networkDefaults;
-    } // listToAttrs (map configureAddrs interfaces));
+                parts = [
+                  "${pkgs.freebsd.route}/bin/route"
+                  "-${proto}"
+                  "-n"
+                  "add"
+                  "default"
+                  default.address
+                ]
+                ++ optionals (default.interface != null) [
+                  "-ifp"
+                  default.interface
+                ]
+                ++ optionals (default.metric != null) [
+                  "-weight"
+                  (toString default.metric)
+                ];
+              in
+              ''
+                route -${proto} -n -q delete default
+                ${concatStringsSep " " parts}
+              '';
+          in
+          {
+            description = "Setup defualt routes and DNS settings";
+            rcorderSettings.BEFORE = [ "NETWORKING" ];
+            hooks.start_cmd = ''
+              ${optionalString config.networking.resolvconf.enable ''
+                # Set the static DNS configuration, if given.
+                ${config.networking.resolvconf.package}/sbin/resolvconf -m 1 -a static <<EOF
+                ${optionalString (cfg.nameservers != [ ] && cfg.domain != null) ''
+                  domain ${cfg.domain}
+                ''}
+                ${optionalString (cfg.search != [ ]) ("search " + concatStringsSep " " cfg.search)}
+                ${flip concatMapStrings cfg.nameservers (ns: ''
+                  nameserver ${ns}
+                '')}
+                EOF
+              ''}
+
+              # Set the default gateway.
+              ${optionalString (cfg.defaultGateway != null && cfg.defaultGateway.address != "") (
+                formatDefaultGateway "4" cfg.defaultGateway
+              )}
+              ${optionalString (cfg.defaultGateway6 != null && cfg.defaultGateway6.address != "") (
+                formatDefaultGateway "6" cfg.defaultGateway6
+              )}
+            '';
+          };
+
+        deviceDependency =
+          dev:
+          if (dev == null || dev == "lo0") then
+            [ ]
+          else if (count (i: i.name == dev && i.virtual) interfaces > 0) then
+            [
+              "netdev_${dev}"
+            ]
+          # TODO: figure out devd here
+          else
+            [ ];
+
+        configureAddrs =
+          i:
+          let
+            serviceName = "network_addresses_${i.name}";
+            ips = i.ipv4.addresses ++ i.ipv6.addresses;
+          in
+          nameValuePair serviceName {
+            description = "Address and route configuration of ${i.name}";
+            rcorderSettings = {
+              BEFORE = [
+                "network_defaults"
+                "NETWORKING"
+              ];
+              REQUIRE = [ "FILESYSTEMS" ] ++ deviceDependency i.name;
+            };
+            path = with pkgs; [
+              freebsd.route
+              freebsd.ifconfig
+            ];
+            hooks.start_cmd = ''
+              startmsg -n "Setting addresses for ${i.name}"
+
+              state="/run/nixos/network/addresses/${i.name}"
+              mkdir -p $(dirname "$state")
+
+              ifconfig "${i.name}" up
+
+              ${flip concatMapStrings ips (
+                ip:
+                let
+                  cidr = "${ip.address}/${toString ip.prefixLength}";
+                in
+                ''
+                  echo "${cidr}" >> $state
+                  echo -n "adding address ${cidr}... "
+                  if out=$(ifconfig "${i.name}" "${cidr}" alias 2>&1); then
+                    echo "done"
+                  else
+                    echo "'ifconfig "${i.name}""${cidr}" alias' failed: $out"
+                    exit 1
+                  fi
+                ''
+              )}
+
+              ${flip concatMapStrings (i.ipv4.routes ++ i.ipv6.routes) (
+                route:
+                let
+                  cidr = escapeShellArg "${route.address}/${toString route.prefixLength}";
+                  gateway = escapeShellArg (if route.via == null then i.name else route.via);
+                  flags = map (f: "-${f}") (optional (route.via == null) "iface" ++ route.flags);
+                  modifiers = concatLists (
+                    mapAttrsToList (k: v: [
+                      "-${k}"
+                      v
+                    ]) ({ ifp = i.name; } // route.modifiers)
+                  );
+                  lockedModifiers = concatLists (
+                    mapAttrsToList (k: v: [
+                      "-${k}"
+                      v
+                    ]) route.lockedModifiers
+                  );
+                  options = escapeShellArgs (
+                    flags ++ modifiers ++ optional (lockedModifiers != [ ]) "-lockrest" ++ lockedModifiers
+                  );
+                in
+                ''
+                  echo "${cidr}" >> $state
+                  echo -n "adding route ${cidr}... "
+                  if out=$(route add ${options} ${cidr} ${gateway} 2>&1); then
+                    echo "done"
+                  elif ! echo "$out" | grep "File exists" >/dev/null 2>&1; then
+                    echo "'route add ${options} ${cidr} ${gateway}' failed: $out"
+                    exit 1
+                  fi
+                ''
+              )}
+            '';
+          };
+      in
+      mkIf pkgs.stdenv.hostPlatform.isFreeBSD (
+        {
+          network_defaults = networkDefaults;
+        }
+        // listToAttrs (map configureAddrs interfaces)
+      );
 
     boot.kernel.sysctl = {
-      "net.inet6.ip6.use_tempaddr" =
-        tempaddrValues.${cfg.tempAddresses}.use_tempaddr;
-      "net.inet6.ip6.prefer_tempaddr" =
-        tempaddrValues.${cfg.tempAddresses}.prefer_tempaddr;
+      "net.inet6.ip6.use_tempaddr" = tempaddrValues.${cfg.tempAddresses}.use_tempaddr;
+      "net.inet6.ip6.prefer_tempaddr" = tempaddrValues.${cfg.tempAddresses}.prefer_tempaddr;
     };
   };
 }

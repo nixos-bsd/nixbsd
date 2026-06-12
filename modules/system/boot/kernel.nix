@@ -1,19 +1,30 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 with lib;
-let cfg = config.boot.kernel;
-in {
+let
+  cfg = config.boot.kernel;
+in
+{
   options = {
-    boot.kernel.enable = mkEnableOption (
-      "the FreeBSD kernel (sys). This can be disabled for jails where the host kernel is used")
+    boot.kernel.enable =
+      mkEnableOption (
+        "the FreeBSD kernel (sys). This can be disabled for jails where the host kernel is used"
+      )
       // {
         default = true;
       };
 
     boot.kernel.package = mkOption {
-      default = {
-        freebsd = pkgs.freebsd.sys;
-        openbsd = pkgs.openbsd.sys;
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = pkgs.freebsd.sys;
+          openbsd = pkgs.openbsd.sys;
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       defaultText = literalExpression ''
         {
           freebsd = pkgs.freebsd.sys;
@@ -30,10 +41,8 @@ in {
     boot.extraModulePackages = mkOption {
       type = types.listOf types.package;
       default = [ ];
-      example =
-        literalExpression "with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ]";
-      description =
-        "A list of additional packages supplying kernel modules.";
+      example = literalExpression "with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ]";
+      description = "A list of additional packages supplying kernel modules.";
     };
 
     system.moduleEnvironment = mkOption {
@@ -48,10 +57,12 @@ in {
     boot.kernel.imagePath = mkOption {
       type = types.path;
       readOnly = true;
-      default = {
-        freebsd = "${config.system.moduleEnvironment}/kernel/kernel";
-        openbsd = "${cfg.package}/bsd";
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = "${config.system.moduleEnvironment}/kernel/kernel";
+          openbsd = "${cfg.package}/bsd";
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       defaultText = literalExpression ''
         {
           freebsd = "''${config.system.moduleEnvironment}/kernel/kernel";
@@ -64,10 +75,12 @@ in {
     boot.kernel.modulesPath = mkOption {
       type = types.path;
       readOnly = true;
-      default = {
-        freebsd = "${config.system.moduleEnvironment}/kernel";
-        openbsd = "/not-supported";
-      }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+      default =
+        {
+          freebsd = "${config.system.moduleEnvironment}/kernel";
+          openbsd = "/not-supported";
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
       defaultText = literalExpression ''
         {
           freebsd = "''${config.system.moduleEnvironment}/kernel";
@@ -104,12 +117,16 @@ in {
     system.build = { inherit (config.boot) kernel; };
     # can't just do symlinkjoin or buildenv because symlinks can't be absolute
     # because the store partition might be accessed as a temporary rootfs in stand
-    system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (pkgs.runCommand "sys-with-modules" {} ''
-      mkdir -p $out/kernel
-      cd $out/kernel
-      ${lib.concatMapStringsSep "\n" (pkg: "ln -s ../../$(basename ${pkg})/kernel/* .") ([ cfg.package ] ++ config.boot.extraModulePackages)}
-      ${pkgs.buildPackages.freebsd.kldxref}/bin/kldxref $out/kernel
-    '');
+    system.moduleEnvironment = mkIf pkgs.stdenv.hostPlatform.isFreeBSD (
+      pkgs.runCommand "sys-with-modules" { } ''
+        mkdir -p $out/kernel
+        cd $out/kernel
+        ${lib.concatMapStringsSep "\n" (pkg: "ln -s ../../$(basename ${pkg})/kernel/* .") (
+          [ cfg.package ] ++ config.boot.extraModulePackages
+        )}
+        ${pkgs.buildPackages.freebsd.kldxref}/bin/kldxref $out/kernel
+      ''
+    );
 
     system.systemBuilderCommands = ''
       if [ ! -f ${cfg.imagePath} ]; then
@@ -126,6 +143,9 @@ in {
       init_shell = config.environment.binsh;
     };
 
-    boot.kernelModules = [ "nullfs" "unionfs" ];
+    boot.kernelModules = [
+      "nullfs"
+      "unionfs"
+    ];
   };
 }

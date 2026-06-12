@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -16,8 +21,15 @@ in
 {
 
   imports = [
-    (mkRenamedOptionModule [ "services" "xserver" "vaapiDrivers" ] [ "hardware" "opengl" "extraPackages" ])
-    (mkRemovedOptionModule [ "hardware" "opengl" "s3tcSupport" ] "S3TC support is now always enabled in Mesa.")
+    (mkRenamedOptionModule
+      [ "services" "xserver" "vaapiDrivers" ]
+      [ "hardware" "opengl" "extraPackages" ]
+    )
+    (mkRemovedOptionModule [
+      "hardware"
+      "opengl"
+      "s3tcSupport"
+    ] "S3TC support is now always enabled in Mesa.")
   ];
 
   options = {
@@ -48,7 +60,10 @@ in
 
       driModulePackages = mkOption {
         type = types.listOf types.package;
-        default = with pkgs.freebsd; [ drm-kmod drm-kmod-firmware ];
+        default = with pkgs.freebsd; [
+          drm-kmod
+          drm-kmod-firmware
+        ];
         description = ''
           Kernel modules to install to enable the direct rendering interface
         '';
@@ -64,7 +79,7 @@ in
 
       extraPackages = mkOption {
         type = types.listOf types.package;
-        default = [];
+        default = [ ];
         example = literalExpression "with pkgs; [ intel-media-driver intel-ocl intel-vaapi-driver ]";
         description = ''
           Additional packages to add to OpenGL drivers.
@@ -100,7 +115,9 @@ in
       "L+ /run/opengl-driver - - - - ${package}"
     ];
 
-    environment.sessionVariables.LD_LIBRARY_PATH = mkIf cfg.setLdLibraryPath [ "/run/opengl-driver/lib" ];
+    environment.sessionVariables.LD_LIBRARY_PATH = mkIf cfg.setLdLibraryPath [
+      "/run/opengl-driver/lib"
+    ];
 
     hardware.opengl.package = mkDefault pkgs.mesa.drivers;
   };

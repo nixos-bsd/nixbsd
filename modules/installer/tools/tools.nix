@@ -1,7 +1,12 @@
 # This module generates nixos-install, nixos-rebuild,
 # nixos-generate-config, etc.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -12,7 +17,8 @@ let
     nixosRevision = config.system.nixos.revision;
     configurationRevision = config.system.configurationRevision;
   };
-in {
+in
+{
 
   options.system.disableInstallerTools = mkOption {
     internal = true;
@@ -28,8 +34,12 @@ in {
 
   config = lib.mkMerge [
     (lib.mkIf (config.nix.enable && !config.system.disableInstallerTools) {
-      environment.systemPackages = with tools;
-        [ nixos-install nixos-rebuild nixos-version nixos-enter ];
+      environment.systemPackages = with tools; [
+        nixos-install
+        nixos-rebuild
+        nixos-version
+        nixos-enter
+      ];
     })
 
     # These may be used in auxiliary scripts (ie not part of toplevel), so they are defined unconditionally.

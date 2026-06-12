@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -13,11 +18,14 @@ let
       compatSystem = "i686-linux";
 
     };
-    aarch64-freebsd = { compatSystem = "aarch64-freebsd"; };
+    aarch64-freebsd = {
+      compatSystem = "aarch64-freebsd";
+    };
   };
-  system = systems.${pkgs.hostPlatform.system} or (throw
-    "Unsupported host system for Linux emulation");
-in {
+  system =
+    systems.${pkgs.hostPlatform.system} or (throw "Unsupported host system for Linux emulation");
+in
+{
   options = {
     boot.linux = {
       enable = mkEnableOption "Linux emulation";
@@ -42,42 +50,56 @@ in {
   };
 
   config = mkIf cfg.enable {
-    assertions = [{
-      assertion = cfg.enable32Bit -> system ? compatsSystem32;
-      message = ''
-        32-bit emulation is not supported on this platform.
-      '';
-    }];
+    assertions = [
+      {
+        assertion = cfg.enable32Bit -> system ? compatsSystem32;
+        message = ''
+          32-bit emulation is not supported on this platform.
+        '';
+      }
+    ];
 
-    nix.settings.extra-platforms = [ system.compatSystem ]
-      ++ lib.optional cfg.enable32Bit system.compatSystem32;
+    nix.settings.extra-platforms = [
+      system.compatSystem
+    ]
+    ++ lib.optional cfg.enable32Bit system.compatSystem32;
 
     freebsd.rc.services.linux = {
       description = "Linux user-mode emulation";
-      path = with pkgs.freebsd; [ kldload kldstat sysctl mount ];
+      path = with pkgs.freebsd; [
+        kldload
+        kldstat
+        sysctl
+        mount
+      ];
       hooks.stop = ":";
-      hooks.start_cmd = optionalString pkgs.hostPlatform.is64bit ''
-        load_kld -e linux64elf linux64
-      '' + optionalString (cfg.enable32Bit || pkgs.hostPlatform.is32bit) ''
-        load_kld -e linuxelf linux
-      '' + ''
-        # We want linux to be ready immediately after this service,
-        # not after the late sysctl set, so set sysctls manually here
-        mkdir -p /etc/compat/linux
-        sysctl -w compat.linux.emul_path=/etc/compat/linux
-      '' + lib.optionalString
-        (cfg.setFallback && (cfg.enable32Bit || pkgs.hostPlatform.is32bit)) ''
+      hooks.start_cmd =
+        optionalString pkgs.hostPlatform.is64bit ''
+          load_kld -e linux64elf linux64
+        ''
+        + optionalString (cfg.enable32Bit || pkgs.hostPlatform.is32bit) ''
+          load_kld -e linuxelf linux
+        ''
+        + ''
+          # We want linux to be ready immediately after this service,
+          # not after the late sysctl set, so set sysctls manually here
+          mkdir -p /etc/compat/linux
+          sysctl -w compat.linux.emul_path=/etc/compat/linux
+        ''
+        + lib.optionalString (cfg.setFallback && (cfg.enable32Bit || pkgs.hostPlatform.is32bit)) ''
           sysctl -w kern.elf32.fallback_brand=3
         ''
         + lib.optionalString (cfg.setFallback && pkgs.hostPlatform.is64bit) ''
           sysctl -w kern.elf64.fallback_brand=3
-        '' + ''
+        ''
+        + ''
           # the upstream rc script says modules are required even if mounts aren't done
           load_kld -m pty pty
           load_kld -m fdescfs fdescfs
           load_kld -m linprocfs linprocfs
           load_kld -m linsysfs linsysfs
-        '' + lib.optionalString cfg.mountLinux ''
+        ''
+        + lib.optionalString cfg.mountLinux ''
           # Again, we don't want to rely on mount ordering, just mount here
           linux_mount linprocfs /etc/compat/linux/proc -o nocover
           linux_mount linsysfs /etc/compat/linux/sys -o nocover

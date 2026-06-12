@@ -1,13 +1,19 @@
 # This module provides configuration for the PAM (Pluggable
 # Authentication Modules) system.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
 let
 
-  mkRulesTypeOption = type:
+  mkRulesTypeOption =
+    type:
     mkOption {
       # These options are experimental and subject to breaking changes without notice.
       description = ''
@@ -15,91 +21,110 @@ let
 
         Attribute keys are the name of each rule.
       '';
-      type = types.attrsOf (types.submodule ({ name, config, ... }: {
-        options = {
-          name = mkOption {
-            type = types.str;
-            description = ''
-              Name of this rule.
-            '';
-            internal = true;
-            readOnly = true;
-          };
-          enable = mkOption {
-            type = types.bool;
-            default = true;
-            description = ''
-              Whether this rule is added to the PAM service config file.
-            '';
-          };
-          order = mkOption {
-            type = types.int;
-            description = ''
-              Order of this rule in the service file. Rules are arranged in ascending order of this value.
+      type = types.attrsOf (
+        types.submodule (
+          { name, config, ... }:
+          {
+            options = {
+              name = mkOption {
+                type = types.str;
+                description = ''
+                  Name of this rule.
+                '';
+                internal = true;
+                readOnly = true;
+              };
+              enable = mkOption {
+                type = types.bool;
+                default = true;
+                description = ''
+                  Whether this rule is added to the PAM service config file.
+                '';
+              };
+              order = mkOption {
+                type = types.int;
+                description = ''
+                  Order of this rule in the service file. Rules are arranged in ascending order of this value.
 
-              ::: {.warning}
-              The `order` values for the built-in rules are subject to change. If you assign a constant value to this option, a system update could silently reorder your rule. You could be locked out of your system, or your system could be left wide open. When using this option, set it to a relative offset from another rule's `order` value:
+                  ::: {.warning}
+                  The `order` values for the built-in rules are subject to change. If you assign a constant value to this option, a system update could silently reorder your rule. You could be locked out of your system, or your system could be left wide open. When using this option, set it to a relative offset from another rule's `order` value:
 
-              ```nix
-              {
-                security.pam.services.login.rules.auth.foo.order =
-                  config.security.pam.services.login.rules.auth.unix.order + 10;
-              }
-              ```
-              :::
-            '';
-          };
-          control = mkOption {
-            type = types.str;
-            description = ''
-              Indicates the behavior of the PAM-API should the module fail to succeed in its authentication task. See `control` in {manpage}`pam.conf(5)` for details.
-            '';
-          };
-          modulePath = mkOption {
-            type = types.str;
-            description = ''
-              Either the full filename of the PAM to be used by the application (it begins with a '/'), or a relative pathname from the default module location. See `module-path` in {manpage}`pam.conf(5)` for details.
-            '';
-          };
-          args = mkOption {
-            type = types.listOf types.str;
-            description = ''
-              Tokens that can be used to modify the specific behavior of the given PAM. Such arguments will be documented for each individual module. See `module-arguments` in {manpage}`pam.conf(5)` for details.
+                  ```nix
+                  {
+                    security.pam.services.login.rules.auth.foo.order =
+                      config.security.pam.services.login.rules.auth.unix.order + 10;
+                  }
+                  ```
+                  :::
+                '';
+              };
+              control = mkOption {
+                type = types.str;
+                description = ''
+                  Indicates the behavior of the PAM-API should the module fail to succeed in its authentication task. See `control` in {manpage}`pam.conf(5)` for details.
+                '';
+              };
+              modulePath = mkOption {
+                type = types.str;
+                description = ''
+                  Either the full filename of the PAM to be used by the application (it begins with a '/'), or a relative pathname from the default module location. See `module-path` in {manpage}`pam.conf(5)` for details.
+                '';
+              };
+              args = mkOption {
+                type = types.listOf types.str;
+                description = ''
+                  Tokens that can be used to modify the specific behavior of the given PAM. Such arguments will be documented for each individual module. See `module-arguments` in {manpage}`pam.conf(5)` for details.
 
-              Escaping rules for spaces and square brackets are automatically applied.
+                  Escaping rules for spaces and square brackets are automatically applied.
 
-              {option}`settings` are automatically added as {option}`args`. It's recommended to use the {option}`settings` option whenever possible so that arguments can be overridden.
-            '';
-          };
-          settings = mkOption {
-            type = with types;
-              attrsOf (nullOr (oneOf [ bool str int pathInStore ]));
-            default = { };
-            description = ''
-              Settings to add as `module-arguments`.
+                  {option}`settings` are automatically added as {option}`args`. It's recommended to use the {option}`settings` option whenever possible so that arguments can be overridden.
+                '';
+              };
+              settings = mkOption {
+                type =
+                  with types;
+                  attrsOf (
+                    nullOr (oneOf [
+                      bool
+                      str
+                      int
+                      pathInStore
+                    ])
+                  );
+                default = { };
+                description = ''
+                  Settings to add as `module-arguments`.
 
-              Boolean values render just the key if true, and nothing if false. Null values are ignored. All other values are rendered as key-value pairs.
-            '';
-          };
-        };
-        config = {
-          inherit name;
-          # Formats an attrset of settings as args for use as `module-arguments`.
-          args = concatLists (flip mapAttrsToList config.settings (name: value:
-            if isBool value then
-              optional value name
-            else
-              optional (value != null) "${name}=${toString value}"));
-        };
-      }));
+                  Boolean values render just the key if true, and nothing if false. Null values are ignored. All other values are rendered as key-value pairs.
+                '';
+              };
+            };
+            config = {
+              inherit name;
+              # Formats an attrset of settings as args for use as `module-arguments`.
+              args = concatLists (
+                flip mapAttrsToList config.settings (
+                  name: value:
+                  if isBool value then optional value name else optional (value != null) "${name}=${toString value}"
+                )
+              );
+            };
+          }
+        )
+      );
     };
 
   parentConfig = config;
 
-  pamOpts = { config, name, ... }:
-    let cfg = config;
-    in let config = parentConfig;
-    in {
+  pamOpts =
+    { config, name, ... }:
+    let
+      cfg = config;
+    in
+    let
+      config = parentConfig;
+    in
+    {
 
       options = {
 
@@ -127,8 +152,7 @@ let
             :::
           '';
           type = types.submodule {
-            options = genAttrs [ "account" "auth" "password" "session" ]
-              mkRulesTypeOption;
+            options = genAttrs [ "account" "auth" "password" "session" ] mkRulesTypeOption;
           };
         };
 
@@ -456,8 +480,7 @@ let
         logFailures = mkOption {
           default = false;
           type = types.bool;
-          description = 
-            "Whether to log authentication failures in {file}`/var/log/faillog`.";
+          description = "Whether to log authentication failures in {file}`/var/log/faillog`.";
         };
 
         enableAppArmor = mkOption {
@@ -511,8 +534,7 @@ let
             default = 3000000;
             type = types.int;
             example = 1000000;
-            description =
-              "The delay time (in microseconds) on failure.";
+            description = "The delay time (in microseconds) on failure.";
           };
         };
 
@@ -574,195 +596,232 @@ let
         setLoginUid = mkDefault cfg.startSession;
         limits = mkDefault config.security.pam.loginLimits;
 
-        text = let
-          ensureUniqueOrder = type: rules:
-            let
-              checkPair = a: b:
-                assert assertMsg (a.order != b.order)
-                  "security.pam.services.${name}.rules.${type}: rules '${a.name}' and '${b.name}' cannot have the same order value (${
-                    toString a.order
-                  })";
-                b;
-              checked = zipListsWith checkPair rules (drop 1 rules);
-            in take 1 rules ++ checked;
-          # Formats a string for use in `module-arguments`. See `man pam.conf`.
-          formatModuleArgument = token:
-            if hasInfix " " token then
-              "[${replaceStrings [ "]" ] [ "\\]" ] token}]"
-            else
-              token;
-          formatRules = type:
-            pipe cfg.rules.${type} [
-              attrValues
-              (filter (rule: rule.enable))
-              (sort (a: b: a.order < b.order))
-              (ensureUniqueOrder type)
-              (map (rule:
-                concatStringsSep " " ([ type rule.control rule.modulePath ]
-                  ++ map formatModuleArgument rule.args
-                  ++ [ "# ${rule.name} (order ${toString rule.order})" ])))
-              (concatStringsSep "\n")
+        text =
+          let
+            ensureUniqueOrder =
+              type: rules:
+              let
+                checkPair =
+                  a: b:
+                  assert assertMsg (a.order != b.order)
+                    "security.pam.services.${name}.rules.${type}: rules '${a.name}' and '${b.name}' cannot have the same order value (${toString a.order})";
+                  b;
+                checked = zipListsWith checkPair rules (drop 1 rules);
+              in
+              take 1 rules ++ checked;
+            # Formats a string for use in `module-arguments`. See `man pam.conf`.
+            formatModuleArgument =
+              token: if hasInfix " " token then "[${replaceStrings [ "]" ] [ "\\]" ] token}]" else token;
+            formatRules =
+              type:
+              pipe cfg.rules.${type} [
+                attrValues
+                (filter (rule: rule.enable))
+                (sort (a: b: a.order < b.order))
+                (ensureUniqueOrder type)
+                (map (
+                  rule:
+                  concatStringsSep " " (
+                    [
+                      type
+                      rule.control
+                      rule.modulePath
+                    ]
+                    ++ map formatModuleArgument rule.args
+                    ++ [ "# ${rule.name} (order ${toString rule.order})" ]
+                  )
+                ))
+                (concatStringsSep "\n")
+              ];
+          in
+          mkDefault ''
+            # Account management.
+            ${formatRules "account"}
+
+            # Authentication management.
+            ${formatRules "auth"}
+
+            # Password management.
+            ${formatRules "password"}
+
+            # Session management.
+            ${formatRules "session"}
+          '';
+
+        rules =
+          let
+            autoOrderRules = flip pipe [
+              (imap1 (
+                index: rule:
+                rule
+                // {
+                  order = mkDefault (10000 + index * 100);
+                }
+              ))
+              (map (rule: nameValuePair rule.name (removeAttrs rule [ "name" ])))
+              listToAttrs
             ];
-        in mkDefault ''
-          # Account management.
-          ${formatRules "account"}
+          in
+          {
+            account = autoOrderRules [
+              {
+                name = "login_access";
+                control = "required";
+                modulePath = "pam_login_access.so";
+              }
+              {
+                name = "unix";
+                control = "required";
+                modulePath = "pam_unix.so";
+              }
+            ];
 
-          # Authentication management.
-          ${formatRules "auth"}
+            auth = autoOrderRules [
+              {
+                name = "unix";
+                enable = cfg.unixAuth;
+                control = "sufficient";
+                modulePath = "pam_unix.so";
+                settings = {
+                  nullok = cfg.allowNullPassword;
+                  inherit (cfg) nodelay;
+                  likeauth = true;
+                  try_first_pass = true;
+                };
+              }
+              {
+                name = "deny";
+                control = "required";
+                modulePath = "pam_deny.so";
+              }
+            ];
 
-          # Password management.
-          ${formatRules "password"}
+            password = autoOrderRules [
+              {
+                name = "unix";
+                control = "sufficient";
+                modulePath = "pam_unix.so";
+                settings = {
+                  nullok = true;
+                  yescrypt = true;
+                };
+              }
+            ];
 
-          # Session management.
-          ${formatRules "session"}
-        '';
-
-        rules = let
-          autoOrderRules = flip pipe [
-            (imap1 (index: rule:
-              rule // {
-                order = mkDefault (10000 + index * 100);
-              }))
-            (map (rule: nameValuePair rule.name (removeAttrs rule [ "name" ])))
-            listToAttrs
-          ];
-        in {
-          account = autoOrderRules [
-            {
-              name = "login_access";
-              control = "required";
-              modulePath = "pam_login_access.so";
-            }
-            {
-              name = "unix";
-              control = "required";
-              modulePath = "pam_unix.so";
-            }
-          ];
-
-          auth = autoOrderRules [
-            {
-              name = "unix";
-              enable = cfg.unixAuth;
-              control = "sufficient";
-              modulePath = "pam_unix.so";
-              settings = {
-                nullok = cfg.allowNullPassword;
-                inherit (cfg) nodelay;
-                likeauth = true;
-                try_first_pass = true;
-              };
-            }
-            {
-              name = "deny";
-              control = "required";
-              modulePath = "pam_deny.so";
-            }
-          ];
-
-          password = autoOrderRules [{
-            name = "unix";
-            control = "sufficient";
-            modulePath = "pam_unix.so";
-            settings = {
-              nullok = true;
-              yescrypt = true;
-            };
-          }];
-
-          session = autoOrderRules [
-            {
-              name = "lastlog";
-              enable = cfg.updateWtmp;
-              control = "required";
-              modulePath = "pam_lastlog.so";
-              settings = { silent = true; };
-            }
-            {
-              name = "rcSession";
-              enable = cfg.startSession;
-              control = "required";
-              modulePath = "pam_exec.so";
-              settings = {
-                seteuid = true;
-              };
-              args = ["/bin/sh" "-c" "USER_LOGIN=$PAM_USER /bin/sh /etc/rc"];
-            }
-          ];
-        };
+            session = autoOrderRules [
+              {
+                name = "lastlog";
+                enable = cfg.updateWtmp;
+                control = "required";
+                modulePath = "pam_lastlog.so";
+                settings = {
+                  silent = true;
+                };
+              }
+              {
+                name = "rcSession";
+                enable = cfg.startSession;
+                control = "required";
+                modulePath = "pam_exec.so";
+                settings = {
+                  seteuid = true;
+                };
+                args = [
+                  "/bin/sh"
+                  "-c"
+                  "USER_LOGIN=$PAM_USER /bin/sh /etc/rc"
+                ];
+              }
+            ];
+          };
 
       };
     };
 
-  limitsType = with lib.types;
-    listOf (submodule ({ ... }: {
-      options = {
-        domain = mkOption {
-          description =
-            "Username, groupname, or wildcard this limit applies to";
-          example = "@wheel";
-          type = str;
-        };
+  limitsType =
+    with lib.types;
+    listOf (
+      submodule (
+        { ... }:
+        {
+          options = {
+            domain = mkOption {
+              description = "Username, groupname, or wildcard this limit applies to";
+              example = "@wheel";
+              type = str;
+            };
 
-        type = mkOption {
-          description = "Type of this limit";
-          type = enum [ "-" "hard" "soft" ];
-          default = "-";
-        };
+            type = mkOption {
+              description = "Type of this limit";
+              type = enum [
+                "-"
+                "hard"
+                "soft"
+              ];
+              default = "-";
+            };
 
-        item = mkOption {
-          description = "Item this limit applies to";
-          type = enum [
-            "core"
-            "data"
-            "fsize"
-            "memlock"
-            "nofile"
-            "rss"
-            "stack"
-            "cpu"
-            "nproc"
-            "as"
-            "maxlogins"
-            "maxsyslogins"
-            "priority"
-            "locks"
-            "sigpending"
-            "msgqueue"
-            "nice"
-            "rtprio"
-          ];
-        };
+            item = mkOption {
+              description = "Item this limit applies to";
+              type = enum [
+                "core"
+                "data"
+                "fsize"
+                "memlock"
+                "nofile"
+                "rss"
+                "stack"
+                "cpu"
+                "nproc"
+                "as"
+                "maxlogins"
+                "maxsyslogins"
+                "priority"
+                "locks"
+                "sigpending"
+                "msgqueue"
+                "nice"
+                "rtprio"
+              ];
+            };
 
-        value = mkOption {
-          description = "Value of this limit";
-          type = oneOf [ str int ];
-        };
-      };
-    }));
+            value = mkOption {
+              description = "Value of this limit";
+              type = oneOf [
+                str
+                int
+              ];
+            };
+          };
+        }
+      )
+    );
 
   makePAMService = name: service: {
     name = "pam.d/${name}";
     value.source = pkgs.writeText "${name}.pam" service.text;
   };
 
-  optionalSudoConfigForSSHAgentAuth =
-    optionalString config.security.pam.enableSSHAgentAuth ''
-      # Keep SSH_AUTH_SOCK so that pam_ssh_agent_auth.so can do its magic.
-      Defaults env_keep+=SSH_AUTH_SOCK
-    '';
+  optionalSudoConfigForSSHAgentAuth = optionalString config.security.pam.enableSSHAgentAuth ''
+    # Keep SSH_AUTH_SOCK so that pam_ssh_agent_auth.so can do its magic.
+    Defaults env_keep+=SSH_AUTH_SOCK
+  '';
 
-in {
+in
+{
 
   meta.maintainers = [ maintainers.majiir ];
 
   imports = [
-    (mkRenamedOptionModule [ "security" "pam" "enableU2F" ] [
-      "security"
-      "pam"
-      "u2f"
-      "enable"
-    ])
+    (mkRenamedOptionModule
+      [ "security" "pam" "enableU2F" ]
+      [
+        "security"
+        "pam"
+        "u2f"
+        "enable"
+      ]
+    )
   ];
 
   ###### interface
@@ -844,8 +903,7 @@ in {
       '';
     };
 
-    security.pam.enableOTPW =
-      mkEnableOption ("the OTPW (one-time password) PAM module");
+    security.pam.enableOTPW = mkEnableOption ("the OTPW (one-time password) PAM module");
 
     security.pam.dp9ik = {
       enable = mkEnableOption (''
@@ -906,7 +964,12 @@ in {
 
       control = mkOption {
         default = "sufficient";
-        type = types.enum [ "required" "requisite" "sufficient" "optional" ];
+        type = types.enum [
+          "required"
+          "requisite"
+          "sufficient"
+          "optional"
+        ];
         description = ''
           This option sets pam "control".
           If you want to have multi factor authentication, use "required".
@@ -994,7 +1057,12 @@ in {
 
       control = mkOption {
         default = "sufficient";
-        type = types.enum [ "required" "requisite" "sufficient" "optional" ];
+        type = types.enum [
+          "required"
+          "requisite"
+          "sufficient"
+          "optional"
+        ];
         description = ''
           This option sets pam "control".
           If you want to have multi factor authentication, use "required".
@@ -1109,7 +1177,12 @@ in {
 
       control = mkOption {
         default = "sufficient";
-        type = types.enum [ "required" "requisite" "sufficient" "optional" ];
+        type = types.enum [
+          "required"
+          "requisite"
+          "sufficient"
+          "optional"
+        ];
         description = ''
           This option sets pam "control".
           If you want to have multi factor authentication, use "required".
@@ -1141,7 +1214,12 @@ in {
       };
       control = mkOption {
         default = "sufficient";
-        type = types.enum [ "required" "requisite" "sufficient" "optional" ];
+        type = types.enum [
+          "required"
+          "requisite"
+          "sufficient"
+          "optional"
+        ];
         description = ''
           This option sets pam "control".
           If you want to have multi factor authentication, use "required".
@@ -1167,7 +1245,10 @@ in {
       };
       mode = mkOption {
         default = "client";
-        type = types.enum [ "client" "challenge-response" ];
+        type = types.enum [
+          "client"
+          "challenge-response"
+        ];
         description = ''
           Mode of operation.
 
@@ -1221,7 +1302,8 @@ in {
     };
 
     security.pam.enableEcryptfs = mkEnableOption (
-      "eCryptfs PAM module (mounting ecryptfs home directory on login)");
+      "eCryptfs PAM module (mounting ecryptfs home directory on login)"
+    );
     security.pam.enableFscrypt = mkEnableOption (''
       fscrypt to automatically unlock directories with the user's login password.
 
@@ -1233,19 +1315,16 @@ in {
 
     users.motd = mkOption {
       default = null;
-      example =
-        "Today is Sweetmorn, the 4th day of The Aftermath in the YOLD 3178.";
+      example = "Today is Sweetmorn, the 4th day of The Aftermath in the YOLD 3178.";
       type = types.nullOr types.lines;
-      description =
-        "Message of the day shown to users when they log in.";
+      description = "Message of the day shown to users when they log in.";
     };
 
     users.motdFile = mkOption {
       default = null;
       example = "/etc/motd";
       type = types.nullOr types.path;
-      description = 
-        "A file containing the message of the day shown to users when they log in.";
+      description = "A file containing the message of the day shown to users when they log in.";
     };
   };
 
@@ -1260,8 +1339,8 @@ in {
         '';
       }
       {
-        assertion = config.security.pam.zfs.enable
-          -> (config.boot.zfs.enabled || config.boot.zfs.enableUnstable);
+        assertion =
+          config.security.pam.zfs.enable -> (config.boot.zfs.enabled || config.boot.zfs.enableUnstable);
         message = ''
           `security.pam.zfs.enable` requires enabling ZFS (`boot.zfs.enabled` or `boot.zfs.enableUnstable`).
         '';
@@ -1281,8 +1360,7 @@ in {
     #  ++ optionals config.security.pam.enableFscrypt [ pkgs.fscrypt-experimental ]
     #  ++ optionals config.security.pam.u2f.enable [ pkgs.pam_u2f ];
 
-    boot.supportedFilesystems =
-      optionals config.security.pam.enableEcryptfs [ "ecryptfs" ];
+    boot.supportedFilesystems = optionals config.security.pam.enableEcryptfs [ "ecryptfs" ];
 
     #security.wrappers = {
     #  unix_chkpwd = {

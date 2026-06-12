@@ -313,7 +313,10 @@ in
     };
 
     systemd.tmpfiles.settings.hedgedoc = {
-      "/var/lib/hedgedoc".d = { user = name; mode = "0700"; };
+      "/var/lib/hedgedoc".d = {
+        user = name;
+        mode = "0700";
+      };
     };
   };
 }

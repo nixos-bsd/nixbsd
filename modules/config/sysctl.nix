@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 with lib;
 
@@ -6,14 +11,17 @@ let
   cfg = config.boot.kernel.sysctl;
   sysctlOption = mkOptionType {
     name = "sysctl option value";
-    check = val:
-      let checkType = x: isBool x || isString x || isInt x || x == null;
-      in checkType val
-      || (val._type or "" == "override" && checkType val.content);
+    check =
+      val:
+      let
+        checkType = x: isBool x || isString x || isInt x || x == null;
+      in
+      checkType val || (val._type or "" == "override" && checkType val.content);
     merge = loc: defs: mergeOneOption loc (filterOverrides defs);
   };
 
-in {
+in
+{
 
   options = {
 
@@ -37,32 +45,50 @@ in {
 
   };
 
-  config = let
-    sysctlBin = {
-      freebsd = "${pkgs.freebsd.sysctl}/bin/sysctl";
-      openbsd = "${pkgs.openbsd.sysctl}/bin/sysctl";
-    }.${pkgs.stdenv.hostPlatform.parsed.kernel.name};
-  in mkIf (cfg != { }) {
+  config =
+    let
+      sysctlBin =
+        {
+          freebsd = "${pkgs.freebsd.sysctl}/bin/sysctl";
+          openbsd = "${pkgs.openbsd.sysctl}/bin/sysctl";
+        }
+        .${pkgs.stdenv.hostPlatform.parsed.kernel.name};
+    in
+    mkIf (cfg != { }) {
 
-    environment.etc."sysctl.conf".text = concatStrings (mapAttrsToList (n: v:
-      optionalString (v != null) ''
-        ${n}=${if v == false then "0" else toString v}
-      '') cfg);
+      environment.etc."sysctl.conf".text = concatStrings (
+        mapAttrsToList (
+          n: v:
+          optionalString (v != null) ''
+            ${n}=${if v == false then "0" else toString v}
+          ''
+        ) cfg
+      );
 
-    init.services.sysctl = {
-      description = "Set sysctl variables";
-      startType = "oneshot";
-      startCommand = [ "${sysctlBin}" "-i" "-f" "/etc/sysctl.conf" ];
+      init.services.sysctl = {
+        description = "Set sysctl variables";
+        startType = "oneshot";
+        startCommand = [
+          "${sysctlBin}"
+          "-i"
+          "-f"
+          "/etc/sysctl.conf"
+        ];
+      };
+
+      init.services.sysctl-lastload = {
+        description = "Set sysctl variables after services are started";
+        dependencies = [ "LOGIN" ];
+        before = [ "jail" ];
+
+        startType = "oneshot";
+        startCommand = [
+          "${sysctlBin}"
+          "-i"
+          "-f"
+          "/etc/sysctl.conf"
+        ];
+      };
+
     };
-
-    init.services.sysctl-lastload = {
-      description = "Set sysctl variables after services are started";
-      dependencies = [ "LOGIN" ];
-      before = [ "jail" ];
-
-      startType = "oneshot";
-      startCommand = [ "${sysctlBin}" "-i" "-f" "/etc/sysctl.conf" ];
-    };
-
-  };
 }

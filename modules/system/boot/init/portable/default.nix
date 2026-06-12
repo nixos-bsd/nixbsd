@@ -32,7 +32,7 @@ with lib;
               provides = mkOption {
                 type = types.listOf types.str;
                 description = "Additional names this service should provide.";
-                default = [];
+                default = [ ];
               };
 
               description = mkOption {
@@ -109,7 +109,15 @@ with lib;
               };
 
               stopSignal = mkOption {
-                type = types.enum [ "TERM" "KILL" "QUIT" "INT" "HUP" "USR1" "USR2" ];
+                type = types.enum [
+                  "TERM"
+                  "KILL"
+                  "QUIT"
+                  "INT"
+                  "HUP"
+                  "USR1"
+                  "USR2"
+                ];
                 default = "TERM";
                 description = "Signal to send to the program as the first-shot shutdown notice.";
               };
@@ -169,7 +177,8 @@ with lib;
               {
                 name = mkOptionDefault name;
                 defaultLog.name = mkOptionDefault name;
-              }];
+              }
+            ];
           }
         )
       );
