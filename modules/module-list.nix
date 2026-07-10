@@ -7,12 +7,12 @@ in
   "${extPath}/config/nix.nix"
   "${extPath}/config/shells-environment.nix"
   "${extPath}/config/system-environment.nix"
-  "${extPath}/config/terminfo.nix"
   "${extPath}/config/vte.nix"
   "${extPath}/config/qt.nix"
+  "${extPath}/misc/assertions.nix"
   "${extPath}/misc/ids.nix"
-  "${extPath}/misc/man-db.nix"
   "${extPath}/misc/mandoc.nix"
+  "${extPath}/misc/nixpkgs.nix"
   "${extPath}/misc/version.nix"
   "${extPath}/programs/bash/bash-completion.nix"
   "${extPath}/programs/bash/bash.nix"
@@ -43,6 +43,7 @@ in
   ./config/swap.nix
   ./config/sysctl.nix
   ./config/system-path.nix
+  ./config/terminfo.nix
   ./config/user-class.nix
   ./config/users-groups.nix
   ./hardware/opengl.nix
@@ -51,9 +52,9 @@ in
   ./misc/documentation.nix
   ./misc/extra-arguments.nix
   ./misc/extra-ids.nix
+  ./misc/man-db.nix
   ./misc/nix-overlay.nix
   ./misc/substituter.nix
-  ./misc/nixpkgs.nix
   ./programs/passwd.nix
   ./programs/su.nix
   ./programs/ssh.nix
@@ -108,7 +109,7 @@ in
   "${extPath}/config/fonts/packages.nix"
   "${extPath}/config/fonts/fontdir.nix"
   "${extPath}/config/fonts/ghostscript.nix"
-  "${extPath}/config/xdg/autostart.nix"
+  ./config/xdg/autostart.nix
   "${extPath}/config/xdg/mime.nix" # both
   ./config/xdg/mime.nix # both
   "${extPath}/config/xdg/icons.nix"
