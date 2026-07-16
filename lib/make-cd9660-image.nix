@@ -215,6 +215,25 @@ let
       for f in $(cat ${nixStoreClosurePaths}/store-paths); do
         cp -a $f $root/nix/store
       done
+
+      # FreeBSD's makefs -t cd9660 silently drops some symlinks.
+      # Dereference all symlinks that point within /nix/store/ since all
+      # targets are present in the tree. This avoids the makefs bug.
+      chmod -R u+w $root/nix/store
+
+      # Collect all symlinks first (avoid modifying tree during find traversal)
+      find $root/nix/store -type l > $TMPDIR/symlinks.txt
+
+      while read -r link; do
+        target=$(readlink "$link")
+        if [[ "$target" == /nix/store/* ]]; then
+          resolved="$root$target"
+          if [ -e "$resolved" ]; then
+            rm -f "$link"
+            cp -a "$resolved" "$link"
+          fi
+        fi
+      done < $TMPDIR/symlinks.txt
     ''
     + lib.optionalString storeRegistration ''
       # Also include a manifest of the closures in a format suitable for

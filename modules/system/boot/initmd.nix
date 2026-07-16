@@ -203,6 +203,9 @@ let
         dup2(fd, 2);
         printf("hello from init0. we did a pivotroot!\n");
         mkdir("/etc", 0755);
+        /* Create empty fstab to prevent FreeBSD init warning */
+        int fstab_fd = open("/etc/fstab", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fstab_fd >= 0) close(fstab_fd);
         mkdir("/nix", 0755);
         mkdir("/nix/store", 0755);
         mkdir("/run", 0755);

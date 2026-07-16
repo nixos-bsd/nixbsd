@@ -268,6 +268,9 @@ foreach my $u (@{$spec->{users}}) {
     }
 
     $u->{class} = "" unless defined $u->{class}; 
+    $u->{description} = "" unless defined $u->{description};
+    $u->{hashedPassword} = "*" unless defined $u->{hashedPassword};
+    $u->{home} = "/var/empty" unless defined $u->{home};
 
     $usersOut{$name} = $u;
 
@@ -295,6 +298,11 @@ updateFile($uidMapFile, to_json($uidMap, {canonical => 1}));
 updateFile("/etc/master.passwd", \@lines);
 
 # Regenerate /etc/passwd
+# Ensure /etc/shells exists so pwd_mkdb doesn't warn about unknown shells
+if (!$is_dry && !-e "/etc/shells") {
+    my @shells = map { $_->{shell} } grep { defined $_->{shell} && $_->{shell} ne "" } values %usersOut;
+    updateFile("/etc/shells", join("\n", @shells) . "\n");
+}
 system("pwd_mkdb", "-p", "/etc/master.passwd") unless $is_dry;
 
 # Rewrite /etc/subuid & /etc/subgid to include default container mappings
