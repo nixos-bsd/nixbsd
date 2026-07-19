@@ -107,7 +107,7 @@ with lib;
       allLocaleVars = {
         LANG = config.i18n.defaultLocale;
         # These are now hardcoded
-        #PATH_LOCALE = "/run/current-system/sw/share/locale";
+        PATH_LOCALE = "/run/current-system/sw/share/locale";
         #PATH_I18NMODULE = "/run/current-system/sw/lib/i18n";
         MM_CHARSET =
           let
@@ -130,5 +130,11 @@ with lib;
 
       environment.sessionVariables = allLocaleVars;
       init.environment = allLocaleVars;
+
+      # Set PATH_LOCALE in login.conf so locale is available before shell
+      # profile scripts run (bash calls setlocale() at startup).
+      users.classes.default.settings.setenv = "PATH_LOCALE=/run/current-system/sw/share/locale,LANG=${config.i18n.defaultLocale}";
+      users.classes.root.settings.setenv = "PATH_LOCALE=/run/current-system/sw/share/locale,LANG=${config.i18n.defaultLocale}";
+      users.classes.daemon.settings.setenv = "PATH_LOCALE=/run/current-system/sw/share/locale";
     };
 }

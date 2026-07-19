@@ -348,5 +348,9 @@ in
         ${cap_mkdb} /etc/login.conf
       '';
     };
+
+    # Ensure standard FreeBSD classes always exist
+    users.classes.root = { };
+    users.classes.daemon = { };
   };
 }

@@ -191,18 +191,20 @@ let
             fprintf(stderr, "nmount: %s\n", errmsg);
             return 48;
         }
-        int fd = open("/dev/ttyu0", O_RDWR);
+        int fd = open("/dev/console", O_RDWR);
         if (fd < 0) {
-          return 103;
+          fd = open("/dev/null", O_RDWR);
         }
-        if (fd != 0) {
-          return 104;
+        if (fd >= 0) {
+          if (fd != 0) { dup2(fd, 0); close(fd); }
+          dup2(0, 1);
+          dup2(0, 2);
         }
-        //dup2(fd, 0);
-        dup2(fd, 1);
-        dup2(fd, 2);
         printf("hello from init0. we did a pivotroot!\n");
         mkdir("/etc", 0755);
+        /* Create empty fstab to prevent FreeBSD init warning */
+        int fstab_fd = open("/etc/fstab", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fstab_fd >= 0) close(fstab_fd);
         mkdir("/nix", 0755);
         mkdir("/nix/store", 0755);
         mkdir("/run", 0755);

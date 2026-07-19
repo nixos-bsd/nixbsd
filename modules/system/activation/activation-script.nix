@@ -185,6 +185,7 @@ let
           freebsd.fsck_msdosfs
           freebsd.nscd
           freebsd.pwd_mkdb
+          bash
         ];
         openbsd = [
           openbsd.mount
