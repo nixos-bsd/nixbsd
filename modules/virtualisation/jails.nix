@@ -134,7 +134,7 @@ in
                     (import ../../lib/eval-config.nix {
                       inherit lib;
                       extraArgs = {
-                        inherit (host) cppnixFlake mini-tmpfiles-flake;
+                        inherit (host) mini-tmpfiles-flake;
                       };
                       nixpkgsPath = config.nixpkgs;
                       modules =
