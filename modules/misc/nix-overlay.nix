@@ -1,30 +1,28 @@
 {
   config,
   lib,
-  cppnixFlake ? null,
   mini-tmpfiles-flake ? null,
   ...
 }:
 with lib;
 {
-  # TODO: @artemist remove when support is upstream
-  # Also remove specialArgs and input changes in flake
   options = {
+    # TODO: remove when stable nix >= 2.35
     nixpkgs.overrideNix = mkOption {
       type = types.bool;
       default = true;
       example = false;
       description = ''
-        Overlay nix with a development version of lix.
+        Overlay nix with the latest version of nix.
 
         This only works when building with a flake and `nixpkgs.pkgs` is not set manually.
 
-        The nixbsd flake includes an input for a patched version of lix
-        for FreeBSD. When this option is enabled then the overlay is enabled so that
+        When this option is enabled then the overlay is enabled so that
         packages and options that require a working nix can build.
       '';
     };
     # TODO: @sky1e remove once mini-tmpfiles is a proper package
+    # Also remove specialArgs and input changes in flake
     nixpkgs.overrideMiniTmpfiles = mkOption {
       type = types.bool;
       default = true;
@@ -45,7 +43,9 @@ with lib;
 
   config = {
     nixpkgs.overlays =
-      lib.optional (cppnixFlake != null && config.nixpkgs.overrideNix) cppnixFlake.overlays.internal
+      lib.optionals config.nixpkgs.overrideNix [
+        (_: prev: { nix = prev.nixVersions.latest; })
+      ]
       ++ lib.optional (
         mini-tmpfiles-flake != null && config.nixpkgs.overrideMiniTmpfiles
       ) mini-tmpfiles-flake.overlays.default
